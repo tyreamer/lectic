@@ -116,7 +116,13 @@ class CaptureStore:
         return h
 
     def import_record(self,path):
-        path=Path(path).resolve();event=validate_capture(read(path));cid=event['capture_id']
+        path=Path(path).resolve();supplied=read(path)
+        require(isinstance(supplied,dict),'Capture input must be a JSON object')
+        if path.name.endswith('.capture.json') and 'schema_version' not in supplied:
+            from capture_input import expand_input
+            event=expand_input(supplied)
+        else: event=validate_capture(supplied)
+        cid=event['capture_id']
         # Resolve all attachment paths before accepting this envelope; never read outside its folder.
         for attachment in event.get('attachments',[]): safe_child(path.parent,attachment['path'])
         existing=(self.root/'state'/f'{cid}.json').exists()

@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Minimal capture input v1",
+  "description": "A .capture.json adapter input, expanded by the desktop into a canonical capture. The producer supplies capture time, never import time.",
+  "type": "object",
+  "properties": {
+    "captured_at": {"type": "string", "minLength": 1},
+    "original_value": {"type": "string", "minLength": 1},
+    "user_note": {"type": "string"},
+    "requested_collections": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    }
+  },
+  "required": ["captured_at", "original_value"],
+  "additionalProperties": false
+}

@@ -2,11 +2,11 @@
 
 Use for saving a shared link/text/file, importing a synced Inbox, finding saved items, adding notes, moving memberships, processing pending captures or tracing a saved result. You operate scripts; users should not see internal IDs unless requested. The core contract is independent of iCloud and the phone adapter.
 
-Resolve PROJECT and SKILL_ROOT as usual. Don't guess the synced Inbox location or silently import an entire personal drive. Use a folder the user identifies, or locate a previously specified folder. The iPhone setup is [documented here](../docs/iphone-shortcut.md). If no phone Shortcut exists, explain that the proof requires one-time manual assembly; do not claim it has been installed.
+Resolve PROJECT and SKILL_ROOT as usual. Don't guess the synced Inbox location or silently import an entire personal drive. Use a folder the user identifies, or locate a previously specified folder. The iPhone setup is [documented here](../docs/iphone-shortcut.md). If no phone Shortcut exists, explain that the proof requires one-time four-action manual assembly; do not claim it has been installed.
 
 ## Save and manage
 
-Use `ec.py capture --project PROJECT --action import --inbox FOLDER` to import available envelopes. Import is cheap storage only. Retry safely after sync; report per-file issues without making valid captures fail. Do not delete remote/synced files. Local project state is authoritative for subsequent processing; no background service or bidirectional state sync exists.
+Use `ec.py capture --project PROJECT --action import --inbox FOLDER` to import available canonical envelopes or minimal `.capture.json` inputs. The minimal adapter generates metadata on desktop; it still requires actual shared text and a timezone-aware capture timestamp. Do not substitute import time or file modification time. Existing full captures remain supported. Import is cheap storage only. Retry safely after sync; report per-file issues without making valid captures fail. Do not delete remote/synced files. Local project state is authoritative for subsequent processing; no background service or bidirectional state sync exists.
 
 For directly supplied text/URLs/files, use `scripts/capture_write.py --inbox PROJECT/.expertise-compiler/capture-drop` with `--url`, `--text-file`, `--file`, `--note`, `--collection` and `--title` only when actually supplied, then import that folder. Preserve exact text in a UTF-8 file before passing it; do not interpolate arbitrary user text into shell commands. Set an honest origin. Never create a transcript or infer a recipe from a URL. Saving alone does not authorize extraction or a Capability Map.
 

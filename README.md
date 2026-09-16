@@ -127,7 +127,7 @@ Later:
 
 Capture stores supplied data without running extraction or rebuilding capabilities. Personal notes remain separate from source content. A source can belong to several collections while sharing its underlying files.
 
-**The first phone adapter is an [iPhone Share Sheet Shortcut proof of concept](docs/iphone-shortcut.md).** It writes URL/text records to a synced folder, which the desktop imports on request. It requires one-time manual setup; it is not an installable mobile app, and real-device/iCloud testing remains outstanding.
+**The first phone adapter is an [iPhone Share Sheet Shortcut proof of concept](docs/iphone-shortcut.md).** It writes URL/text records to a synced folder, which the desktop imports on request. The one-time setup uses four actions; the desktop generates IDs and record metadata. It is not an installable mobile app, and real-device/iCloud testing remains outstanding.
 
 A saved link is not retrieved content. V1 preserves URLs and supplied attachment bytes; it does not scrape social platforms, fetch article bodies, parse PDFs, perform OCR or transcribe media. Only actual supplied text and supported transcript files can feed expertise processing today.
 

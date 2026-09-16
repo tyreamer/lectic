@@ -194,6 +194,8 @@ Start with 2–5 supplied text/transcript files per participant, then include a 
 
 Give 2–4 participants an optional capture track across the existing groups. Let them save a few items encountered naturally, including a URL-only item and actual shared text. Record save success, sync delay, import retries, repeated-import duplicates, annotation handling and a later real use. Don't hand-curate every capture into a complete transcript. Failed retrieval is an expected V1 limitation; if users consistently need link-to-content retrieval to get any value, that is still a product finding, not a problem to hide by silently preparing sources for them.
 
+Use the new four-action Shortcut recipe for fresh installs; keep a legacy-format case in the facilitator's compatibility checks. Measure installation minutes separately from recurring save time, and record every intervention configuring variables, dates, filenames or folder permissions. Check that the JSON timestamp reflects the phone capture time even after delayed sync; rename a file while retaining `.capture.json` and reimport without duplicates. Device-test the date formatting and dictionary serialization before claiming easier onboarding. A smaller action count alone is not evidence that users can set it up unaided.
+
 Use a relevant supported job as the primary application task when the material permits it. Keep deliberately unsupported requests as separate diagnostic probes: an honest refusal can pass a fidelity check without counting as a completed useful artifact. If a person's actual material supports no useful job for them, record that unmet need rather than inventing an opportunity or quietly replacing their corpus.
 
 ## Make the baseline comparison fair

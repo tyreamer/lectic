@@ -13,7 +13,7 @@ Build intent ultimately needs independent inclusion/exclusion choices: reasoning
 | Responsibility | Current implementation | Boundary to preserve |
 | --- | --- | --- |
 | Capture and personal context | scripts/capture_store.py; capture schemas | Saved input and annotations are distinct from source truth |
-| First capture adapter | scripts/capture_write.py; docs/iphone-shortcut.md | Synced-folder transport independent of compiler/provider |
+| First capture adapter | scripts/capture_input.py; scripts/capture_write.py; docs/iphone-shortcut.md | Synced-folder transport independent of compiler/provider |
 | Sources, IR, validation | schemas and parts of scripts/ec.py | Provider-neutral source and knowledge records |
 | Collections and revisions | scripts/collection_store.py | Durable private archive independent of builds |
 | Opportunity discovery | scripts/capability_maps.py; discovery prompt | Replaceable, versioned interpretation of IR |
@@ -45,6 +45,8 @@ These are explicit follow-up constraints, not implemented features or reasons to
 The architecture now includes capture → sources/collections → expertise compiler → builds/outcomes. `capture_store.py` owns immutable envelopes, attachment blobs, annotation events and mutable membership/processing state. `capture_write.py` is a reference producer for the generic folder contract. The iPhone Shortcut is a first adapter described in `docs/iphone-shortcut.md`; there is no iCloud API in the core, native application, hosted backend, watcher or retrieval service.
 
 Capture and annotation schemas are independent of source and IR schemas. A capture preserves original shared value, known URL/title/type, attachment references, timestamp and entry provenance. A separate state record tracks import identity, multiple stable collection IDs, normalized source IDs and processing issues. Notes never enter normalized segments. New build briefs snapshot relevant capture context privately; later notes cannot mutate old builds or become source evidence. Trace operations follow cited result units to historical source IDs and then to captures.
+
+The minimal share adapter only requires original shared content and capture time. `capture_input.py` expands `.capture.json` inputs into the existing canonical schema at import: stable identity, URL detection, type, status and provenance belong on desktop, where they are testable and updateable without rebuilding each phone Shortcut. Capture time must still come from the producer, since sync/import time is not capture time. Personal notes remain separate optional fields. The four-action phone recipe and full legacy records feed the same core; the core never assumes that a file's adapter label authenticates its originating device. See the [minimal input contract](docs/CAPTURE.md#minimal-share-input-adapter) for timestamp/identity and same-time duplicate semantics.
 
 Import is idempotent by capture ID and envelope fingerprint. Attachment blobs are content-addressed; different intentional captures may retain separate notes while sharing source content. A repeated ID with different data is an error, not an update. Synced JSON records are commit markers written after attachments. Missing files and early annotation events retry on a later explicit import. Original synced files remain untouched. A local OS writer lock serializes capture CLI mutations and releases on process exit; the project does not merge competing desktop replicas.
 
