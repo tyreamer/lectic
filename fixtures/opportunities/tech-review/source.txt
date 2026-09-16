@@ -1,0 +1,7 @@
+Translate a specification into the task it changes for a particular user.
+
+List the intended tasks, inspect observations for each task, then compare the nearest alternative.
+
+Smooth playback of one basic edit does not establish that an effects-heavy project runs smoothly.
+
+Label an untested workload as unknown rather than extending an observation to it.

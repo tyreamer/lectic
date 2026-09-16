@@ -152,10 +152,11 @@ def work(*, project='.', input=None, metadata=None, collection=None, name=None, 
             from capture_store import CaptureStore
             CaptureStore(project).refresh_status()
         return respond('knowledge_saved',summary=library.inspect(data['collection_id']),ir_hash=fingerprint(ir),
-                       message='Sources and reviewed knowledge saved; no user goal, result or skill was invented.')
+                       message='Sources and reviewed knowledge saved; no user goal, result or skill was invented.',
+                       guidance=str(ROOT/'prompts/guide-use.md'))
     if action in {'save','add','remove','replace'} and brief is None:
         return respond('archived', transcripts=len(docs), message='Sources saved locally; no method or skill was forced.',
-                       revision_count=len(data['revisions']))
+                       revision_count=len(data['revisions']),guidance=str(ROOT/'prompts/guide-use.md'))
     if action == 'export':
         require(state.get('last_build'), 'There is no completed method to export yet')
         build = safe_child(folder,state['last_build']); validate_build(build)
@@ -312,4 +313,5 @@ def work(*, project='.', input=None, metadata=None, collection=None, name=None, 
     state['last_build']=destination.relative_to(folder).as_posix(); write(state_path,state)
     method_location=destination/'method.md' if generic else destination / 'method' / method['capability']['capability_id'] / 'SKILL.md'
     return respond('complete',result=str(destination / 'result.md'),method=str(method_location),
-                   build=str(destination),validation=verification,limits=result['limitations'],unsupported=result['unsupported'])
+                   build=str(destination),validation=verification,limits=result['limitations'],unsupported=result['unsupported'],
+                   guidance=str(ROOT/'prompts/guide-use.md'))

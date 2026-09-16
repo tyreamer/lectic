@@ -26,5 +26,71 @@
     ["principle","Expert A recommends launching a small trial after one confirmed customer commitment."],
     ["principle","Expert B recommends waiting for three independent customer commitments before launching a small trial."],
     ["example","With one confirmed commitment, A would launch while B would wait."],
-    ["warning","These thresholds describe small reversible trials, not full product launches."]]}
+    ["warning","These thresholds describe small reversible trials, not full product launches."]]},
+  {
+    "domain": "tech-review",
+    "title": "Workload Fit Reviewer",
+    "categories": [
+      "review",
+      "decide"
+    ],
+    "second_title": "Review Test Planner",
+    "second_categories": [
+      "plan",
+      "evaluate"
+    ],
+    "input": "A review draft, target user and actual test observations.",
+    "output": "Unsupported claims, workflow tradeoffs and specific tests still needed.",
+    "rules": [
+      [
+        "principle",
+        "Translate a specification into the task it changes for a particular user."
+      ],
+      [
+        "procedure",
+        "List the intended tasks, inspect observations for each task, then compare the nearest alternative."
+      ],
+      [
+        "example",
+        "Smooth playback of one basic edit does not establish that an effects-heavy project runs smoothly."
+      ],
+      [
+        "warning",
+        "Label an untested workload as unknown rather than extending an observation to it."
+      ]
+    ]
+  },
+  {
+    "domain": "comedy-method",
+    "title": "Absurd Procedure Workshop",
+    "categories": [
+      "create",
+      "improve"
+    ],
+    "second_title": "Scene Logic Reviewer",
+    "second_categories": [
+      "review",
+      "learn"
+    ],
+    "input": "An ordinary inconvenience and an original premise or scene draft.",
+    "output": "A premise, escalating beats, or a critique of how the invented procedure creates the next problem.",
+    "rules": [
+      [
+        "principle",
+        "Make a small inconvenience motivate a disproportionate formal procedure."
+      ],
+      [
+        "procedure",
+        "State the ordinary goal, invent a rule, then make each attempted solution create a new cost."
+      ],
+      [
+        "example",
+        "A fictional office requires an appointment to request fewer meetings, then adds a meeting to approve the appointment."
+      ],
+      [
+        "warning",
+        "Keep the internal logic legible and use invented consenting characters; the exercise is not a plan to deceive real people."
+      ]
+    ]
+  }
 ]

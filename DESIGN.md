@@ -17,6 +17,7 @@ Build intent ultimately needs independent inclusion/exclusion choices: reasoning
 | Sources, IR, validation | schemas and parts of scripts/ec.py | Provider-neutral source and knowledge records |
 | Collections and revisions | scripts/collection_store.py | Durable private archive independent of builds |
 | Opportunity discovery | scripts/capability_maps.py; discovery prompt | Replaceable, versioned interpretation of IR |
+| Library and next-use guidance | scripts/library_guide.py; use-guide schema; guide-use prompt | Read actual saved state; keep personal applications separate from IR and exports |
 | Goals and compilation | scripts/goal_workflow.py; extraction/reconciliation prompts | Interpret intent, select expertise and preserve evidence |
 | Current text outcome targets | scripts/outcomes.py | Rendering and goal contracts, not an exhaustive expertise taxonomy |
 | Agent Skills target | scripts/scoped_export.py; rendering in scripts/ec.py | Scoped export consuming core records |

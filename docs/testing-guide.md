@@ -233,6 +233,10 @@ Human reviewers should know the domain/source content. Review at least the decis
 
 ## Proposed decision gates: freeze before Wave 2
 
+Before interpreting reuse results, run the [guided-use acceptance](GUIDED-USE.md#live-acceptance). After the first result, ask the participant to explain in their own words what was saved, which method is ready, and what they would use it for next. Record whether the assistant supplied a useful example without being asked. In a fresh session, have them find that method and choose a new application without a facilitator naming it. A returned file path alone does not pass this comprehension check.
+
+Test guidance both with no personal context and with an explicitly supplied role. Correct the role once and check that the assistant adjusts, attributes the context honestly and leaves source evidence unchanged. Keep suggestions grounded: an unbuilt opportunity, an outdated method or unavailable source must not become “ready” through persuasive wording. Record context-assumption errors and map/guide numbering mistakes as usability failures. Do not substitute these checks for the existing comparison against ordinary chat.
+
 These thresholds are **proposed product decisions**, not scientific benchmarks or existing results. Adopt or revise them once before the second wave, record the choice, then don't move them after seeing outcomes. Report raw counts alongside percentages, by wave and group. With 10–14 testers, treat findings as directional evidence and failure diagnosis, not proof of population-wide superiority.
 
 | Gate | Proposed threshold | If missed |

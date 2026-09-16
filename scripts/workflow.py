@@ -192,6 +192,7 @@ def compile_workflow(input=None, output=None, *, project='.', metadata=None, int
         session['last_built'] = {'run': session['active_run'], 'capability_id': built[0]['id']}
         write(session_path, session)
     result = response('use' if intent == 'use' else 'ready', summary=capability_summary(), built=built)
+    result['guidance'] = str(ROOT / 'prompts/guide-use.md')
     if intent == 'compare':
         require(len(built) == 1, 'Compare one capability at a time')
         task_path = (project / tasks).resolve() if tasks else run / 'evaluation/tasks.json'

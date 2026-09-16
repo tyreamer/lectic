@@ -500,6 +500,12 @@ def status(run):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest='command', required=True)
+    p = sub.add_parser('library', help='Read saved methods, results, possibilities and availability without processing')
+    p.add_argument('--project', default='.'); p.add_argument('--collection')
+    p = sub.add_parser('guide', help='Prepare, save, show or select grounded next uses from the saved library')
+    p.add_argument('--project', default='.'); p.add_argument('--collection')
+    p.add_argument('--action', choices=['prepare','save','show','select'], default='prepare')
+    p.add_argument('--draft'); p.add_argument('--guide-id'); p.add_argument('--select')
     p = sub.add_parser('capture', help='Import and manage cheap captures; process only on request')
     p.add_argument('--project', default='.'); p.add_argument('--collection')
     p.add_argument('--action', choices=['import','list','show','add','move','remove','note','process','trace'], default='list')
@@ -534,7 +540,14 @@ def main():
     p = sub.add_parser('validate-package'); p.add_argument('folder')
     args = parser.parse_args()
     try:
-        if args.command == 'capture':
+        if args.command == 'library':
+            from library_guide import library_view
+            result = library_view(args.project, args.collection)
+        elif args.command == 'guide':
+            from library_guide import use_guide
+            result = use_guide(project=args.project,collection=args.collection,action=args.action,
+                               draft=args.draft,guide_id=args.guide_id,select=args.select)
+        elif args.command == 'capture':
             from capture_store import capture_command
             result = capture_command(project=args.project,action=args.action,inbox=args.inbox,collection=args.collection,
                                      items=args.items,to=args.to,query=args.query,since=args.since,until=args.until,

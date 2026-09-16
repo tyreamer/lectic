@@ -158,7 +158,7 @@ def compare_maps(old,new):
 
 
 def capability_map(*,project='.',collection=None,action='discover',draft=None,map_id=None,
-                   before=None,select=None,regenerate=False,reconciled=False):
+                   before=None,select=None,regenerate=False,reconciled=False,use_context=None):
     from goal_workflow import compiler_hash, work
     library=Library(project); resolved=library.resolve(collection)
     require(resolved is not None, 'Save a collection before discovering opportunities')
@@ -205,6 +205,11 @@ def capability_map(*,project='.',collection=None,action='discover',draft=None,ma
                                        'Produce a usable method; do not just repeat the opportunity pitch.',
                                        'Explain supported delivery forms without claiming future integrations exist.']}
             path=folder/'map-selections'/f"{chosen_id}-{opportunity['opportunity_id']}.json"
+            if use_context is not None:
+                # Keep the selected application through interruption/building, in
+                # private intent context rather than changing source knowledge.
+                brief['context'] += '\n\nSelected next use (personal intent, not source evidence):\n' + json.dumps(use_context,ensure_ascii=False)
+                path=path.with_name(path.stem+'-'+fingerprint(use_context)[:16]+'.json')
             if path.exists(): require(read(path)==brief,'Saved selection differs')
             else: write(path,brief)
             result=work(project=project,collection=data['collection_id'],brief=str(path))
@@ -212,7 +217,7 @@ def capability_map(*,project='.',collection=None,action='discover',draft=None,ma
         if chosen_id not in index['maps']: index['maps'].append(chosen_id)
         index['last_shown']=chosen_id; write(index_path,index)
         active_run=library.run(folder,data)
-        return {'phase':'capability_map','map':record,'markdown':render_map(record),
+        return {'phase':'capability_map','map':record,'markdown':render_map(record),'guidance':str(ROOT/'prompts/guide-use.md'),
                 'stale_source_revision':record['binding']['source_revision']!=data['active_revision'],
                 'stale_knowledge_revision':not (active_run/'ir.json').exists() or fingerprint(validate_ir(active_run))!=record['binding']['ir_hash']}
     require(action=='discover','Unknown Capability Map action')
@@ -226,7 +231,7 @@ def capability_map(*,project='.',collection=None,action='discover',draft=None,ma
             record=load_map(folder,data,uid)
             if record['binding']==binding:
                 index['last_shown']=uid;write(index_path,index)
-                return {'phase':'capability_map','map':record,'markdown':render_map(record)}
+                return {'phase':'capability_map','map':record,'markdown':render_map(record),'guidance':str(ROOT/'prompts/guide-use.md')}
     draft_path=folder/'maps/drafts'/f'{fingerprint(binding)}.json'
     if draft:
         draft_path=(Path(project)/draft).resolve()
@@ -243,4 +248,4 @@ def capability_map(*,project='.',collection=None,action='discover',draft=None,ma
     text_write(folder/'maps'/f'{uid}.md',render_map(record))
     if uid not in index['maps']: index['maps'].append(uid)
     index['last_shown']=uid;write(index_path,index)
-    return {'phase':'capability_map','map':record,'path':str(destination),'markdown':render_map(record)}
+    return {'phase':'capability_map','map':record,'path':str(destination),'markdown':render_map(record),'guidance':str(ROOT/'prompts/guide-use.md')}

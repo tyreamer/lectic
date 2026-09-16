@@ -1,0 +1,119 @@
+{
+  "notice": "Authored synthetic context and suggestions for contract tests, not real user memory or live AI quality evidence.",
+  "cases": [
+    {
+      "domain": "tech-review",
+      "context": [
+        {
+          "context_id": "role",
+          "text": "I make video game review videos.",
+          "origin": "user_message",
+          "source": "Explicit synthetic user message.",
+          "status": "provided"
+        }
+      ],
+      "uses": [
+        {
+          "opportunity": 0,
+          "title": "Strengthen a review script",
+          "input": "Your draft, intended audience and tests you actually ran.",
+          "output": "Claims that exceed the observations, workflow-specific caveats and proposed wording.",
+          "why_useful": "For your review videos, translate hardware observations into claims you can support.",
+          "try_prompt": "Use these workload-fit criteria to review this script. Flag untested claims and suggest revisions.",
+          "limits": [
+            "The saved lesson does not supply game benchmarks or establish game quality."
+          ],
+          "context_ids": [
+            "role"
+          ]
+        },
+        {
+          "opportunity": 1,
+          "title": "Plan the tests your review is missing",
+          "input": "A product claim and the real workloads you want to discuss.",
+          "output": "A short list of observations needed before making each recommendation.",
+          "why_useful": "Know what evidence to collect before recording a verdict.",
+          "try_prompt": "Use my review methods to plan the missing workload tests for this video.",
+          "limits": [
+            "This produces a test plan, not completed measurements."
+          ],
+          "context_ids": [
+            "role"
+          ]
+        }
+      ]
+    },
+    {
+      "domain": "comedy-method",
+      "context": [],
+      "uses": [
+        {
+          "opportunity": 0,
+          "title": "Develop an original sketch premise",
+          "input": "A mundane inconvenience and a fictional setting.",
+          "output": "A premise in which an excessive procedure creates the next problem.",
+          "why_useful": "Start from an everyday situation without copying a source scene.",
+          "try_prompt": "Use the saved absurd-procedure method to develop a premise about scheduling a team lunch.",
+          "limits": [
+            "High-level structural technique; no claim of reproducing a specific person."
+          ],
+          "context_ids": []
+        },
+        {
+          "opportunity": 0,
+          "title": "Turn a premise into escalating beats",
+          "input": "Your original premise and the character's ordinary goal.",
+          "output": "A beat outline where each attempted solution creates a new cost.",
+          "why_useful": "Move from a funny setup to a scene that develops.",
+          "try_prompt": "Use this method to outline five escalating beats for my premise.",
+          "limits": [
+            "Keep the invented rule understandable; comedic effectiveness remains subjective."
+          ],
+          "context_ids": []
+        },
+        {
+          "opportunity": 1,
+          "title": "Find where a draft loses its internal logic",
+          "input": "Your scene draft.",
+          "output": "Places where escalation feels arbitrary and concrete revision suggestions.",
+          "why_useful": "Revise existing work instead of always asking for a new skit.",
+          "try_prompt": "Review this draft against the saved procedure-and-consequence criteria.",
+          "limits": [
+            "A source-based critique, not a prediction of audience reaction."
+          ],
+          "context_ids": []
+        }
+      ]
+    },
+    {
+      "domain": "photography",
+      "context": [],
+      "uses": [
+        {
+          "opportunity": 0,
+          "title": "Plan a retake of a blurry portrait",
+          "input": "The image or an accurate description of sharp and blurred areas, plus camera settings.",
+          "output": "A focus-versus-motion diagnosis order and the next retake checks.",
+          "why_useful": "Avoid changing shutter speed when the problem is the focus plane.",
+          "try_prompt": "Use my portrait troubleshooting method to plan a retake from these observations.",
+          "limits": [
+            "The saved lesson does not cover lighting, composition or pricing."
+          ],
+          "context_ids": []
+        },
+        {
+          "opportunity": 1,
+          "title": "Review a planned focus fix",
+          "input": "Your proposed camera-setting changes and observed blur.",
+          "output": "Which changes address the observed failure and what remains untested.",
+          "why_useful": "Check the reasoning before another shoot.",
+          "try_prompt": "Review my proposed fix against the saved focus and motion distinctions.",
+          "limits": [
+            "No claim to inspect an image unless the host actually supports and receives it."
+          ],
+          "context_ids": []
+        }
+      ]
+    }
+  ]
+}

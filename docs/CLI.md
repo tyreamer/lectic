@@ -1,5 +1,7 @@
 # Internal command reference
 
+For a returning user's saved library, run `python scripts/ec.py library --project PROJECT`. It is read-only. The `guide` coordinator prepares, saves, shows and selects private next-use suggestions grounded in that library. See [guided use](GUIDED-USE.md#implementation-and-persistence) for the exact workflow. These commands are operated by the assistant; users can ask what is saved and what they could do with it.
+
 These commands are for the assistant, contributors, and advanced debugging. Normal users install the skill and talk to it; see [README](../README.md). Run from a user's project and resolve the installed scripts by absolute path. Relative input/output/metadata paths resolve against `--project` for the coordinator.
 
 ## Goal coordinator

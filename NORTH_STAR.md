@@ -2,6 +2,8 @@
 
 Lectic takes trusted human content and compiles its useful expertise into a durable, structured, evidence-preserving representation. People building with AI can select and rebuild that expertise toward different goals, capabilities and runtimes.
 
+The assistant interface should actively explain what has been saved and suggest concrete, supported applications before asking users to invent a goal. A readable library and private next-use guides expose the value of durable expertise. Relevant context actually available from the user or host may personalize those guides; it is not source truth, a global identity profile or an assumed connection to platform memory. These presentation artifacts remain separate from IR and portable build targets.
+
 **Delphi digitizes the expert. Lectic compiles the expertise.**
 
 This is product-direction shorthand, not a verified comparison of another company's features. The architectural distinction is: **digital person platforms package the person; Lectic packages reusable pieces of the expertise.** Recreating a person is neither required nor the default.

@@ -1,0 +1,175 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Private next-use guide; distinct from source truth",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "binding_hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "saved_summary": {
+      "type": "string",
+      "minLength": 1
+    },
+    "context": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "context_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1
+          },
+          "origin": {
+            "enum": [
+              "user_message",
+              "saved_user_context",
+              "host_memory"
+            ]
+          },
+          "source": {
+            "type": "string",
+            "minLength": 1
+          },
+          "status": {
+            "enum": [
+              "provided",
+              "tentative"
+            ]
+          }
+        },
+        "required": [
+          "context_id",
+          "text",
+          "origin",
+          "source",
+          "status"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 0,
+      "maxItems": 5
+    },
+    "cards": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "card_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "reference": {
+            "type": "string",
+            "minLength": 1
+          },
+          "availability": {
+            "enum": [
+              "ready",
+              "build_first",
+              "saved_version"
+            ]
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "input": {
+            "type": "string",
+            "minLength": 1
+          },
+          "output": {
+            "type": "string",
+            "minLength": 1
+          },
+          "why_useful": {
+            "type": "string",
+            "minLength": 1
+          },
+          "try_prompt": {
+            "type": "string",
+            "minLength": 1
+          },
+          "limits": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 1
+          },
+          "unit_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 1,
+            "uniqueItems": true
+          },
+          "context_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 0,
+            "uniqueItems": true
+          }
+        },
+        "required": [
+          "card_id",
+          "reference",
+          "availability",
+          "title",
+          "input",
+          "output",
+          "why_useful",
+          "try_prompt",
+          "limits",
+          "unit_ids",
+          "context_ids"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 0,
+      "maxItems": 3
+    },
+    "recommended_card": {
+      "type": "string"
+    },
+    "recommendation_reason": {
+      "type": "string",
+      "minLength": 1
+    },
+    "question": {
+      "type": "string"
+    },
+    "no_suggestions_reason": {
+      "type": "string"
+    },
+    "semantic_review": {
+      "const": "assistant-reviewed"
+    }
+  },
+  "required": [
+    "schema_version",
+    "binding_hash",
+    "saved_summary",
+    "context",
+    "cards",
+    "recommended_card",
+    "recommendation_reason",
+    "question",
+    "no_suggestions_reason",
+    "semantic_review"
+  ],
+  "additionalProperties": false
+}

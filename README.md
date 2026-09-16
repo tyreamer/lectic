@@ -66,11 +66,17 @@ Choose a shown opportunity:
 
 The compiler carries its evidence, boundaries and input/output contract into a reusable method. No technical artifact choice is required. Apply it to real work, or ask for a skill export when you need one.
 
+Afterward, the assistant explains **what was saved**, **what you can use now**, and **what else you could produce**. Expect a few concrete input/output examples and a suggested first use, with existing methods separated from possible new builds. Relevant context you've actually shared can help tailor those suggestions.
+
 Already know your goal? Go directly to the task:
 
 > Use My Research to review my plan in ./plan.md. Preserve the original, save an improved version, and explain the changes using the sources.
 
 Return in a new session in the **same project** to use the collection again. Your sources and earlier builds remain available without another upload.
+
+> Show me what Lectic has saved here. What can I use now, and what are three useful things I could do next?
+
+Lectic reads the saved library and can reopen its next-use guide. It does not assume access to another platform's memory or to every project on your computer. [Saved library and guided use →](docs/GUIDED-USE.md)
 
 ## What you can build
 
@@ -161,6 +167,7 @@ We are testing with **AI builders, consultants, creators and knowledge-heavy pro
 | Guide | Purpose |
 | --- | --- |
 | [Installation](docs/INSTALLATION.md) | Setup, updates and troubleshooting |
+| [Guided use](docs/GUIDED-USE.md) | See what is saved, discover concrete applications and reuse it |
 | [iPhone Shortcut](docs/iphone-shortcut.md) | Capture setup and exact first live test |
 | [Evaluation](docs/EVALUATION.md) | Compare against capable ordinary transcript chat |
 | [Architecture](DESIGN.md) | Current boundaries, storage and limitations |

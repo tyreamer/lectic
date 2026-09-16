@@ -1,6 +1,6 @@
 ---
 name: expertise-compiler
-description: Capture valuable links, text and files for later; manage Inbox, notes and collection memberships. Discover what processed content can become with grounded Capability Maps, or apply saved expertise to a known goal. Build selected opportunities and reuse source-backed methods across work, learning and decisions.
+description: Save valuable content, show what is saved and ready to use, suggest concrete ways to use it, and apply source-backed methods to real work. Use for returning to saved expertise, discovering what content can become, building a selected opportunity, or managing captures and collections.
 license: MIT
 ---
 
@@ -15,6 +15,8 @@ Give your AI content you trust. If you don't know what to build, discover its st
 Requires local file/command access and Python 3.10+. No model API calls or third-party Python runtime packages. You supply reasoning and operate the scripts. Never ask users to run Python, edit JSON, choose internal IDs or manage stages. Do not claim execution without saved, validated artifacts.
 
 ## Understand the work
+
+For “What did we save?”, “What can I use?”, “What else can I do with it?” or returning to a collection, read the saved library and follow [guide-use.md](prompts/guide-use.md). Distinguish saved sources, ready methods, previous results and possible new builds. Proactively show concrete input/output examples and a next-use request; don't make the user invent the applications. Tailor suggestions using only relevant user context actually available, never a guessed profile or an assumed connection to platform memory.
 
 For “save this link,” share/capture requests, Inbox management or deferred processing, follow [capture.md](prompts/capture.md) first. Capture means cheap storage, not permission to extract, discover or compile. Personal notes remain separate from sources. If a later goal uses a capture-fed collection, process available pending material when useful and disclose unavailable linked content. The [iPhone Shortcut proof](docs/iphone-shortcut.md) is the first folder-based adapter, not an installed native app.
 
@@ -52,7 +54,7 @@ Read [extract](prompts/extract.md), [reconcile](prompts/reconcile.md) and [goal-
 
 Review the result against the brief and source meaning before acknowledging semantic review. Separate additional general advice from source-derived findings. Explain unsupported judgments; do not manufacture a method to fill a format.
 
-Only announce a completed result after `validate-build` passes. Lead with the requested outcome and link to its saved result; optionally mention the saved method. New general outcomes do not create a skill package until export is requested. For archive-only or knowledge preparation, describe exactly what was saved, never imply a result exists. A saved guided procedure is not proof the user executed it. Distinguish structural integrity, evidence linkage, assistant semantic review and effectiveness testing.
+Only announce a completed result after `validate-build` passes. Lead with the requested outcome and link to its saved result. Make the saved reusable method visible and provide a grounded next use with an example request following [guide-use.md](prompts/guide-use.md). New general outcomes do not create a skill package until export is requested. For archive-only or knowledge preparation, describe exactly what was saved, never imply a result exists. A saved guided procedure is not proof the user executed it. Distinguish structural integrity, evidence linkage, assistant semantic review and effectiveness testing.
 
 Full originals and user drafts stay in private collections. Scoped methods contain relevant quotations, which may still need permission to share. No automatic publishing, global installation or remote transmission through tools.
 

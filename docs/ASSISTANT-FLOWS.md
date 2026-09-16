@@ -24,7 +24,7 @@ For generality repeat review/improvement with photography, using a draft that co
 
 ## Photography
 
-The following legacy discovery cases remain supported when discovery is explicitly requested. For content with no goal, the new default first asks what the user hopes to accomplish.
+The following legacy discovery cases remain supported when discovery is explicitly requested. For content with no goal and no storage-only restriction, the current default discovers supported opportunities and suggests concrete applications before asking what would help. Returning users get the [saved library and use guide](GUIDED-USE.md).
 
 1. “Explore what's useful in ./fixtures/photography.” The assistant reads the transcript and offers a few grounded possibilities without forcing a skill.
 2. “What useful capabilities can this corpus support?” It explains a narrow handheld blur/focus review. It must not claim coverage of composition or commercial pricing.
