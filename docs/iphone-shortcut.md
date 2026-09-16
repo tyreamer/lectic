@@ -4,11 +4,13 @@ Save a link or selected text to Inbox. The **desktop generates the metadata**; y
 
 This is a simpler manual setup, **not an installable Shortcut link yet**. The importer is tested; the action configuration and actual iCloud delivery still need testing on an iPhone. A prebuilt, device-tested iCloud Shortcut link remains the next distribution step.
 
+Existing shortcuts and an `Expertise Compiler/Inbox` folder still work. Keep importing your existing folder; you do not need to move saved captures or recreate a working Shortcut for the rebrand. New setups below use Lectic.
+
 ## Set up once
 
-In Files, create **iCloud Drive → Expertise Compiler → Inbox**. Enable iCloud Drive on your desktop and make that folder available offline. Keep your compiler project outside this synced folder. [Apple's Windows setup](https://support.apple.com/guide/icloud-windows/icw0144825a5/icloud).
+In Files, create **iCloud Drive → Lectic → Inbox**. Enable iCloud Drive on your desktop and make that folder available offline. Keep your compiler project outside this synced folder. [Apple's Windows setup](https://support.apple.com/guide/icloud-windows/icw0144825a5/icloud).
 
-In Shortcuts, create **Expertise Compiler**. Enable **Show in Share Sheet**, accepting **URLs** and **Text**. Set absent input to stop. This basic version is for one shared link or selected text at a time; don't enable images/video/files and convert them to text.
+In Shortcuts, create **Lectic**. Enable **Show in Share Sheet**, accepting **URLs** and **Text**. Set absent input to stop. This basic version is for one shared link or selected text at a time; don't enable images/video/files and convert them to text.
 
 Add these **four actions**. Blue variable tokens are selected from the variable picker, not typed as literal words. Apple supports [formatting dates inside variables](https://support.apple.com/en-jo/guide/shortcuts/apd71b0ac246/ios) and [custom date formats](https://support.apple.com/en-in/guide/shortcuts/apd8d9b19184/ios).
 
@@ -39,7 +41,7 @@ Set this date token's format to **Custom**: `yyyyMMdd-HHmmssSSS`. Example filena
 
 Input: the **Renamed Item** from action 3.
 
-- Destination: **iCloud Drive/Expertise Compiler/Inbox**.
+- Destination: **iCloud Drive/Lectic/Inbox**.
 - **Ask Where to Save: off**.
 - **Overwrite If File Exists: off**.
 
@@ -59,7 +61,7 @@ Capture IDs derive from the capture time and exact shared value. Two identical s
 
 Use the actual downloaded folder on your desktop:
 
-> Import captures from [my synced Expertise Compiler Inbox path]. Show what's saved and what still needs content. Don't compile anything yet.
+> Import captures from [my synced Lectic Inbox path]. Show what's saved and what still needs content. Don't compile anything yet.
 
 Then, when useful:
 
@@ -73,7 +75,7 @@ Optional phone context can be added later using a separate Shortcut variant: the
 
 ## Exact first live test
 
-1. In Safari, share a page → **Expertise Compiler**. In Files, confirm one `.capture.json` file exists with the actual URL and timezone-aware capture time.
+1. In Safari, share a page → **Lectic**. In Files, confirm one `.capture.json` file exists with the actual URL and timezone-aware capture time.
 2. From Notes, select and share: **For two servings, cook 200 g dry pasta and mix with 250 g tomato sauce.** Confirm a second file exists.
 3. Wait for desktop download. Ask the assistant to import twice. Expect **two captures, no duplicates, no compilation**. The URL should say awaiting retrieval.
 4. Say: **“Move the pasta text to Dinner Ideas. Add the note 'Good for a weeknight.' Process its supplied text, then plan one dinner for two and list the ingredients. Do not infer anything from the saved URL.”**

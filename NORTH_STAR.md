@@ -1,10 +1,10 @@
-# Expertise Compiler: product north star
+# Lectic: product north star
 
-Expertise Compiler takes trusted human content and compiles its useful expertise into a durable, structured, evidence-preserving representation. People building with AI can select and rebuild that expertise toward different goals, capabilities and runtimes.
+Lectic takes trusted human content and compiles its useful expertise into a durable, structured, evidence-preserving representation. People building with AI can select and rebuild that expertise toward different goals, capabilities and runtimes.
 
-**Delphi digitizes the expert. Expertise Compiler compiles the expertise.**
+**Delphi digitizes the expert. Lectic compiles the expertise.**
 
-This is product-direction shorthand, not a verified comparison of another company's features. The architectural distinction is: **digital person platforms package the person; Expertise Compiler packages reusable pieces of the expertise.** Recreating a person is neither required nor the default.
+This is product-direction shorthand, not a verified comparison of another company's features. The architectural distinction is: **digital person platforms package the person; Lectic packages reusable pieces of the expertise.** Recreating a person is neither required nor the default.
 
 ## What the product is for
 

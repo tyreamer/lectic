@@ -1,6 +1,6 @@
 <div align="center">
 
-# Expertise Compiler
+# Lectic
 
 ### Turn trusted human content into reusable expertise for AI.
 
@@ -12,7 +12,7 @@
 
 </div>
 
-Expertise Compiler turns useful content into structured knowledge, reasoning patterns and methods with traceable evidence. Discover what a collection can become, build a capability, and reuse the same expertise for a different goal tomorrow.
+Lectic turns useful content into structured knowledge, reasoning patterns and methods with traceable evidence. Discover what a collection can become, build a capability, and reuse the same expertise for a different goal tomorrow.
 
 Built for developers, AI builders, consultants, creators and teams turning human methods into AI workflows.
 
@@ -33,18 +33,20 @@ You need **local Codex or Claude Code**, file and command access, and **Python 3
 
 ```text
 Use $skill-installer to install the repository root at
-https://github.com/tyreamer/expertise-compiler as a personal skill
+https://github.com/tyreamer/lectic as a personal skill
 named expertise-compiler, including its supporting files.
 ```
 
 **In Claude Code, send:**
 
 ```text
-Install https://github.com/tyreamer/expertise-compiler as my personal
+Install https://github.com/tyreamer/lectic as my personal
 expertise-compiler skill. Download and review the repository, then use
 its bundled installer to copy the complete skill to
 ~/.claude/skills/expertise-compiler. Preserve any existing installation.
 ```
+
+Lectic was previously named Expertise Compiler. The installed skill identifier remains `expertise-compiler` for compatibility; existing commands and `.expertise-compiler/` project data continue to work.
 
 Restart the assistant if the skill does not appear. For an existing installation, follow the update guidance rather than overwriting it. [Installation and troubleshooting →](docs/INSTALLATION.md)
 
@@ -94,7 +96,7 @@ Ordinary transcript chat can be useful. This project is designed to reduce the r
 
 The advantage over ordinary chat remains a hypothesis to test. Our [pilot strategy](docs/testing-guide.md) compares quality, setup cost, corrections, reuse and voluntary return.
 
-Digital person platforms package the person. **Expertise Compiler packages reusable pieces of the expertise.** The goal is portable methods and reasoning, with independently selectable components as the architecture evolves. [Read the north star →](NORTH_STAR.md)
+Digital person platforms package the person. **Lectic packages reusable pieces of the expertise.** The goal is portable methods and reasoning, with independently selectable components as the architecture evolves. [Read the north star →](NORTH_STAR.md)
 
 ## How it works
 
@@ -176,7 +178,7 @@ Run the existing suite from a checkout:
 python -m unittest discover -s tests -v
 ```
 
-[Report an issue](https://github.com/tyreamer/expertise-compiler/issues) with a minimal, sanitized example. Keep private corpora and client work out of public reports.
+[Report an issue](https://github.com/tyreamer/lectic/issues) with a minimal, sanitized example. Keep private corpora and client work out of public reports.
 
 ## License
 

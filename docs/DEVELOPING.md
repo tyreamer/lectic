@@ -24,7 +24,7 @@ python scripts/install_skill.py --dest /personal/skills/expertise-compiler
 
 Resolve the platform's destination first: Codex's installed `$skill-installer` chooses its personal directory; Claude Code uses `~/.claude/skills/expertise-compiler`. The copy helper accepts an explicit path and never downloads or silently overwrites a differing installation. It includes runtime resources and fixtures, but no `.git`, caches, or user work. Tests install to temporary directories; they do not change real user configuration.
 
-For Codex's bundled GitHub installer, use repository `tyreamer/expertise-compiler`, path `.`, and explicit name `expertise-compiler`. Follow the installed helper's actual syntax. For example, where that helper is present: `install-skill-from-github.py --repo tyreamer/expertise-compiler --path . --name expertise-compiler`. This is internal installation machinery; the README gives a chat request instead.
+For Codex's bundled GitHub installer, use repository `tyreamer/lectic`, path `.`, and explicit name `expertise-compiler`. Follow the installed helper's actual syntax. For example, where that helper is present: `install-skill-from-github.py --repo tyreamer/lectic --path . --name expertise-compiler`. This is internal installation machinery; the README gives a chat request instead.
 
 ## Structure
 

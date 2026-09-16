@@ -1,5 +1,5 @@
 interface:
-  display_name: "Expertise Compiler"
+  display_name: "Lectic"
   short_description: "Discover what your content can become, then build it"
   default_prompt: "Use $expertise-compiler to save these sources, discover their strongest supported opportunities, and recommend what to build first."
 policy:

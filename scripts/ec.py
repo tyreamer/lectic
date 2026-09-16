@@ -1,4 +1,4 @@
-"""Expertise Compiler: deterministic, offline plumbing. Python 3.10+, stdlib only."""
+"""Lectic: deterministic, offline plumbing. Python 3.10+, stdlib only."""
 from __future__ import annotations
 
 import argparse

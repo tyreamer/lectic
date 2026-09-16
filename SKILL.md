@@ -4,7 +4,9 @@ description: Capture valuable links, text and files for later; manage Inbox, not
 license: MIT
 ---
 
-# Expertise Compiler
+# Lectic
+
+Lectic retains the `expertise-compiler` skill identifier and project storage paths for compatibility.
 
 This installed skill is a conversational interface to the core compiler, not the product's architectural definition. [NORTH_STAR.md](NORTH_STAR.md) defines the durable, provider-independent expertise representation and extensible build direction. Today's intent contracts and Agent Skills export are supported interfaces/targets, not the limits of the expertise model.
 

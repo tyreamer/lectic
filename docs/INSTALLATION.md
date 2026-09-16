@@ -1,10 +1,10 @@
-# Install Expertise Compiler as a skill
+# Install Lectic as a skill
 
-The repository root is the skill. Keep its name `expertise-compiler` and include supporting folders, not just SKILL.md. Give the installation message in the README to your assistant; no manual terminal setup is needed.
+Lectic is the new product name; `expertise-compiler` remains the compatible installed skill identifier. Existing installations and `.expertise-compiler/` data folders do not need renaming. The repository root is the skill. Keep its name `expertise-compiler` and include supporting folders, not just SKILL.md. Give the installation message in the README to your assistant; no manual terminal setup is needed.
 
 ## Codex
 
-Ask `$skill-installer` to install the root of `tyreamer/expertise-compiler` under the explicit name `expertise-compiler`. The repository-relative skill path is `.`. The installed helper resolves its supported personal skill directory; follow it rather than assuming one universal directory across Codex versions. For a local development copy, ask Codex to use this repository's clean-copy installer with its personal skill directory as the destination.
+Ask `$skill-installer` to install the root of `tyreamer/lectic` under the explicit name `expertise-compiler`. The repository-relative skill path is `.`. The installed helper resolves its supported personal skill directory; follow it rather than assuming one universal directory across Codex versions. For a local development copy, ask Codex to use this repository's clean-copy installer with its personal skill directory as the destination.
 
 New installations are normally detected automatically; restart if absent. Describe your actual task, for example: “Use the transcripts in ./input to review my draft in ./plan.md for missing steps. Save this collection as Project Training for future work.” An explicit `$expertise-compiler` mention is an optional fallback. [Official Codex installation guidance](https://learn.chatgpt.com/docs/build-skills).
 

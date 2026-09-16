@@ -6,7 +6,7 @@ Automated fixtures test deterministic contracts. They do not certify natural-lan
 
 Send these requests in order. The assistant should handle files, paths, briefs and validators itself.
 
-1. “Use this checkout's Expertise Compiler. Save ./fixtures/universal/architecture as Enterprise AI Architecture. Prepare the knowledge for reuse; I don't need a skill export.” Expect saved sources and knowledge, no invented goal/result/package.
+1. “Use this checkout's Lectic. Save ./fixtures/universal/architecture as Enterprise AI Architecture. Prepare the knowledge for reuse; I don't need a skill export.” Expect saved sources and knowledge, no invented goal/result/package.
 2. “Use Enterprise AI Architecture to review this design: every service shares one permanent credential, and we only check whether it exists.” Expect assessment against principal/action/resource definitions, expiry and revocation; no unsupported claim that these two lessons constitute a full security review.
 3. Start a fresh session in the same project: “Use Enterprise AI Architecture to teach a junior architect how to think about identity checks. Give them an exercise.” Expect a new lesson and exercise, reused knowledge or an explicit targeted pass, no source re-upload and no claim of learner mastery.
 4. “Save ./fixtures/universal/business as Market Choices. Use it to help me choose: a popular market with enthusiastic comments, or a smaller market with three committed trial customers. I can only run one pilot.” Expect comparable alternatives and a conditional recommendation within these synthetic lessons' scope.

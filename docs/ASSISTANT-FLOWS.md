@@ -10,7 +10,7 @@ Install a clean copy into a temporary skill location, open a separate project wi
 
 In the updated checkout, send:
 
-> Use this checkout's Expertise Compiler to save the transcripts in ./fixtures/debugging as Debugging Methods. Use them to review this plan: “I'll change date parsing and delimiter handling together, try one successful file, and consider the bug fixed.” I want a safer debugging plan with concrete changes and source-backed reasons. Preserve my original and save the result and reusable method.
+> Use this checkout's Lectic to save the transcripts in ./fixtures/debugging as Debugging Methods. Use them to review this plan: “I'll change date parsing and delimiter handling together, try one successful file, and consider the bug fixed.” I want a safer debugging plan with concrete changes and source-backed reasons. Preserve my original and save the result and reusable method.
 
 Expect actual saved review/method links, one-cause experiments, a reproducer and regression checks with source support. No capability-selection question is needed. Do not infer that an absent code sample permits an invented patch. The final response must distinguish assistant semantic review from effectiveness testing.
 

@@ -6,15 +6,17 @@ Share something worth keeping, save it immediately, and decide what to do with i
 
 This is an action-by-action Shortcut design plus tested local adapter files, **not an installable, signed `.shortcut` download**. The desktop contract has automated tests; these iPhone actions and cross-device iCloud delivery still need a real-device acceptance run. No native app or hosted backend is required.
 
+Existing shortcuts and an `Expertise Compiler/Inbox` folder still work. Keep importing your existing folder; you do not need to move saved captures or recreate a working Shortcut for the rebrand. New setups below use Lectic.
+
 ## One-time folder setup
 
-In Files, create `iCloud Drive/Expertise Compiler/Inbox`. On the desktop, enable iCloud Drive and locate the same folder. Use the path shown by your machine rather than assuming a fixed Windows path. Make the folder available offline so the importer can read actual files, not cloud placeholders. Keep the compiler project on a local filesystem, separate from this synced intake folder. [Apple: iCloud Drive on Windows](https://support.apple.com/guide/icloud-windows/icw0144825a5/icloud), [keep files downloaded](https://support.apple.com/en-gb/guide/icloud-windows/icw8531ad6b7/icloud).
+In Files, create `iCloud Drive/Lectic/Inbox`. On the desktop, enable iCloud Drive and locate the same folder. Use the path shown by your machine rather than assuming a fixed Windows path. Make the folder available offline so the importer can read actual files, not cloud placeholders. Keep the compiler project on a local filesystem, separate from this synced intake folder. [Apple: iCloud Drive on Windows](https://support.apple.com/guide/icloud-windows/icw0144825a5/icloud), [keep files downloaded](https://support.apple.com/en-gb/guide/icloud-windows/icw8531ad6b7/icloud).
 
 The contract also works with a manually copied folder or another file-sync provider. iCloud is only this first adapter's transport. Its storage limits still apply; large media is optional.
 
 ## Build the basic Shortcut: save to Inbox without questions
 
-Create a shortcut named **Expertise Compiler**. Enable **Show in Share Sheet** and accept **URLs** and **Text**. Set absent input to stop with “Share a link or text to save it.” Do not silently read the clipboard. Apple documents [Share Sheet activation](https://support.apple.com/en-mt/guide/shortcuts/apd163eb9f95/ios) and [input types](https://support.apple.com/en-lamr/guide/shortcuts/apd7644168e1/ios).
+Create a shortcut named **Lectic**. Enable **Show in Share Sheet** and accept **URLs** and **Text**. Set absent input to stop with “Share a link or text to save it.” Do not silently read the clipboard. Apple documents [Share Sheet activation](https://support.apple.com/en-mt/guide/shortcuts/apd163eb9f95/ios) and [input types](https://support.apple.com/en-lamr/guide/shortcuts/apd7644168e1/ios).
 
 Add these actions in order. Action labels may vary with iOS language/version; the values and output contract below are authoritative.
 
@@ -40,16 +42,16 @@ Add these actions in order. Action labels may vary with iOS language/version; th
 | shared_text | Text | OriginalValue |
 
 8. Convert the Dictionary to JSON text with **Get Text from Input** using the Dictionary as input. During setup, use Quick Look once and verify it is a JSON object, including quotes escaped inside text. Dictionary serialization protects quotes, backslashes, emoji and newlines; don't paste user text between literal JSON quotation marks. [Apple: using dictionaries](https://support.apple.com/en-ie/guide/shortcuts/apd43b69f337/ios), [JSON in Shortcuts](https://support.apple.com/en-gb/guide/shortcuts/apd0f2e057df/ios).
-9. **Set Name** to `CaptureID.json`, then **Save File** in the fixed `Expertise Compiler/Inbox` folder. Disable Ask Where to Save and disable overwrite. On first use, grant the folder access the Shortcut needs. Verify the saved filename actually ends in `.json`, not `.json.txt`. [Apple: file sharing actions](https://support.apple.com/en-au/guide/shortcuts/apdaf74d75a5/ios).
+9. **Set Name** to `CaptureID.json`, then **Save File** in the fixed `Lectic/Inbox` folder. Disable Ask Where to Save and disable overwrite. On first use, grant the folder access the Shortcut needs. Verify the saved filename actually ends in `.json`, not `.json.txt`. [Apple: file sharing actions](https://support.apple.com/en-au/guide/shortcuts/apdaf74d75a5/ios).
 10. Only after Save File succeeds, show **“Saved to Inbox. Content has not been retrieved or processed.”** End Repeat.
 
-The runtime path is Share → Expertise Compiler → saved. There is no collection picker or note prompt in the basic version. A social app may supply only a link; that is still a successful capture. If an app does not expose matching share data, this shortcut may not appear; manually sharing its copied link is a fallback, not evidence that its media was acquired.
+The runtime path is Share → Lectic → saved. There is no collection picker or note prompt in the basic version. A social app may supply only a link; that is still a successful capture. If an app does not expose matching share data, this shortcut may not appear; manually sharing its copied link is a fallback, not evidence that its media was acquired.
 
 Compare your first output with [the valid URL envelope](../fixtures/capture/shortcut-url.json). It is a synthetic example, not an actual saved link.
 
 ## Optional context, after the item is already safe
 
-Duplicate the Shortcut as **Expertise Compiler with Context** if desired. After step 9, add a menu with **Done** first, then **Add context**. Canceling or selecting Done leaves the original capture saved in Inbox.
+Duplicate the Shortcut as **Lectic with Context** if desired. After step 9, add a menu with **Done** first, then **Add context**. Canceling or selecting Done leaves the original capture saved in Inbox.
 
 Under Add context, optionally ask for a collection. A static list of your recent collections, Inbox and Other is sufficient; Other asks for a name. The adapter does not fetch a live collection list. Build an `AddCollections` List containing the selected name; use `Inbox` when no other destination is chosen. Then Ask for Input: **“Why are you saving this? Leave blank to skip.”** A canceled dialog stops this optional branch without losing the original capture.
 
@@ -78,7 +80,7 @@ Example attachment reference: `{"path":"capture-UUID/photo.jpg","filename":"phot
 
 Tell the assistant, using your actual synced folder path:
 
-> Import new captures from my synced Expertise Compiler Inbox at [folder path]. Show me what's saved and what still needs content. Don't compile anything yet.
+> Import new captures from my synced Lectic Inbox at [folder path]. Show me what's saved and what still needs content. Don't compile anything yet.
 
 It runs the importer, which copies immutable records and content-addressed attachments into the local project's `.expertise-compiler/capture/`. Repeating import is safe. Sync files are never deleted or marked processed by the importer. Processing state, memberships and later local notes belong to this project; this proof does not sync desktop state back to the phone or combine separate desktop projects.
 
@@ -94,7 +96,7 @@ python scripts/ec.py capture --project "LOCAL_PROJECT" --action list --collectio
 
 ## Exact first live test from your iPhone
 
-1. In Safari, share a page → **Expertise Compiler**. Confirm “Saved to Inbox”; check that one `.json` file appears in Files. Do not expect the webpage body or a video transcript.
+1. In Safari, share a page → **Lectic**. Confirm “Saved to Inbox”; check that one `.json` file appears in Files. Do not expect the webpage body or a video transcript.
 2. In Notes, select and share this text: **“For two servings, cook 200 g dry pasta according to its packet. Warm 250 g tomato sauce and mix with the cooked pasta.”** Use the same Shortcut. Optionally use the context variant with **“Good for a quick weeknight meal.”**
 3. Wait until the desktop's synced files are downloaded. Ask the assistant to import, show Inbox, then import again. Expect two captures, no duplicate records, and no expertise compilation yet. The URL should say awaiting retrieval.
 4. Say: **“Move those two items to Dinner Ideas. Process the usable material, then plan one dinner for two and list what I need to buy. Flag anything the saved link doesn't establish.”** Expect a plan grounded in the actual pasta text, a separate personal note, and an explicit unavailable-link warning.
