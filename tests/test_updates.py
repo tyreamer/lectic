@@ -45,12 +45,13 @@ class UpdatesTests(unittest.TestCase):
             # A small valid payload, including the actual standalone runner for reload tests.
             for name in updater.PAYLOAD:
                 if '.' in name:
-                    text = ('---\nname: expertise-compiler\ndescription: Test updates\n---\n# Lectic\n'
+                    text = ('---\nname: lectic\ndescription: Test updates\n---\n# Lectic\n'
                             if name == 'SKILL.md' else 'Example\n')
                     archive.writestr(f'lectic-{commit}/{name}', text)
                 else:
                     archive.writestr(f'lectic-{commit}/{name}/example.txt', 'Example\n')
             archive.writestr(f'lectic-{commit}/scripts/update_skill.py', (ROOT / 'scripts/update_skill.py').read_bytes())
+            archive.writestr(f'lectic-{commit}/agents/openai.yaml', (ROOT / 'agents/openai.yaml').read_bytes())
             archive.writestr(f'lectic-{commit}/workspace/private.txt', 'Never install')
             archive.writestr(f'lectic-{commit}/.expertise-compiler/library.json', '{}')
             for name, content in (extras or {}).items():
@@ -136,6 +137,52 @@ class UpdatesTests(unittest.TestCase):
         self.assertEqual(len(result['backups']), 2)
         self.assertEqual(updater.inventory(Path(result['backups'][1]['path'])), first)
         self.assertEqual((self.state / 'runner.py').read_bytes(), (self.dest / 'scripts/update_skill.py').read_bytes())
+
+    def test_new_named_install_and_legacy_name_receive_same_release(self):
+        for name in ['expertise-compiler', 'lectic']:
+            with self.subTest(name=name):
+                self.dest = self.dest.parent / name
+                self.dest.mkdir(exist_ok=True)
+                if name == 'lectic':
+                    (self.dest / 'SKILL.md').write_text('Older Lectic copy', encoding='utf-8')
+                self.state = updater.locations(self.dest)[1]
+                self.update(adopt=True)
+                updater.operate('enable', self.dest, task_name='Existing schedule')
+                result = self.update(NEXT)
+                self.assertEqual(result['installed_commit'], NEXT)
+                self.assertEqual(result['task_name'], 'Existing schedule')
+                self.assertTrue(result['automatic_updates'])
+                self.assertEqual(self.state.name, name)
+                self.assertIn(f'\nname: {name}\n', (self.dest / 'SKILL.md').read_text())
+                self.assertIn(f'Use ${name} ', (self.dest / 'agents/openai.yaml').read_text())
+                self.assertEqual(result['changed_files'], [])
+                self.assertEqual(updater.operate('run', self.dest)['status'], 'not_due')
+
+    def test_clean_install_both_names_runs_and_remains_idempotent(self):
+        for name in ['lectic', 'expertise-compiler']:
+            with self.subTest(name=name):
+                target = self.base / 'Clean Personal Skills' / name
+                install_skill.install(target)
+                self.assertIn(f'\nname: {name}\n', (target / 'SKILL.md').read_text(encoding='utf-8'))
+                self.assertIn(f'Use ${name} ', (target / 'agents/openai.yaml').read_text(encoding='utf-8'))
+                self.assertEqual(install_skill.install(target), target)
+                self.assertEqual((target / 'schemas/source.schema.json').read_bytes(),
+                                 (ROOT / 'schemas/source.schema.json').read_bytes())
+                project = self.base / f'Fresh Project {name}'
+                project.mkdir()
+                response = subprocess.run([sys.executable, '-B', str(target / 'scripts/ec.py'),
+                                           'library', '--project', str(project)], capture_output=True, text=True)
+                self.assertEqual(response.returncode, 0, response.stderr)
+                self.assertEqual(json.loads(response.stdout)['phase'], 'lectic_library')
+                self.assertFalse((project / '.expertise-compiler').exists())
+
+    def test_identity_adaptation_does_not_rewrite_source_or_body(self):
+        original = b'---\nname: lectic\ndescription: Example\n---\nname: lectic\n.expertise-compiler/\n'
+        actual = updater.installed_bytes('SKILL.md', original, 'expertise-compiler')
+        self.assertEqual(actual, original.replace(b'name: lectic', b'name: expertise-compiler', 1))
+        self.assertEqual(updater.installed_bytes('fixtures/transcript.txt', original, 'expertise-compiler'), original)
+        with self.assertRaisesRegex(updater.UpdateError, 'Unknown'):
+            updater.installed_bytes('SKILL.md', original, 'something-else')
 
     def test_bad_archives_and_malformed_code_do_not_replace_install(self):
         self.update(adopt=True)

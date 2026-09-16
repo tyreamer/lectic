@@ -33,20 +33,20 @@ You need **local Codex or Claude Code**, file and command access, and **Python 3
 
 ```text
 Use $skill-installer to install the repository root at
-https://github.com/tyreamer/lectic as a personal skill
-named expertise-compiler, including its supporting files.
+https://github.com/tyreamer/lectic as a personal skill named lectic,
+including all supporting files.
 ```
 
 **In Claude Code, send:**
 
 ```text
 Install https://github.com/tyreamer/lectic as my personal
-expertise-compiler skill. Download and review the repository, then use
+lectic skill. Download and review the repository, then use
 its bundled installer to copy the complete skill to
-~/.claude/skills/expertise-compiler. Preserve any existing installation.
+~/.claude/skills/lectic. Preserve any existing installation.
 ```
 
-Lectic was previously named Expertise Compiler. The installed skill identifier remains `expertise-compiler` for compatibility; existing commands and `.expertise-compiler/` project data continue to work.
+New installations use `lectic` (`$lectic` in Codex, `/lectic` in Claude Code). Existing `expertise-compiler` installations remain supported; update that copy in place rather than installing a duplicate. Project data stays in `.expertise-compiler/`, so saved work does not need moving.
 
 Restart the assistant if the skill does not appear. For an existing installation, follow the update guidance rather than overwriting it. [Installation and troubleshooting →](docs/INSTALLATION.md)
 

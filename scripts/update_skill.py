@@ -19,6 +19,7 @@ import zipfile
 
 REPOSITORY = 'tyreamer/lectic'
 REF = 'main'
+SKILL_NAMES = {'lectic', 'expertise-compiler'}
 # Same clean payload as install_skill.py; installed receipts/backups live outside it.
 PAYLOAD = ['SKILL.md', 'LICENSE', 'README.md', 'DESIGN.md', 'agents', 'scripts',
            'schemas', 'prompts', 'fixtures', 'docs']
@@ -72,7 +73,7 @@ def ordinary(path):
 
 def locations(destination, state_dir=None):
     dest = ordinary(destination)
-    require(dest.name == 'expertise-compiler', 'Skill folder must be named expertise-compiler')
+    require(dest.name in SKILL_NAMES, 'Skill folder must be named lectic (or legacy expertise-compiler)')
     state = ordinary(state_dir or dest.parent.parent / 'lectic-updates' / dest.name)
     require(not state.is_relative_to(dest.parent) and not dest.is_relative_to(state),
             'Update state and backups must live outside the skills directory')
@@ -91,13 +92,33 @@ def inventory(folder):
     return result
 
 
-def validate_candidate(folder):
+def installed_bytes(name, content, identity):
+    """Keep a legacy installation's invocation name without changing project storage."""
+    require(identity in SKILL_NAMES, 'Unknown installed skill name')
+    if name == 'SKILL.md':
+        text = content.decode('utf-8')
+        parts = text.split('---', 2)
+        require(len(parts) == 3 and not parts[0], 'Missing skill metadata')
+        parts[1], count = re.subn(r'^name: (?:lectic|expertise-compiler)[ \t]*\r?$',
+                                 f'name: {identity}', parts[1], flags=re.M)
+        require(count == 1, 'Unexpected skill identity')
+        return '---'.join(parts).encode('utf-8')
+    if name == 'agents/openai.yaml':
+        text = content.decode('utf-8')
+        text = re.sub(r'^([ \t]*default_prompt:.*)$',
+                      lambda m: re.sub(r'\$(?:lectic|expertise-compiler)(?![a-z0-9-])',
+                                       lambda _: '$' + identity, m[0]), text, flags=re.M)
+        return text.encode('utf-8')
+    return content
+
+
+def validate_candidate(folder, identity=None):
     for name in PAYLOAD:
         require((folder / name).exists(), f'Incomplete update: missing {name}')
     skill = (folder / 'SKILL.md').read_text(encoding='utf-8')
     require(skill.startswith('---\n') and '\n---' in skill[4:], 'Missing skill metadata')
     header = skill[4:].split('\n---', 1)[0]
-    require(re.search(r'^name: expertise-compiler\s*$', header, re.M) and
+    require(len(re.findall(r'^name: (?:lectic|expertise-compiler)[ \t]*$', header, re.M)) == 1 and
             re.search(r'^description: \S', header, re.M), 'Unexpected skill identity or description')
     for path in folder.rglob('*'):
         if path.suffix == '.py':
@@ -105,6 +126,11 @@ def validate_candidate(folder):
         elif path.suffix == '.json':
             read(path)
     require((folder / 'scripts/update_skill.py').is_file(), 'Update runner is missing')
+    if identity is not None:
+        for name in ['SKILL.md', 'agents/openai.yaml']:
+            path = folder / name
+            if path.is_file():
+                path.write_bytes(installed_bytes(name, path.read_bytes(), identity))
     return inventory(folder)
 
 
@@ -124,7 +150,7 @@ def latest_commit():
     return commit
 
 
-def unpack(data, commit, folder):
+def unpack(data, commit, folder, identity=None):
     """Read only the allowed payload from an immutable commit archive."""
     prefix = f'lectic-{commit}'
     seen = set()
@@ -151,7 +177,7 @@ def unpack(data, commit, folder):
             require(target.resolve().is_relative_to(folder.resolve()), 'Archive escaped staging folder')
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_bytes(archive.read(entry))
-    return validate_candidate(folder)
+    return validate_candidate(folder, identity)
 
 
 @contextmanager
@@ -300,7 +326,7 @@ def operate(action, destination, state_dir=None, adopt=False, interval=24, task_
                 return status(dest, state)
             stage = Path(tempfile.mkdtemp(prefix='.lectic-stage-', dir=dest.parent)).resolve()
             data = download(f'https://codeload.github.com/{REPOSITORY}/zip/{commit}')
-            files = unpack(data, commit, stage)
+            files = unpack(data, commit, stage, dest.name)
             current = replace_install(dest, state, current, stage, commit, files)
             return status(dest, state)
         except Exception as exc:

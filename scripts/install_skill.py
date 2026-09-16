@@ -4,6 +4,7 @@ import shutil
 import tempfile
 from pathlib import Path
 from ec import ROOT, Invalid, digest, require
+from update_skill import SKILL_NAMES, UpdateError, installed_bytes
 
 # A complete skill, including demo/acceptance data, without user runs or repository state.
 PAYLOAD = ['SKILL.md', 'LICENSE', 'README.md', 'DESIGN.md', 'agents', 'scripts', 'schemas', 'prompts', 'fixtures', 'docs']
@@ -27,11 +28,12 @@ def payload_files(source):
 def install(destination, source=ROOT):
     destination = Path(destination).expanduser().resolve()
     source = Path(source).resolve()
-    require(destination.name == 'expertise-compiler', 'Skill folder must be named expertise-compiler')
+    require(destination.name in SKILL_NAMES, 'Skill folder must be named lectic (or legacy expertise-compiler)')
     require(not destination.is_relative_to(source), 'Install outside the source repository')
     files = payload_files(source)
     if destination.exists():
-        expected = {name: digest(p.read_bytes()) for name, p in files.items()}
+        expected = {name: digest(installed_bytes(name, p.read_bytes(), destination.name))
+                    for name, p in files.items()}
         actual = {p.relative_to(destination).as_posix(): digest(p.read_bytes()) for p in destination.rglob('*')
                   if p.is_file() and '__pycache__' not in p.parts and p.suffix not in {'.pyc', '.pyo'}}
         require(expected == actual, 'An existing installation differs; preserve it and choose an explicit update plan')
@@ -42,7 +44,7 @@ def install(destination, source=ROOT):
         for name, path in files.items():
             target = temp / name
             target.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(path, target)
+            target.write_bytes(installed_bytes(name, path.read_bytes(), destination.name))
         temp.rename(destination)
     finally:
         if temp.exists(): shutil.rmtree(temp)
@@ -54,4 +56,4 @@ if __name__ == '__main__':
     p.add_argument('--dest', required=True)
     args = p.parse_args()
     try: print(install(args.dest))
-    except (Invalid, OSError) as exc: p.exit(1, f'Error: {exc}\n')
+    except (Invalid, UpdateError, OSError) as exc: p.exit(1, f'Error: {exc}\n')

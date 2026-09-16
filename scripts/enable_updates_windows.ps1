@@ -9,8 +9,8 @@ $ErrorActionPreference = 'Stop'
 if (-not $Python) { $Python = (Get-Command python -ErrorAction Stop).Source }
 $Python = (Resolve-Path -LiteralPath $Python).Path
 $Destination = (Resolve-Path -LiteralPath $Destination).Path
-if ((Split-Path -Leaf $Destination) -ne 'expertise-compiler') {
-    throw 'Expected the installed expertise-compiler skill directory.'
+if ((Split-Path -Leaf $Destination) -notin @('lectic', 'expertise-compiler')) {
+    throw 'Expected the installed lectic (or legacy expertise-compiler) skill directory.'
 }
 $lecticUpdater = Join-Path $Destination 'scripts/update_skill.py'
 $lecticStatusText = & $Python -B $lecticUpdater status --dest $Destination

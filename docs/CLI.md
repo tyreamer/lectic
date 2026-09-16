@@ -7,22 +7,22 @@ These commands are for the assistant, contributors, and advanced debugging. Norm
 ## Goal coordinator
 
 ```text
-python /path/to/expertise-compiler/scripts/ec.py work --project . --input ./input --name "Product Research" --brief ./.expertise-compiler/inbox/brief.json
-python /path/to/expertise-compiler/scripts/ec.py work --project . --collection "Product Research"
-python /path/to/expertise-compiler/scripts/ec.py work --project . --collection "Product Research" --reconciled
-python /path/to/expertise-compiler/scripts/ec.py work --project . --collection "Product Research" --reviewed
-python /path/to/expertise-compiler/scripts/ec.py work --project . --collection "Product Research" --brief NEW_BRIEF --target checklist
-python /path/to/expertise-compiler/scripts/ec.py work --project . --input ./more --collection "Product Research" --action add
-python /path/to/expertise-compiler/scripts/ec.py work --project . --input ./input --name "Leadership" --action prepare
-python /path/to/expertise-compiler/scripts/ec.py work --project . --collection "Leadership" --action inspect
-python /path/to/expertise-compiler/scripts/ec.py work --project . --collection "Leadership" --action remove --remove lesson.txt
-python /path/to/expertise-compiler/scripts/ec.py work --project . --collection "Leadership" --action replace --input ./updated
-python /path/to/expertise-compiler/scripts/ec.py work --project . --collection "Leadership" --action compare
-python /path/to/expertise-compiler/scripts/ec.py work --project . --collection "Leadership" --action archive
-python /path/to/expertise-compiler/scripts/ec.py work --project . --collection "Leadership" --action restore
-python /path/to/expertise-compiler/scripts/ec.py work --project . --action list
-python /path/to/expertise-compiler/scripts/ec.py work --project . --collection "Product Research" --action export
-python /path/to/expertise-compiler/scripts/ec.py validate-build BUILD_FOLDER
+python /path/to/lectic/scripts/ec.py work --project . --input ./input --name "Product Research" --brief ./.expertise-compiler/inbox/brief.json
+python /path/to/lectic/scripts/ec.py work --project . --collection "Product Research"
+python /path/to/lectic/scripts/ec.py work --project . --collection "Product Research" --reconciled
+python /path/to/lectic/scripts/ec.py work --project . --collection "Product Research" --reviewed
+python /path/to/lectic/scripts/ec.py work --project . --collection "Product Research" --brief NEW_BRIEF --target checklist
+python /path/to/lectic/scripts/ec.py work --project . --input ./more --collection "Product Research" --action add
+python /path/to/lectic/scripts/ec.py work --project . --input ./input --name "Leadership" --action prepare
+python /path/to/lectic/scripts/ec.py work --project . --collection "Leadership" --action inspect
+python /path/to/lectic/scripts/ec.py work --project . --collection "Leadership" --action remove --remove lesson.txt
+python /path/to/lectic/scripts/ec.py work --project . --collection "Leadership" --action replace --input ./updated
+python /path/to/lectic/scripts/ec.py work --project . --collection "Leadership" --action compare
+python /path/to/lectic/scripts/ec.py work --project . --collection "Leadership" --action archive
+python /path/to/lectic/scripts/ec.py work --project . --collection "Leadership" --action restore
+python /path/to/lectic/scripts/ec.py work --project . --action list
+python /path/to/lectic/scripts/ec.py work --project . --collection "Product Research" --action export
+python /path/to/lectic/scripts/ec.py validate-build BUILD_FOLDER
 ```
 
 Use --action save to archive without a goal, --action explore to discover a Capability Map, and --adopt OLD_RUN to copy an existing run. Do not repeat --input on continuation calls. The assistant saves briefs from conversation, handles returned tasks and acknowledges actual review; users do not operate this CLI. [Complete phase contract](../prompts/goal-work.md).
@@ -53,15 +53,15 @@ Compare explicit source revisions with --before/--after; compare historical know
 ## Legacy capability coordinator
 
 ```text
-python /path/to/expertise-compiler/scripts/ec.py compile ./input --project .
-python /path/to/expertise-compiler/scripts/ec.py compile --project .
-python /path/to/expertise-compiler/scripts/ec.py compile --project . --reconciled
-python /path/to/expertise-compiler/scripts/ec.py compile --project . --intent discover
-python /path/to/expertise-compiler/scripts/ec.py compile --project . --intent build --select 2
-python /path/to/expertise-compiler/scripts/ec.py compile --project . --intent build --build-all
-python /path/to/expertise-compiler/scripts/ec.py compile --project . --intent use
-python /path/to/expertise-compiler/scripts/ec.py compile --project . --intent compare
-python /path/to/expertise-compiler/scripts/ec.py compile --project . --run workspace/existing-run
+python /path/to/lectic/scripts/ec.py compile ./input --project .
+python /path/to/lectic/scripts/ec.py compile --project .
+python /path/to/lectic/scripts/ec.py compile --project . --reconciled
+python /path/to/lectic/scripts/ec.py compile --project . --intent discover
+python /path/to/lectic/scripts/ec.py compile --project . --intent build --select 2
+python /path/to/lectic/scripts/ec.py compile --project . --intent build --build-all
+python /path/to/lectic/scripts/ec.py compile --project . --intent use
+python /path/to/lectic/scripts/ec.py compile --project . --intent compare
+python /path/to/lectic/scripts/ec.py compile --project . --run workspace/existing-run
 ```
 
 Quote paths containing spaces. Replace `python` with the discovered interpreter where necessary. The operator interprets natural-language intent; the coordinator takes explicit arguments and returns a structured phase. [Phase contract](../prompts/operate.md).

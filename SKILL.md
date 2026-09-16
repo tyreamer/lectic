@@ -1,12 +1,12 @@
 ---
-name: expertise-compiler
+name: lectic
 description: Save valuable content, show what is saved and ready to use, suggest concrete ways to use it, and apply source-backed methods to real work. Use for returning to saved expertise, discovering what content can become, building a selected opportunity, or managing captures and collections.
 license: MIT
 ---
 
 # Lectic
 
-Lectic retains the `expertise-compiler` skill identifier and project storage paths for compatibility.
+New installations use `lectic`. The installer/updater preserves `expertise-compiler` as the invocation name in existing legacy installations. Project storage remains `.expertise-compiler/` in both cases.
 
 This installed skill is a conversational interface to the core compiler, not the product's architectural definition. [NORTH_STAR.md](NORTH_STAR.md) defines the durable, provider-independent expertise representation and extensible build direction. Today's intent contracts and Agent Skills export are supported interfaces/targets, not the limits of the expertise model.
 

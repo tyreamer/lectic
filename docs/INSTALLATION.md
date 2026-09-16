@@ -1,18 +1,26 @@
 # Install Lectic as a skill
 
-Lectic is the new product name; `expertise-compiler` remains the compatible installed skill identifier. Existing installations and `.expertise-compiler/` data folders do not need renaming. The repository root is the skill. Keep its name `expertise-compiler` and include supporting folders, not just SKILL.md. Give the installation message in the README to your assistant; no manual terminal setup is needed.
+Install new copies as `lectic`. The repository root is the skill; include all supporting folders, not just SKILL.md. Existing `expertise-compiler` installations remain supported and should be updated in place instead of duplicated. Both names use the same `.expertise-compiler/` project storage, so saved collections and capabilities do not need moving. Give the installation message in the README to your assistant; no manual terminal setup is needed.
 
 ## Codex
 
-Ask `$skill-installer` to install the root of `tyreamer/lectic` under the explicit name `expertise-compiler`. The repository-relative skill path is `.`. The installed helper resolves its supported personal skill directory; follow it rather than assuming one universal directory across Codex versions. For a local development copy, ask Codex to use this repository's clean-copy installer with its personal skill directory as the destination.
+Ask:
 
-New installations are normally detected automatically; restart if absent. Describe your actual task, for example: “Use the transcripts in ./input to review my draft in ./plan.md for missing steps. Save this collection as Project Training for future work.” An explicit `$expertise-compiler` mention is an optional fallback. [Official Codex installation guidance](https://learn.chatgpt.com/docs/build-skills).
+> Use $skill-installer to install the repository root at https://github.com/tyreamer/lectic as a personal skill named lectic, including all supporting files.
+
+The repository-relative skill path is `.`. The installed helper resolves its supported personal skill directory; follow it rather than assuming one universal directory across Codex versions. For a local development copy, ask Codex to use this repository's clean-copy installer with its personal skill directory as the destination. If either `lectic` or `expertise-compiler` is already installed, follow the update flow for that existing copy.
+
+New installations are normally detected automatically; restart if absent. Describe your actual task, for example: “Use the transcripts in ./input to review my draft in ./plan.md for missing steps. Save this collection as Project Training for future work.” An explicit `$lectic` mention is an optional fallback (`$expertise-compiler` for a legacy installation). [Official Codex installation guidance](https://learn.chatgpt.com/docs/build-skills).
 
 ## Claude Code
 
-Ask Claude Code to download/review the repository and install it at `~/.claude/skills/expertise-compiler`. This personal skill works across local projects. A project-scoped alternative is `.claude/skills/expertise-compiler`. On Windows, the assistant resolves `~` to your user home.
+Ask:
 
-Describe what you're working on and what would make the result useful, alongside the source files. If automatic matching does not activate it, use `/expertise-compiler` followed by that request. Personal local skills are distinct from web/account skill installations. [Official Claude Code skill locations](https://code.claude.com/docs/en/skills).
+> Install https://github.com/tyreamer/lectic as my personal lectic skill. Download and review the repository, then use its bundled installer to copy the complete skill to ~/.claude/skills/lectic. Preserve any existing installation.
+
+This personal skill works across local projects. A project-scoped alternative is `.claude/skills/lectic`. On Windows, the assistant resolves `~` to your user home. Update any existing `expertise-compiler` copy in place rather than installing a duplicate.
+
+Describe what you're working on and what would make the result useful, alongside the source files. If automatic matching does not activate it, use `/lectic` followed by that request (`/expertise-compiler` for a legacy installation). Personal local skills are distinct from web/account skill installations. [Official Claude Code skill locations](https://code.claude.com/docs/en/skills).
 
 ## Installation contents
 
@@ -40,7 +48,7 @@ The installed copy is separate from a checkout. Updates never pull into a develo
 
 An existing copy without an update receipt needs one explicit enrollment. The `--adopt` operation retains **the entire existing installation**, including unrecognized files, in a backup before installing the published payload. It does not merge customizations. Thereafter, added, deleted, or modified installed files prevent replacement; `--adopt` cannot override this check. Python bytecode caches are ignored. Review local edits instead of removing the receipt to bypass protection.
 
-The current state, exact commit, last check, last result, changed files and backup paths are available with “Show Lectic's update status.” State and backups live outside the skill discovery directory, normally `~/.codex/lectic-updates/expertise-compiler/` for an installation at `~/.codex/skills/expertise-compiler`. Other supported skill roots get an adjacent `lectic-updates/` directory. Receipts use version `1.0`, with a destination binding, upstream repository/ref, file SHA-256 hashes, commit, check interval and backup history. They are distribution metadata, separate from Expertise IR.
+The current state, exact commit, last check, last result, changed files and backup paths are available with “Show Lectic's update status.” State and backups live outside the skill discovery directory, normally `~/.codex/lectic-updates/lectic/` for an installation at `~/.codex/skills/lectic`. Legacy installations retain `lectic-updates/expertise-compiler/`. Other supported skill roots get an adjacent `lectic-updates/` directory. Receipts use version `1.0`, with a destination binding, upstream repository/ref, file SHA-256 hashes, commit, check interval and backup history. They are distribution metadata, separate from Expertise IR.
 
 On **Windows**, the optional per-user scheduled task wakes hourly and at login, but contacts GitHub at most once every 24 hours. It runs without a console window, administrator privileges, stored password or AI session, and only while the user is logged in. Missed checks catch up when the machine/user is available. Offline checks, download failures, file locks and local edits preserve the installation and leave a `needs_attention` result for the assistant to explain. There are no push notifications. “Check now” bypasses the time gate; it does not bypass local-edit protection.
 
@@ -53,14 +61,14 @@ The downloaded payload is refreshed on disk. Use a new turn/task for new instruc
 Run the updater from a reviewed checkout for the first enrollment, using the actual installed location. The old installed copy might not yet contain it:
 
 ```text
-python /path/to/lectic/scripts/update_skill.py update --dest /path/to/skills/expertise-compiler --adopt
-python /path/to/skills/expertise-compiler/scripts/update_skill.py status --dest /path/to/skills/expertise-compiler
+python /path/to/lectic/scripts/update_skill.py update --dest /path/to/skills/lectic --adopt
+python /path/to/skills/lectic/scripts/update_skill.py status --dest /path/to/skills/lectic
 ```
 
 To enable the Windows schedule after enrollment:
 
 ```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "C:\path\to\lectic\scripts\enable_updates_windows.ps1" -Destination "C:\path\to\skills\expertise-compiler" -Python "C:\path\to\python.exe"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "C:\path\to\lectic\scripts\enable_updates_windows.ps1" -Destination "C:\path\to\skills\lectic" -Python "C:\path\to\python.exe"
 ```
 
 The setup checks the managed installation, creates a task for the current user, then enables the update receipt. Inspect the returned task name, action and next run, and exercise the task once before reporting success. Re-running setup is idempotent for that installation; it refuses to overwrite an unrelated task. `-Disable` pauses checks and removes that exact task. The simpler `update_skill.py pause --dest ...` leaves the task registered but makes it a no-op.
@@ -68,6 +76,18 @@ The setup checks the managed installation, creates a task for the current user, 
 Subsequent manual updates use `update_skill.py update --dest ...` without `--adopt`. `status` is read-only and reports the most recent successful comparison; it does not contact GitHub. The standalone runner lives at `<state directory>/runner.py` and is refreshed after successful updates. It accepts the same commands and remains usable during recovery.
 
 On macOS/Linux, the Python updater can be run manually. Automatic scheduler setup for those platforms is not supplied yet; `enable` sets the receipt flag only and does not create an OS schedule.
+
+### Existing expertise-compiler installations
+
+Use the actual legacy destination in the commands above. The clean installer and updater preserve its `name: expertise-compiler` metadata and matching default prompt, while new `lectic` copies use `name: lectic`. Only these two interface metadata fields are adapted; no project records or generated capability names are rewritten.
+
+The first updater release (`8ca8f79`) rejects the new name during download validation. For a managed installation on that release, have the assistant download/review the current checkout and run **that checkout's updater** once:
+
+```text
+python /path/to/lectic/scripts/update_skill.py update --dest /path/to/skills/expertise-compiler
+```
+
+This retains its file-edit protections, backup history, existing invocation name and scheduled task, and refreshes the independent runner so subsequent updates work normally. No receipt deletion or bypass of local-edit protection is needed. Unmanaged older installations use the same command with `--adopt` for their first enrollment. Do not merely rename an installed folder: update receipts and scheduled tasks refer to its actual path.
 
 ### ChatGPT versus the local skill
 
