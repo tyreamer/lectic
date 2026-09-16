@@ -31,6 +31,8 @@ Use --action save to archive without a goal, --action explore to discover a Capa
 
 Capture and deferred processing are available through `ec.py capture`. Importing a synced folder does not compile it. See [capture operations and states](CAPTURE.md) for import, Inbox search, annotations, multiple memberships, explicit processing and evidence tracing; the assistant handles these commands for the user.
 
+For YouTube batches, write one capture per URL and preserve personal context in `--note`, then import and run `capture --action process --collection NAME`. This retrieves available English captions through optional yt-dlp and returns normal preparation tasks. The legacy `compile` and low-level `ingest` commands also accept one supported YouTube URL as input; direct ingestion authorizes acquisition immediately and does not create a capture or use the capture cache. Use capture processing for saved-link reuse and private annotations. [Acquisition details](YOUTUBE.md).
+
 ### Capability Map operations (assistant-operated)
 
 ```text

@@ -53,7 +53,7 @@ That's the entire basic Shortcut. No collection or note questions are necessary.
 
 The importer expands the two fields into the existing canonical capture format: stable ID, source type, supplied URL detection, provenance, pending status and Inbox membership. It validates the timestamp and preserves the full shared value, including quotes, emoji and newlines. Importing again, renaming the file or changing sync folders does not duplicate a capture.
 
-Only supplied HTTP(S) links are detected; no page, video or social-media content is retrieved. A URL alone stays **awaiting retrieval**. Text alongside a URL remains available as an excerpt, without implying that the linked content was acquired.
+Only supplied HTTP(S) links are detected; capture/import retrieves no page or media content. A URL alone stays **awaiting retrieval** until requested processing. The desktop can then retrieve [YouTube English captions](YOUTUBE.md) using optional yt-dlp; other linked platforms remain unavailable. Text alongside a URL remains available as an excerpt, without implying that the linked content was acquired.
 
 Capture IDs derive from the capture time and exact shared value. Two identical shares with the exact same timestamp collapse into one capture; a later save gets a separate capture. Matching source content can still share one normalized source. This lightweight format does not support distinct same-time/same-content events; use the advanced format with explicit IDs if that matters.
 

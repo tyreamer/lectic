@@ -180,9 +180,15 @@ def normalize(raw, suffix):
 
 def ingest(input_dir, output, metadata=None):
     from ingestors import adapter_for
-    records = adapter_for(input_dir).collect(metadata)
-    input_dir, output = Path(input_dir).resolve(), Path(output).resolve()
-    require(not output.is_relative_to(input_dir), 'Output must be outside input folder')
+    adapter = adapter_for(input_dir)
+    if hasattr(adapter, 'folder'):
+        require(not Path(output).resolve().is_relative_to(adapter.folder), 'Output must be outside input folder')
+    return ingest_records(adapter.collect(metadata), output)
+
+
+def ingest_records(records, output):
+    """Normalize an already acquired snapshot without fetching it a second time."""
+    output = Path(output).resolve()
     docs, blobs = [], {}
     for record in records:
         filename, raw, m = record.filename, record.raw, record.metadata

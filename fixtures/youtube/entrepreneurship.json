@@ -1,0 +1,21 @@
+{
+  "fixture_note": "Real user journey URLs; automated tests use synthetic captions, not claims about these videos.",
+  "collection": "Entrepreneurship Growth",
+  "urls": [
+    "https://www.youtube.com/watch?v=-AdkwqkE20M",
+    "https://www.youtube.com/watch?v=VjVSXJBdlNU",
+    "https://www.youtube.com/watch?v=NcD2t9qt-fM",
+    "https://www.youtube.com/watch?v=Unhi8uNBhyI",
+    "https://www.youtube.com/watch?v=o64cI6tebnU&t=868s",
+    "https://www.youtube.com/watch?v=MzAIP_WJ-jE",
+    "https://www.youtube.com/watch?v=q-_hwD1jNK4&t=432s",
+    "https://www.youtube.com/watch?v=nIk3DedjxJM"
+  ],
+  "context": "These are YouTube links from a man who helps people become millionaires. I am going to use this collection for my own personal growth to break free and become an entrepreneur.",
+  "intent": "plan",
+  "goal": "Use this collection to help me become an entrepreneur.",
+  "work": "I want to identify a small experiment I can try before committing to a business idea.",
+  "result_sections": [["steps", "First experiment", "Choose one business idea, identify who has the problem, and ask what they currently do. Record what remains unknown before deciding on an experiment."]],
+  "limitations": ["Synthetic caption fixture; this does not establish what the real videos teach.", "Source methods do not guarantee income or entrepreneurial success."],
+  "unsupported": ["The corpus does not establish that the user will become a millionaire."]
+}

@@ -24,6 +24,8 @@ Describe what you're working on and what would make the result useful, alongside
 
 ## Installation contents
 
+The core needs Python 3.10+ and no third-party Python runtime packages. Processing YouTube links additionally needs a current `yt-dlp` executable on the assistant's PATH and network access. This optional dependency is detected, never installed silently. Ask your assistant to install it when you authorize setup; local transcript files work without it. [Caption selection, failure handling and live retest](YOUTUBE.md).
+
 For a first real task and reuse checks, follow the [alpha testing guide](testing-guide.md).
 
 The bundled `scripts/install_skill.py` copies reviewed local skill files: scripts, prompts, schemas, fixtures, and guidance. It excludes `.git`, user workspaces, and caches and refuses to overwrite a differing installation. It makes no network requests; downloading is the host assistant/installer's responsibility.

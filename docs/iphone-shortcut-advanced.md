@@ -84,7 +84,7 @@ Tell the assistant, using your actual synced folder path:
 
 It runs the importer, which copies immutable records and content-addressed attachments into the local project's `.expertise-compiler/capture/`. Repeating import is safe. Sync files are never deleted or marked processed by the importer. Processing state, memberships and later local notes belong to this project; this proof does not sync desktop state back to the phone or combine separate desktop projects.
 
-Later say “Move this to Dinner Ideas,” “Put this in AI Architecture and Security,” or “Process the unprocessed items in Dinner Ideas.” Processing normalizes only actually supplied text and hands extraction to your existing assistant when requested. URL-only items remain unavailable; add exported text as a new capture if you want to use their contents today. No background watcher runs.
+Later say “Move this to Dinner Ideas,” “Put this in AI Architecture and Security,” or “Process the unprocessed items in Dinner Ideas.” Processing normalizes supplied text and can retrieve YouTube English captions through optional local yt-dlp, then hands extraction to your assistant. [YouTube setup and limits](YOUTUBE.md). Other linked platforms remain unavailable unless usable text was supplied. No background watcher runs.
 
 For local development, the assistant can use the reference producer and importer:
 

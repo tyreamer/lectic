@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "linked-retrieval",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "adapter": {
+      "type": "string",
+      "minLength": 1
+    },
+    "adapter_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "canonical_url": {
+      "type": "string",
+      "minLength": 1
+    },
+    "retrieved_at": {
+      "type": "string",
+      "minLength": 1
+    },
+    "records": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "filename": {
+            "type": "string",
+            "minLength": 1
+          },
+          "blob_hash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "metadata": {
+            "type": "object",
+            "properties": {
+              "title": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "minLength": 1
+              },
+              "creator": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "minLength": 1
+              },
+              "url": {
+                "type": "string",
+                "minLength": 1
+              },
+              "caption_type": {
+                "enum": [
+                  "manual",
+                  "automatic"
+                ]
+              }
+            },
+            "required": [
+              "title",
+              "creator",
+              "url",
+              "caption_type"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "filename",
+          "blob_hash",
+          "metadata"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    }
+  },
+  "required": [
+    "schema_version",
+    "adapter",
+    "adapter_version",
+    "canonical_url",
+    "retrieved_at",
+    "records"
+  ],
+  "additionalProperties": false
+}

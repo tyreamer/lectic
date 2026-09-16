@@ -17,6 +17,7 @@ LOCAL_PROJECT/.expertise-compiler/
     state/capture-ID.json       # memberships, processing state, source IDs
     annotations/annotation-ID.json
     blobs/SHA256               # one payload per exact byte hash
+    retrievals/HASH.json        # immutable linked acquisition receipts
     sources/SOURCE_ID/          # canonical normalized source run
   collections/COLLECTION_ID/  # normal source/IR/build history
 ```
@@ -25,7 +26,7 @@ Records use `capture.schema.json`; note events use `capture-annotation.schema.js
 
 Required capture fields are `schema_version`, stable `capture_id`, timezone-aware ISO `captured_at`, `original_value`, `source_type`, `capture_status: captured`, `processing_status: pending`, and `provenance {adapter, origin}`. Optional fields are `url`, `shared_text`, actually known `title`, `user_note`, `requested_collections`, and `attachments`. A file reference has a relative `path` plus original `filename`; optional `sha256` and `byte_size` allow stronger arrival checks. The source type describes supplied input (`url`, `text`, `image`, `video`, `file`, `unknown`), not a claim of understanding its content. Known platform can remain in the original URL; no platform taxonomy is required in IR.
 
-The incoming envelope always describes the capture moment. Desktop processing state is stored separately and must not be written back into that immutable envelope. The same ID and envelope can be imported repeatedly. Changing an existing ID is rejected. Separate intentional saves get separate capture IDs and notes; identical supplied content with matching URL/title/suffix shares a canonical source. Raw bytes deduplicate by hash even when source metadata differs. No fuzzy URL deduplication or tracking-parameter removal is performed.
+The incoming envelope always describes the capture moment. Desktop processing state is stored separately and must not be written back into that immutable envelope. The same ID and envelope can be imported repeatedly. Changing an existing ID is rejected. Separate intentional saves get separate capture IDs and notes; identical supplied content with matching URL/title/suffix shares a canonical source. Raw bytes deduplicate by hash even when source metadata differs. Capture URLs are never rewritten. For supported linked acquisition, a separate canonical identity permits cache reuse across URL variants while each capture retains its exact original link.
 
 The importer reads top-level `.json` records, handles captures before `.note.json` annotation events, and ignores temporary non-JSON files. It reports malformed or unavailable files individually. Missing attachments can arrive on a later import; previously accepted bytes cannot be silently replaced. Unsafe paths and hash/size mismatches are rejected. Producers should save attachments before the JSON marker; without a supplied size/hash, V1 cannot independently prove an attachment finished syncing before its first readable arrival.
 
@@ -53,19 +54,21 @@ New build briefs automatically snapshot the collection's capture summaries, note
 | --- | --- |
 | pending | Saved; no eligible content has been normalized yet |
 | awaiting_retrieval | A linked source is saved, but its content is unavailable |
-| partially_processed | Supplied content is normalized, or only part of a linked item is available; extraction/reconciliation may still be needed |
-| processed | Supplied content has a validated saved IR representation, including one available in historical revisions |
-| needs_attention | An attachment is missing/changed/corrupt, a format lacks a processing adapter, or local normalization failed |
+| partially_processed | Available supplied/retrieved content is normalized, or only part of a linked item is available; extraction/reconciliation may still be needed |
+| processed | Available supplied/retrieved content has a validated saved IR representation, including one available in historical revisions |
+| needs_attention | Retrieval failed, an attachment is missing/changed/corrupt, a format lacks a processing adapter, or local normalization failed |
 
-Every successful capture remains `capture_status: captured`, including items whose processing needs attention. A URL plus a processed excerpt remains partial because the linked source was not retrieved. No status means the source is true, endorsed, company policy or exhaustively understood. Failed JSON import is reported at file level because no valid capture record can be accepted yet.
+Every successful capture remains `capture_status: captured`, including items whose processing needs attention. A URL plus a processed excerpt remains partial unless the linked source was also retrieved and represented in validated IR. No status means the source is true, endorsed, company policy or exhaustively understood. Failed JSON import is reported at file level because no valid capture record can be accepted yet.
+
+An optional `retrieval` object in local state records adapter/version, original/canonical URL, attempt/retrieval times, status, normalized source IDs and error. Missing means unattempted; `unavailable` means attempted but failed; `retrieved` means bytes acquired, with source IDs identifying successful normalization. Saved IR coverage is checked separately. Old `1.0` state records remain valid. [Full acquisition contract](YOUTUBE.md).
 
 ## Processing and reuse
 
-`process` normalizes actually supplied text and `.txt/.md/.vtt/.srt` attachments, then enters the existing preparation coordinator. The assistant supplies semantic extraction and reconciliation. URL-only items don't become fabricated source documents. Unsupported attachment bytes stay intact, with a gap reported; there is no OCR, PDF parsing, audio/video transcription, article fetching or social scraping.
+`process` normalizes actually supplied text and `.txt/.md/.vtt/.srt` attachments, retrieves supported YouTube captions through a generic linked-source resolver, then enters the existing preparation coordinator. The assistant supplies semantic extraction and reconciliation. YouTube requires optional local yt-dlp; English captions are preferred manual then automatic, never video/audio. Successful acquisitions are hash-verified and reused across sessions and collections. Failed items retain their errors without blocking other URLs; retry processing after resolving the issue. Unsupported links and attachment bytes stay intact with a gap reported; there is no OCR, PDF parsing, audio/video transcription, article fetching or broad social scraping.
 
 Canonical raw and normalized document files are shared through local hard links in existing-format collection snapshots. NTFS and common local Unix filesystems support this arrangement; actual filesystem capabilities are checked by the link operation. Keep the compiler project outside the synced intake folder. If linking fails, original captures stay saved and processing reports the error; the capture adapter does not silently substitute duplicate payloads. Existing legacy ingestion still supports its prior filesystem behavior and is not globally migrated.
 
-Repeated processing reuses matching sources and existing IR. A source-local extraction checkpoint can also be reused across collections or after a move when a historical validated IR and reconciliation receipt match, its source document is identical, and its unit IDs/relations are safe in the destination. Cross-source synthesis is not copied blindly; reconciliation is still needed. No model or remote service is invoked by the Python utilities, and no background compilation runs when sync receives a file.
+Repeated processing reuses matching sources and existing IR. A source-local extraction checkpoint can also be reused across collections or after a move when a historical validated IR and reconciliation receipt match, its source document is identical, and its unit IDs/relations are safe in the destination. Cross-source synthesis is not copied blindly; reconciliation is still needed. No model service is invoked by the Python utilities. Linked acquisition contacts YouTube only during requested processing; no background compilation runs when sync receives a file.
 
 ## Assistant-operated commands
 

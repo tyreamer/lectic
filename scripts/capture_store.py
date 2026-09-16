@@ -1,7 +1,7 @@
 """Cheap local capture, immutable inputs, personal context and shared source membership.
 
-No retrieval, OCR, transcription, model calls or background jobs. A synced folder
-is an input adapter, never the authoritative compiler workspace.
+Retrieval is an explicit processing operation; capture/import never fetch links.
+A synced folder is an input adapter, never the authoritative compiler workspace.
 """
 from contextlib import contextmanager
 from datetime import datetime, timezone
@@ -83,6 +83,16 @@ class CaptureStore:
         state=read(safe_child(self.root/'state',capture_id+'.json'));validate_schema(state,'capture-state')
         require(event['capture_id']==state['capture_id']==capture_id and state['envelope_hash']==fingerprint(event),'Capture binding mismatch')
         instant(state['imported_at'])
+        if state.get('retrieval'):
+            retrieval=state['retrieval'];instant(retrieval['attempted_at'])
+            require(retrieval['original_url']==self.url(event),'Retrieval original URL differs from capture')
+            require(set(retrieval['source_ids'])<=set(state['source_ids']),'Retrieved sources are not linked to capture')
+            if retrieval['status']=='retrieved':
+                require(retrieval['retrieved_at'] is not None and retrieval['error'] is None,'Malformed successful retrieval state')
+                instant(retrieval['retrieved_at'])
+            else:
+                require(retrieval['error'] and retrieval['retrieved_at'] is None and not retrieval['source_ids'],
+                        'Malformed unavailable retrieval state')
         for item in state['attachment_blobs']:
             blob=self.root/'blobs'/item['blob_hash']
             require(blob.is_file() and digest(blob.read_bytes())==item['blob_hash'],'Capture attachment hash mismatch')
@@ -214,10 +224,12 @@ class CaptureStore:
         return {'phase':'capture_membership_updated','items':len(states),'mode':mode,'collections':names}
 
     def status(self,event,state,processed_ids):
-        if state['issues']: return 'needs_attention'
+        retrieval=state.get('retrieval',{})
+        if state['issues'] or retrieval.get('status')=='unavailable': return 'needs_attention'
         if not state['source_ids']: return 'awaiting_retrieval' if self.url(event) else 'pending'
         unsupported=any(Path(a['filename']).suffix.lower() not in TEXT_EXTENSIONS for a in event.get('attachments',[]))
-        if self.url(event) or unsupported: return 'partially_processed'
+        if (self.url(event) and not (retrieval.get('status')=='retrieved' and retrieval.get('source_ids'))) or unsupported:
+            return 'partially_processed'
         return 'processed' if set(state['source_ids'])<=processed_ids else 'partially_processed'
 
     def processed_sources(self):
@@ -259,19 +271,32 @@ class CaptureStore:
                 'collections':[names.get(cid,cid) for cid in state['collection_ids']],
                 'capture_status':'captured','processing_status':self.status(event,state,processed),
                 'source_ids':state['source_ids'],'user_context':notes,'issues':state['issues'],
-                'retrieval':'Captured but linked source content not yet retrieved.' if self.url(event) else 'Only actually supplied content is available.'})
+                'retrieval':self.retrieval_description(event,state),
+                **({'retrieval_state':state['retrieval']} if 'retrieval' in state else {})})
         result.sort(key=lambda r:instant(r['captured_at']),reverse=True)
         return {'phase':'capture_inbox','items':result}
 
-    def canonical_source(self,raw,suffix,event):
+    @staticmethod
+    def retrieval_description(event,state):
+        retrieval=state.get('retrieval',{})
+        if retrieval.get('status')=='unavailable': return 'Linked content retrieval was attempted but is unavailable: '+retrieval['error']
+        if retrieval.get('status')=='retrieved':
+            return ('Captions retrieved and normalized; knowledge status is reported separately.' if retrieval['source_ids'] else
+                    'Caption bytes retrieved; normalization is incomplete.')
+        return 'Captured but linked source content not yet retrieved.' if CaptureStore.url(event) else 'Only actually supplied content is available.'
+
+    def canonical_source(self,raw,suffix,event,record=None):
         # URL/title are source metadata; annotations, membership and capture time never affect source identity.
         identity=fingerprint({'hash':digest(raw),'suffix':suffix,'url':self.url(event),'title':event.get('title','')})
-        filename=identity+suffix;h=digest(raw);sid='src-'+digest((filename+'\0'+h).encode())[:24]
+        filename=record.filename if record else identity+suffix
+        metadata=record.metadata if record else {'title':event.get('title'),'url':self.url(event)}
+        h=digest(raw);sid='src-'+digest((filename+'\0'+h).encode())[:24]
         destination=self.root/'sources'/sid
         if destination.exists(): validate_sources(destination);return sid
         blob=self.root/'blobs'/self.blob(raw)
-        doc={'schema_version':VERSION,'source_id':sid,'filename':filename,'title':event.get('title') or None,
-             'creator':None,'url':self.url(event) or None,'caption_type':'unknown','content_hash':h,
+        doc={'schema_version':VERSION,'source_id':sid,'filename':filename,'title':metadata.get('title') or None,
+             'creator':metadata.get('creator'),'url':metadata.get('url') or None,
+             'caption_type':metadata.get('caption_type','unknown'),'content_hash':h,
              'raw_path':f'raw/{sid}{suffix}','segments':normalize(raw,suffix)}
         validate_schema(doc,'source');entry={'source_id':sid,'path':f'sources/{sid}.json','document_hash':fingerprint(doc)}
         destination.parent.mkdir(parents=True,exist_ok=True)
@@ -299,7 +324,26 @@ class CaptureStore:
                 issues.append(a['filename']+': original saved; no content adapter for this file type.');continue
             try: sources.add(self.canonical_source((self.root/'blobs'/blobs[a['path']]).read_bytes(),suffix,event))
             except (ValueError,OSError) as exc: issues.append(a['filename']+': '+str(exc))
-        state['source_ids']=sorted(sources);state['issues']=list(dict.fromkeys(state['issues']+issues))
+        from linked_sources import resolver_for, retrieve
+        adapter=resolver_for(self.url(event)) if self.url(event) else None
+        if adapter:
+            retrieval={'adapter':adapter.adapter,'adapter_version':adapter.version,'status':'unavailable',
+                       'original_url':self.url(event),'canonical_url':None,'attempted_at':now(),
+                       'retrieved_at':None,'source_ids':[],'error':None}
+            try:
+                retrieval['canonical_url']=adapter.canonical_url
+                acquired=retrieve(adapter,self.root,self.blob)
+                retrieval.update(status='retrieved',retrieved_at=acquired.receipt['retrieved_at'])
+                # Raw bytes are cached before normalization. A retry need not refetch them.
+                for record in acquired.records:
+                    try:
+                        sid=self.canonical_source(record.raw,Path(record.filename).suffix.lower(),event,record)
+                        sources.add(sid);retrieval['source_ids'].append(sid)
+                    except (ValueError,OSError) as exc: issues.append('Retrieved captions: '+str(exc))
+            except (ValueError,OSError,KeyError) as exc:
+                retrieval['error']=str(exc);issues.append('Linked source: '+str(exc))
+            state['retrieval']=retrieval
+        state['source_ids']=sorted(sources);state['issues']=list(dict.fromkeys(issues))
         state['processing_status']=self.status(event,state,set());self.save_state(state)
 
     def materialize(self,collection_id):
@@ -347,7 +391,7 @@ class CaptureStore:
         reused=self.reuse_checkpoints(run)
         result=work(project=self.project,collection=cid,action='prepare')
         return {**result,'capture_context':self.listing(collection)['items'],'reused_capture_sources':reused,
-                'capture_note':'Saving and normalization do not prove semantic understanding. Linked pages were not retrieved.'}
+                'capture_note':'Only supplied or successfully retrieved content enters sources. Retrieval and normalization do not prove semantic understanding; unavailable links remain listed.'}
 
     def trace(self,build):
         from goal_workflow import validate_build

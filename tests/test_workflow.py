@@ -6,6 +6,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
@@ -229,10 +230,11 @@ class WorkflowTests(unittest.TestCase):
         self.assertFalse(result['recording_duration_known'])
 
     def test_youtube_boundary_is_optional_and_offline(self):
-        for url in ['youtube.com/watch?v=abc', 'https://www.youtube.com/playlist?list=xyz', 'https://youtu.be/abc']:
-            self.assertIsInstance(adapter_for(url), YouTubeIngestor)
-            with self.assertRaisesRegex(ec.Invalid, 'not available yet'):
-                compile_workflow(url, project=self.project)
+        with patch('ingestors.youtube.shutil.which', return_value=None):
+            for url in ['youtube.com/watch?v=o64cI6tebnU', 'https://youtu.be/o64cI6tebnU']:
+                self.assertIsInstance(adapter_for(url), YouTubeIngestor)
+                with self.assertRaisesRegex(ec.Invalid, 'yt-dlp is not installed'):
+                    compile_workflow(url, project=self.project)
         self.assertFalse(YouTubeIngestor.accepts('https://youtube.com.evil.example/watch?v=abc'))
         self.assertFalse((self.project / '.expertise-compiler').exists())
 

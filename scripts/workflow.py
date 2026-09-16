@@ -2,7 +2,7 @@
 from pathlib import Path
 import re
 
-from ec import (ROOT, VERSION, Invalid, assemble, digest, fingerprint, ingest, package, read,
+from ec import (ROOT, VERSION, Invalid, assemble, digest, fingerprint, ingest_records, package, read,
                 require, safe_child, validate_capabilities, validate_ir, validate_package,
                 validate_schema, validate_sources, validate_units, write)
 
@@ -71,12 +71,15 @@ def compile_workflow(input=None, output=None, *, project='.', metadata=None, int
         from ingestors import adapter_for
         from ingestors.youtube import YouTubeIngestor
         location = str(input) if YouTubeIngestor.accepts(input) else str((project / input).resolve())
-        records = adapter_for(location).collect(metadata)
+        adapter = adapter_for(location)
+        records = adapter.collect(metadata)
         snapshot = fingerprint([{'filename': r.filename, 'hash': digest(r.raw), 'metadata': r.metadata} for r in records])
         name = re.sub('[^a-z0-9]+', '-', Path(location).name.lower()).strip('-')[:32] or 'transcripts'
         run = (project / output).resolve() if output else home / 'runs' / f'{name}-{snapshot[:16]}'
         require(run.is_relative_to(project), 'Compilation output must be inside the selected project')
-        ingest(location, run, metadata)
+        if hasattr(adapter, 'folder'):
+            require(not run.is_relative_to(adapter.folder), 'Output must be outside input folder')
+        ingest_records(records, run)
     elif output:
         run = (project / output).resolve()
         require(run.is_relative_to(project), 'Compilation output must be inside the selected project')

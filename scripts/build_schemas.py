@@ -132,6 +132,13 @@ schemas['capture-state'] = obj(schema_version={'const':'1.0'}, capture_id=ID, en
     annotation_ids=arr(ID), capture_status={'const':'captured'},
     processing_status={'enum':['pending','awaiting_retrieval','partially_processed','processed','needs_attention']},
     issues=arr(S))
+schemas['capture-state']['properties']['retrieval'] = obj(
+    adapter=S, adapter_version=S, status={'enum':['unavailable','retrieved']},
+    original_url=S, canonical_url=NULL_S, attempted_at=S, retrieved_at=NULL_S,
+    source_ids=arr(SID), error=NULL_S)
+schemas['linked-retrieval'] = obj(schema_version={'const':'1.0'}, adapter=S, adapter_version=S,
+    canonical_url=S, retrieved_at=S, records=arr(obj(filename=S, blob_hash=HASH,
+        metadata=obj(title=NULL_S, creator=NULL_S, url=S, caption_type={'enum':['manual','automatic']})),1))
 
 if __name__ == '__main__':
     for name, schema in schemas.items():

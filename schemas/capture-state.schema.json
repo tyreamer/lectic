@@ -91,6 +91,75 @@
       },
       "minItems": 0,
       "uniqueItems": true
+    },
+    "retrieval": {
+      "type": "object",
+      "properties": {
+        "adapter": {
+          "type": "string",
+          "minLength": 1
+        },
+        "adapter_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "status": {
+          "enum": [
+            "unavailable",
+            "retrieved"
+          ]
+        },
+        "original_url": {
+          "type": "string",
+          "minLength": 1
+        },
+        "canonical_url": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "attempted_at": {
+          "type": "string",
+          "minLength": 1
+        },
+        "retrieved_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "source_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^src-[a-f0-9]{24}$"
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "error": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        }
+      },
+      "required": [
+        "adapter",
+        "adapter_version",
+        "status",
+        "original_url",
+        "canonical_url",
+        "attempted_at",
+        "retrieved_at",
+        "source_ids",
+        "error"
+      ],
+      "additionalProperties": false
     }
   },
   "required": [

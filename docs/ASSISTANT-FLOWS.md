@@ -45,7 +45,7 @@ Repeat with `./fixtures/debugging`: discover a debugging experiment planner, bui
 - Change the proposal order after displaying numbers. An old “build 2” must get a refreshed list rather than the wrong skill.
 - Add/change a transcript. A new snapshot appears; prior source evidence remains unchanged.
 - Give untimed text. Do not manufacture a recording duration.
-- Supply only an unsupported YouTube link. Explain the adapter limitation and request exported transcripts without a network/audio fallback.
+- Supply YouTube links with private context. Save each exact link, then retrieve captions on authorized processing and continue into the user's goal. If the optional yt-dlp executable is missing, explain setup and request authorization to install it; do not ask for manual transcript downloads. Failed links remain visible while successful sources proceed. Never substitute metadata, audio or video for unavailable captions.
 - Use an installed skill from a different project with spaces in paths. Work belongs to that project, not the installation.
 - Ask for a capability unsupported by the material. Explain the gap, rather than manufacturing three weak skills.
 

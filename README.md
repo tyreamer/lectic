@@ -54,9 +54,11 @@ Restart the assistant if the skill does not appear. For an existing installation
 
 ### 2. Bring valuable material
 
-Supply a folder of UTF-8 `.txt`, `.md`, `.vtt` or `.srt` files. You don't need a build idea:
+Paste YouTube links, or supply a folder of UTF-8 `.txt`, `.md`, `.vtt` or `.srt` files. You don't need a build idea:
 
 > Use the transcripts in ./input. Save them as My Research, show me the strongest things they could become, and recommend what to build first. Explain what I would give each one, what I would get back, and its limits.
+
+For YouTube, paste your links after: **“Save these as My Research, process the collection, and show me what I could use it for.”** Lectic saves the links first, then retrieves available English captions when processing is requested. This requires the optional local `yt-dlp` executable; the assistant helps with setup after your authorization. [YouTube setup and limits →](docs/YOUTUBE.md)
 
 The assistant returns a ranked **Capability Map** grounded in the collection. Each opportunity explains its purpose, inputs, outputs, supporting evidence and repeat-use value. A fact-heavy collection may support reference and learning without supporting a reliable reviewer.
 
@@ -139,7 +141,7 @@ Capture stores supplied data without running extraction or rebuilding capabiliti
 
 **The first phone adapter is an [iPhone Share Sheet Shortcut proof of concept](docs/iphone-shortcut.md).** It writes URL/text records to a synced folder, which the desktop imports on request. The one-time setup uses four actions; the desktop generates IDs and record metadata. It is not an installable mobile app, and real-device/iCloud testing remains outstanding.
 
-A saved link is not retrieved content. V1 preserves URLs and supplied attachment bytes; it does not scrape social platforms, fetch article bodies, parse PDFs, perform OCR or transcribe media. Only actual supplied text and supported transcript files can feed expertise processing today.
+A saved link is not retrieved content. On requested processing, YouTube links can supply English captions through local `yt-dlp`; successful acquisitions are saved for reuse. Other linked platforms remain capture-only. Lectic does not fetch article bodies, parse PDFs, perform OCR, scrape Instagram/TikTok or transcribe audio/video. Unavailable captions remain a visible gap, never a fabricated summary.
 
 [Capture contract, states and sync details →](docs/CAPTURE.md)
 
@@ -147,7 +149,7 @@ A saved link is not retrieved content. V1 preserves URLs and supplied attachment
 
 | Area | Available today | Boundary |
 | --- | --- | --- |
-| Processing | Text and `.txt`, `.md`, `.vtt`, `.srt` transcripts | No automatic URL or media acquisition |
+| Processing | Text/transcript files and deferred YouTube English-caption retrieval | Optional `yt-dlp` required for YouTube; no arbitrary URL or audio/video acquisition |
 | Discovery | Grounded, ranked Capability Maps with version history | Quality depends on source support and assistant interpretation |
 | Outputs | Reusable text methods, work products and optional skill exports | No standalone agent runtime or persistent coaching service |
 | Capture | Local inbox import, annotations and multiple memberships | Phone adapter is a setup recipe; shared source storage requires local hard-link support |
@@ -169,6 +171,7 @@ We are testing with **AI builders, consultants, creators and knowledge-heavy pro
 | Guide | Purpose |
 | --- | --- |
 | [Installation](docs/INSTALLATION.md) | Setup, updates and troubleshooting |
+| [YouTube retrieval](docs/YOUTUBE.md) | Paste links, retrieve captions on demand, preserve evidence and reuse it |
 | [Guided use](docs/GUIDED-USE.md) | See what is saved, discover concrete applications and reuse it |
 | [iPhone Shortcut](docs/iphone-shortcut.md) | Capture setup and exact first live test |
 | [Evaluation](docs/EVALUATION.md) | Compare against capable ordinary transcript chat |
