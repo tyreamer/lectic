@@ -2,6 +2,8 @@
 
 Use for saving a shared link/text/file, importing a synced Inbox, finding saved items, adding notes, moving memberships, processing pending captures or tracing a saved result. You operate scripts; users should not see internal IDs unless requested. The core contract is independent of iCloud and the phone adapter.
 
+Apply the execution-environment check at the top of SKILL.md before saving/importing or processing. Check command-network access and yt-dlp before new YouTube retrieval, not on capture-only saves or cached reuse. If the host cannot execute the requested operation, preserve the request for a capable environment and explain what is not yet saved or processed; never simulate successful capture in chat.
+
 Resolve PROJECT and SKILL_ROOT as usual. Don't guess the synced Inbox location or silently import an entire personal drive. Use a folder the user identifies, or locate a previously specified folder. The iPhone setup is [documented here](../docs/iphone-shortcut.md). If no phone Shortcut exists, explain that the proof requires one-time four-action manual assembly; do not claim it has been installed.
 
 ## Save and manage
