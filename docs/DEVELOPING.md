@@ -35,6 +35,7 @@ For Codex's bundled GitHub installer, use repository `tyreamer/lectic`, path `.`
 - `scripts/outcomes.py`: the eight domain-independent intent contracts and general result rendering. Natural-language inference belongs to the host assistant and is documented in prompts/intents.md.
 - `scripts/ec.py`: preserved ingestion, normalization, IR assembly, integrity checks, and portable export.
 - `scripts/ingestors/`: transcript file adapter and an explicit unavailable YouTube boundary. Adapters produce original bytes/metadata, not knowledge units.
+- `scripts/install_skill.py`, `scripts/update_skill.py`: local interface distribution, independent of sources, IR and build state. The updater is standalone so its runner survives an interrupted installed-folder replacement. `enable_updates_windows.ps1` supplies the opt-in OS schedule; it does not schedule compiler work. Keep its payload allowlist aligned with the clean installer.
 - `prompts/`: detailed reasoning and operator instructions, loaded as needed.
 - `schemas/`: versioned durable artifact contracts. Regenerate from `scripts/build_schemas.py` when intentionally changing them.
 - `fixtures/flows/`: domain-specific held-out cases and scripted conversation contracts.
@@ -46,6 +47,8 @@ Project state lives in `.expertise-compiler/`, outside the installed skill. Add 
 `tests/test_universal.py` uses six unrelated synthetic corpora under fixtures/universal and all eight intents through the same coordinator. It verifies useful section contracts, explicit intent/reason persistence, no automatic skill package, fresh-process reuse, targeted extraction, source replacement/removal (including an empty active collection), relationship invalidation, source/knowledge comparisons, archive/restore, prepare-only knowledge and historical validation. The fixture intent labels and prose are authored expectations, not a simulated model-inference success. The live protocol tests that separate boundary.
 
 ## Validation limits
+
+`tests/test_updates.py` exercises adoption/backups, immutable project data, local-edit protection, repeat/fresh-process use, download failures, unsafe archives, malformed code/JSON, concurrent updates, interrupted replacement recovery and payload parity with the installer. Scheduler registration and actual GitHub access require a live Windows smoke test; deterministic tests do not simulate the passage of a day or a reboot. Update receipts identify published code, not behavioral certification.
 
 `tests/test_capture.py` covers immutable capture import and retries, attachment hashes/path boundaries, annotations, multiple collection memberships with shared underlying files, source-local extraction reuse, fresh installed CLI operation, and two unrelated capture-to-build workflows. Authored outcome fixtures expose unavailable links and missing details; they do not prove live assistant behavior. The iPhone design needs real-device testing. `capture_store.py` adds no retrieval or model dependency, and `Library.attach_shared` preserves existing snapshot/validation contracts.
 

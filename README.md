@@ -50,6 +50,8 @@ Lectic was previously named Expertise Compiler. The installed skill identifier r
 
 Restart the assistant if the skill does not appear. For an existing installation, follow the update guidance rather than overwriting it. [Installation and troubleshooting →](docs/INSTALLATION.md)
 
+**Stay current:** ask “Update Lectic and enable automatic updates on this PC.” The optional Windows updater checks GitHub about once a day while you're logged in, keeps the previous installation, and pauses replacement if installed files have local edits. Saved collections and built capabilities remain in their projects. Updating a local skill does not update a separate ChatGPT workspace skill. [Update controls →](docs/INSTALLATION.md#updates)
+
 ### 2. Bring valuable material
 
 Supply a folder of UTF-8 `.txt`, `.md`, `.vtt` or `.srt` files. You don't need a build idea:

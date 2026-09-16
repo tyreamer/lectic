@@ -22,6 +22,8 @@ Test saved reviewers, decision frameworks, SOPs, guides, lessons and rubrics as 
 
 ## Before you start
 
+Have the facilitator record the **installed commit**, rather than assuming a current GitHub checkout means a current skill. If automatic updates are enabled, pause them during each matched baseline/compiled comparison and its reuse follow-up; record the version again if the study intentionally tests an upgrade. This keeps a software change from masquerading as a measured product improvement. [Version and update controls](INSTALLATION.md#updates).
+
 For the capture-first pilot, use the [iPhone Shortcut live test](iphone-shortcut.md#exact-first-live-test-from-your-iphone). It separately measures saving, sync and import before asking for processing. A URL-only capture is expected to remain unavailable for content-based work; that is different from a failed save. The rest of this guide tests discovery and useful outcomes once enough content is actually available.
 
 Use local Codex or Claude Code with access to your project files and local tools. Follow the [installation instructions](../README.md#use-the-current-skill-interface); your assistant should handle setup, including checking Python 3.10+. You should not need to run compiler commands or edit JSON. If you already have an installation, ask the facilitator to verify its version before testing; the installer preserves differing existing installations instead of silently updating them.
