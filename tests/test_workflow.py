@@ -23,7 +23,7 @@ from workflow import compile_workflow, summary
 class WorkflowTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
-        self.base = Path(self.temp.name)
+        self.base = Path(self.temp.name).resolve()
         self.project = self.base / 'User Project With Spaces'
         self.project.mkdir()
         self.home = isolate_home(self, self.base, 'Lectic Home With Spaces')

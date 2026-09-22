@@ -17,7 +17,7 @@ from capability_maps import capability_map, CATEGORIES, validate_draft, compare_
 
 class CapabilityMapTests(unittest.TestCase):
     def setUp(self):
-        self.temp=tempfile.TemporaryDirectory(); self.project=Path(self.temp.name)
+        self.temp=tempfile.TemporaryDirectory(); self.project=Path(self.temp.name).resolve()
         self.home=isolate_home(self,self.project)
         self.cases=ec.read(ec.ROOT/'fixtures/opportunities/cases.json')
 
@@ -77,7 +77,7 @@ class CapabilityMapTests(unittest.TestCase):
     def test_unrelated_domains_same_discovery_and_multiple_categories(self):
         for case in self.cases:
             with self.subTest(domain=case['domain']), tempfile.TemporaryDirectory() as root:
-                self.project=Path(root);self.home=isolate_home(self,self.project)
+                self.project=Path(root).resolve();self.home=isolate_home(self,self.project)
                 self.seed(case);record=self.save(self.draft(case))
                 self.assertEqual(len(record['recommended_ids']),2)
                 self.assertEqual({c for o in record['draft']['opportunities'] for c in o['categories']},set(case['categories']+case['second_categories']))

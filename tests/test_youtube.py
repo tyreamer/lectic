@@ -61,7 +61,7 @@ class FakeYtDlp:
 class YouTubeTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory(); self.addCleanup(self.temp.cleanup)
-        self.base = Path(self.temp.name)
+        self.base = Path(self.temp.name).resolve()
         self.home = isolate_home(self, self.base)
         self.fake = FakeYtDlp()
         self.which = patch('ingestors.youtube.shutil.which', return_value='yt-dlp').start()

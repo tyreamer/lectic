@@ -17,7 +17,7 @@ from capture_store import CaptureStore
 class CaptureInputTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
-        self.base = Path(self.temp.name)
+        self.base = Path(self.temp.name).resolve()
         self.inbox = self.base / 'Inbox'
         self.inbox.mkdir()
         self.project = self.base / 'Project'

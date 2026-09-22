@@ -36,7 +36,7 @@ class Client:
 class McpWorkflowTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory(); self.addCleanup(self.temp.cleanup)
-        self.base = Path(self.temp.name)
+        self.base = Path(self.temp.name).resolve()
         self.project = self.base / 'Project'; self.project.mkdir()
         self.home = isolate_home(self, self.base)
         self.client = Client(Server(self.project))
@@ -159,7 +159,7 @@ class McpWorkflowTests(unittest.TestCase):
 class McpStdioTests(unittest.TestCase):
     def test_server_speaks_newline_delimited_json_rpc_over_stdio(self):
         with tempfile.TemporaryDirectory() as temp:
-            base = Path(temp); project = base / 'proj'; project.mkdir()
+            base = Path(temp).resolve(); project = base / 'proj'; project.mkdir()
             env = {**os.environ, 'LECTIC_HOME': str(base / 'home'), 'PYTHONIOENCODING': 'utf-8'}
             messages = [
                 {'jsonrpc': '2.0', 'id': 1, 'method': 'initialize', 'params': {'protocolVersion': '2025-03-26', 'capabilities': {}, 'clientInfo': {'name': 'x', 'version': '0'}}},

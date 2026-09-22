@@ -18,7 +18,7 @@ import test_workflow
 class HomeResolutionTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory(); self.addCleanup(self.temp.cleanup)
-        self.base = Path(self.temp.name)
+        self.base = Path(self.temp.name).resolve()
         self.project = self.base / 'Project'; self.project.mkdir()
 
     def test_environment_variable_wins(self):
@@ -69,7 +69,7 @@ class SharedHomeTests(unittest.TestCase):
 
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory(); self.addCleanup(self.temp.cleanup)
-        self.base = Path(self.temp.name)
+        self.base = Path(self.temp.name).resolve()
         self.home = isolate_home(self, self.base)
         self.oracle = None
 

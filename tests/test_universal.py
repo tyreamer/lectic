@@ -20,7 +20,7 @@ from outcomes import INTENTS,validate_outcome
 
 class UniversalTests(unittest.TestCase):
     def setUp(self):
-        self.temp=tempfile.TemporaryDirectory(); self.base=Path(self.temp.name)
+        self.temp=tempfile.TemporaryDirectory(); self.base=Path(self.temp.name).resolve()
         self.project=self.base/'Project'; self.project.mkdir()
         self.home=isolate_home(self,self.base)
         self.cases=ec.read(ec.ROOT/'fixtures/universal/cases.json')

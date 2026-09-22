@@ -22,7 +22,7 @@ class GoalTests(unittest.TestCase):
 
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
-        self.base = Path(self.temp.name)
+        self.base = Path(self.temp.name).resolve()
         self.project = self.base / 'Actual Work'; self.project.mkdir()
         self.home = isolate_home(self, self.base)
         self.oracle = None

@@ -26,7 +26,7 @@ VIDEO_A, VIDEO_B = 'o64cI6tebnU', 'dQw4w9WgXcQ'
 class PackTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory(); self.addCleanup(self.temp.cleanup)
-        self.base = Path(self.temp.name)
+        self.base = Path(self.temp.name).resolve()
         self.oracle = build(self.base / 'oracle')
         self.author = self.base / 'author'; self.author.mkdir()
         self.home = isolate_home(self, self.base, 'author-home')

@@ -14,7 +14,7 @@ from store import LocalStore, staged
 class LocalStoreTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory(); self.addCleanup(self.temp.cleanup)
-        self.root = Path(self.temp.name) / 'home'
+        self.root = Path(self.temp.name).resolve() / 'home'
         self.store = LocalStore(self.root)
 
     def test_blobs_are_content_addressed_and_verified(self):

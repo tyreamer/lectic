@@ -19,7 +19,7 @@ from goal_workflow import work, validate_build
 
 class CaptureTests(unittest.TestCase):
     def setUp(self):
-        self.temp=tempfile.TemporaryDirectory();self.base=Path(self.temp.name)
+        self.temp=tempfile.TemporaryDirectory();self.base=Path(self.temp.name).resolve()
         self.project=self.base/'Local Project';self.project.mkdir()
         self.home=isolate_home(self,self.base)
         self.inbox=self.base/'Synced Inbox';self.inbox.mkdir()

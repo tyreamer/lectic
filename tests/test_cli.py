@@ -18,7 +18,7 @@ import cli
 class SetupTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory(); self.addCleanup(self.temp.cleanup)
-        self.base = Path(self.temp.name)
+        self.base = Path(self.temp.name).resolve()
         self.user = self.base / 'user'; self.user.mkdir()
         self.home = isolate_home(self, self.base)
         patch('cli.Path.home', return_value=self.user).start(); self.addCleanup(patch.stopall)

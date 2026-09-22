@@ -25,7 +25,7 @@ NEXT = 'b' * 40
 class UpdatesTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
-        self.base = Path(self.temp.name)
+        self.base = Path(self.temp.name).resolve()
         self.dest = self.base / 'Assistant With Spaces/skills/expertise-compiler'
         self.dest.mkdir(parents=True)
         (self.dest / 'SKILL.md').write_text('Old customized skill\n', encoding='utf-8')

@@ -17,7 +17,7 @@ from lectic_mcp import connect_url, ensure_token, serve_http
 class HttpTransportTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory(); self.addCleanup(self.temp.cleanup)
-        self.base = Path(self.temp.name); self.project = self.base / 'Project'; self.project.mkdir()
+        self.base = Path(self.temp.name).resolve(); self.project = self.base / 'Project'; self.project.mkdir()
         self.home = isolate_home(self, self.base)
         self.httpd = serve_http(self.project, port=0, announce=None, allowed_origins=['app.example'])
         threading.Thread(target=self.httpd.serve_forever, daemon=True).start()

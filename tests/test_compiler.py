@@ -16,7 +16,7 @@ from evaluate import prepare, score
 class CompilerTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
-        self.base = Path(self.temp.name)
+        self.base = Path(self.temp.name).resolve()
         self.home = isolate_home(self, self.base)
         self.run = build(self.base / 'demo')
 
