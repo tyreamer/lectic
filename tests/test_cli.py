@@ -95,10 +95,32 @@ class SetupTests(unittest.TestCase):
         self.assertIn(f'https://brave-fox-1234.trycloudflare.com/t/{token}/mcp', out)
         for expected in ('ChatGPT', 'Claude', 'Gemini CLI', 'lectic connect', 'The tunnel closed'):
             self.assertIn(expected, out)
+        self.assertFalse((self.home / 'share-link.json').exists())  # the link is retired when sharing stops
         # The same secret is reused next time, unless a new link is requested.
         with patch('cli.shutil.which', side_effect=which):
             self.assertIn(token, self.run_cli('share', '--port', '0')[1])
             self.assertNotIn(token, self.run_cli('share', '--port', '0', '--new-link')[1])
+
+    def test_status_shows_a_live_share_link_and_forgets_a_dead_one(self):
+        """An assistant should not have to scrape `share` output to find the link."""
+        import threading
+        from lectic_mcp import serve_http
+        httpd = serve_http(self.base, port=0, announce=None)
+        threading.Thread(target=httpd.serve_forever, daemon=True).start()
+        self.addCleanup(httpd.server_close); self.addCleanup(httpd.shutdown)
+        local = f'http://127.0.0.1:{httpd.server_address[1]}'
+        self.home.mkdir(parents=True, exist_ok=True)
+        record = self.home / 'share-link.json'
+        record.write_text(json.dumps({'link': local + '/t/secret/mcp', 'local': local, 'started_at': 'now'}), encoding='utf-8')
+        self.assertEqual(cli.live_link(self.home), local + '/t/secret/mcp')
+        self.assertIn(local + '/t/secret/mcp', self.run_cli('status')[1])
+        self.assertIn('(live)', self.run_cli('status')[1])
+        # A record left behind by a server that is gone is checked, not believed.
+        record.write_text(json.dumps({'link': 'http://127.0.0.1:9/t/secret/mcp', 'local': 'http://127.0.0.1:9', 'started_at': 'now'}), encoding='utf-8')
+        self.assertIsNone(cli.live_link(self.home))
+        self.assertIn('not sharing', self.run_cli('status')[1])
+        record.unlink()
+        self.assertIn('not sharing', self.run_cli('status')[1])
 
     def test_share_explains_the_missing_tunnel_and_accepts_a_public_address(self):
         code, out = self.run_cli('share', '--port', '0')

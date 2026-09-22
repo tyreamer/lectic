@@ -193,7 +193,8 @@ def status(argv):
     print(f'Claude Code {"connected" if claude_connected() else "not connected"}')
     print(f'Codex       {"connected" if codex_connected() else "not connected"}')
     print(f'YouTube     {"ready, " + youtube_route() if youtube_available() else "not installed"}')
-    print(f'Share link  {"made (lectic share to use it)" if (Path(info["home"]) / "server.json").is_file() else "none yet (lectic share)"}')
+    link = live_link(info['home'])
+    print(f'Share link  {link + "  (live)" if link else "not sharing (run: lectic share)"}')
     ok, _ = verify_server()
     print(f'Server      {"ok" if ok else "FAILED"}')
     if not (claude_connected() or codex_connected()): print('\nRun `lectic setup` to connect an assistant.')
@@ -269,6 +270,10 @@ def share(argv):
             if not public:
                 print('The tunnel did not come up. Check your connection and try again.'); tunnel.terminate(); tunnel.stdout.close(); httpd.shutdown(); httpd.server_close(); return 1
     link = connect_url(public, httpd.token)
+    # Publish it where `lectic status` and any assistant can find it, rather than only on this screen.
+    record = storage_root(project) / 'share-link.json'
+    record.parent.mkdir(parents=True, exist_ok=True)
+    record.write_text(json.dumps({'link': link, 'local': local, 'started_at': time.strftime('%Y-%m-%dT%H:%M:%S')}), encoding='utf-8')
     print('\nYour Lectic link:\n\n  ' + link + '\n' + HOSTED_HELP)
     if tunnel and not option(argv, '--tunnel'):
         print('This link lasts while `lectic share` is running; a quick tunnel gets a new address each time. For a permanent one see docs/CLOUD.md.')
@@ -281,6 +286,7 @@ def share(argv):
     except KeyboardInterrupt:
         pass
     finally:
+        record.unlink(missing_ok=True)
         if tunnel:
             if tunnel.poll() is None: tunnel.terminate()
             tunnel.stdout.close()
@@ -298,6 +304,20 @@ def connect(argv):
     if any(v == 'connected' for v in results.values()):
         print('\nConnected. Restart the assistant once if it was already open. `lectic setup` switches back to this machine\'s own knowledge.')
     return 0
+
+
+def live_link(home):
+    """The link a running `lectic share` is serving, or None. Checked, never just believed."""
+    import json as _json, urllib.error, urllib.request
+    path = Path(home) / 'share-link.json'
+    if not path.is_file(): return None
+    try:
+        record = _json.loads(path.read_text(encoding='utf-8'))
+        with urllib.request.urlopen(record['local'] + '/health', timeout=2) as response:
+            if response.status != 200: return None
+    except (OSError, ValueError, KeyError, urllib.error.URLError):
+        return None
+    return record['link']
 
 
 def pack(argv):

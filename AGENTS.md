@@ -60,6 +60,22 @@ A chat without command access (plain ChatGPT, for example) cannot install anythi
 1. They run the setup on their own computer through a host that has command access (Claude Code, Codex, a terminal) — you can write out the three commands for them to paste.
 2. Someone who already runs Lectic gives them a link from `lectic share`, which they add as a connector in their chat app's settings. No install needed on their side. See `docs/CLOUD.md`.
 
+## If they want to use it from ChatGPT, Claude on the web, Gemini or their phone
+
+Those cannot reach a local program, so they need a link. From a folder that is **not** a project with its own older `.expertise-compiler` storage (their home folder is a safe choice):
+
+```
+<python> -m lectic.cli share
+```
+
+**It runs until stopped.** Start it in the background, then read the link with `<python> -m lectic.cli status`, which prints it once it is live. Do not run it in the foreground and wait — it will not return.
+
+Give the person the link and where to paste it: ChatGPT → Settings → Apps & Connectors → Create (Authentication: none); Claude → Settings → Connectors → Add custom connector; Gemini CLI → `gemini mcp add --transport http lectic <link>`. Their phone can post saves to the same link; see `docs/CLOUD.md`.
+
+Tell them plainly: the link works while that command keeps running, a quick tunnel gets a new address each time, and **anyone with the link can read and change their knowledge**, so it is not for posting publicly. If they want it always on, point them at the container in `docs/CLOUD.md`.
+
+If it reports that `cloudflared` is missing, install it with their approval (`winget install Cloudflare.cloudflared`, `brew install cloudflared`) and run it again.
+
 ## If they asked you to install a knowledge pack
 
 ```
