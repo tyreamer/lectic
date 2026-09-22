@@ -121,6 +121,28 @@ class YouTubeTests(unittest.TestCase):
             YouTubeIngestor(URL).collect()
         self.boundary.assert_not_called()
 
+    def test_network_route_is_configured_once_and_used_every_time(self):
+        YouTubeIngestor(URL).collect(); self.assertNotIn('--proxy', self.fake.commands[0])
+        cookies = self.base / 'cookies.txt'; cookies.write_text('# Netscape HTTP Cookie File', encoding='utf-8')
+        with patch.dict('os.environ', {'LECTIC_YTDLP_PROXY': 'http://user:pw@proxy.example:8080', 'LECTIC_YTDLP_COOKIES': str(cookies)}):
+            self.fake.commands.clear(); YouTubeIngestor(URL).collect()
+            for command in self.fake.commands:
+                self.assertEqual(command[command.index('--proxy') + 1], 'http://user:pw@proxy.example:8080')
+                self.assertEqual(command[command.index('--cookies') + 1], str(cookies))
+        with patch.dict('os.environ', {'LECTIC_YTDLP_COOKIES': str(self.base / 'missing.txt')}):
+            with self.assertRaisesRegex(ec.Invalid, 'does not exist'): YouTubeIngestor(URL).collect()
+
+    def test_a_blocked_network_is_named_as_such_with_the_fix(self):
+        def blocked(command, **kwargs):
+            self.fake.commands.append(command)
+            return subprocess.CompletedProcess(command, 1, '', 'ERROR: [youtube] o64cI6tebnU: Sign in to confirm you are not a bot. Use --cookies-from-browser or --cookies')
+        self.boundary.side_effect = blocked
+        with self.assertRaisesRegex(ec.Invalid, 'blocked this network, not this video.*LECTIC_YTDLP_PROXY.*home connection'):
+            YouTubeIngestor(URL).collect()
+        with patch.dict('os.environ', {'LECTIC_YTDLP_PROXY': 'http://proxy.example:8080'}):
+            with self.assertRaisesRegex(ec.Invalid, 'configured proxy did not help'):
+                YouTubeIngestor(URL).collect()
+
     def test_pip_installed_yt_dlp_module_works_without_a_path_entry(self):
         self.which.return_value = None
         with patch('ingestors.youtube.importlib.util.find_spec', return_value=object()):

@@ -1,6 +1,7 @@
 """Optional, bounded YouTube caption acquisition. Never download video or audio."""
 import importlib.util
 import json
+import os
 from pathlib import Path
 import re
 import shutil
@@ -11,6 +12,27 @@ from urllib.parse import parse_qs, urlparse
 
 from ec import Invalid, require
 from . import TranscriptInput
+
+
+BLOCKED_SIGNS = ('not a bot', 'sign in to confirm', 'http error 429', 'too many requests')  # never a video that is simply private or removed
+
+
+def network_options():
+    """How this machine reaches YouTube. Set once; every retrieval uses it.
+
+    LECTIC_YTDLP_PROXY   a proxy URL (a residential one is what hosted transcript sites use)
+    LECTIC_YTDLP_COOKIES a cookies.txt exported from a signed-in browser
+    """
+    options, sources = [], []
+    proxy = os.environ.get('LECTIC_YTDLP_PROXY', '').strip()
+    if proxy:
+        options += ['--proxy', proxy]; sources.append('proxy')
+    cookies = os.environ.get('LECTIC_YTDLP_COOKIES', '').strip()
+    if cookies:
+        path = Path(cookies).expanduser()
+        require(path.is_file(), f'LECTIC_YTDLP_COOKIES points at a file that does not exist: {path}')
+        options += ['--cookies', str(path)]; sources.append('cookies')
+    return options, sources
 
 
 def module_launcher():
@@ -101,6 +123,12 @@ class YouTubeIngestor:
             raise Invalid('Could not start yt-dlp: ' + str(exc)) from exc
         if result.returncode:
             detail = ' '.join((result.stderr or result.stdout or 'No diagnostic returned').split())[:800]
+            if any(sign in detail.lower() for sign in BLOCKED_SIGNS):
+                _, using = network_options()
+                raise Invalid('YouTube blocked this network, not this video. ' +
+                              ('The configured ' + ' and '.join(using) + ' did not help; try a residential proxy or fresh cookies. '
+                               if using else 'Give Lectic another route once: set LECTIC_YTDLP_PROXY to a proxy URL (a residential proxy is what hosted transcript sites use) or LECTIC_YTDLP_COOKIES to a cookies.txt from a signed-in browser, then process again. ')
+                              + 'Or process this collection from a home connection. The link remains saved. Detail: ' + detail)
             raise Invalid('YouTube caption retrieval failed: ' + detail + ' The link remains saved; retry later or check yt-dlp availability/version.')
         return result.stdout
 
@@ -112,7 +140,7 @@ class YouTubeIngestor:
         common = launcher + ['--ignore-config', '--no-plugin-dirs', '--no-remote-components',
                   '--no-cache-dir', '--no-playlist', '--skip-download', '--ignore-no-formats-error',
                   '--no-progress', '--encoding', 'utf-8', '--socket-timeout', '15',
-                  '--retries', '1', '--extractor-retries', '1']
+                  '--retries', '1', '--extractor-retries', '1'] + network_options()[0]
         with tempfile.TemporaryDirectory(prefix='lectic-youtube-') as temporary:
             output = self.run(common + ['--dump-single-json', '--', canonical], temporary)
             require(len(output) <= 16 * 1024 * 1024, 'YouTube metadata exceeds the supported size')

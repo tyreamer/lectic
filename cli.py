@@ -122,6 +122,17 @@ def verify_server():
     return ok, json.loads(call['result']['content'][0]['text']) if ok else None
 
 
+def youtube_route():
+    """What `lectic status` shows: how this machine reaches YouTube."""
+    sys.path.insert(0, str(SCRIPTS))
+    from ingestors.youtube import network_options
+    try:
+        _, using = network_options()
+    except Exception as exc:  # a bad cookies path is a status line, not a crash
+        return 'misconfigured: ' + str(exc)
+    return 'via ' + ' + '.join(using) if using else 'direct (set LECTIC_YTDLP_PROXY or LECTIC_YTDLP_COOKIES if YouTube blocks this network)'
+
+
 def youtube_available():
     if shutil.which('yt-dlp'): return True
     try:
@@ -179,7 +190,7 @@ def status(argv):
         print(f'Collections unreadable: {exc}')
     print(f'Claude Code {"connected" if claude_connected() else "not connected"}')
     print(f'Codex       {"connected" if codex_connected() else "not connected"}')
-    print(f'YouTube     {"ready" if youtube_available() else "not installed"}')
+    print(f'YouTube     {"ready, " + youtube_route() if youtube_available() else "not installed"}')
     print(f'Share link  {"made (lectic share to use it)" if (Path(info["home"]) / "server.json").is_file() else "none yet (lectic share)"}')
     ok, _ = verify_server()
     print(f'Server      {"ok" if ok else "FAILED"}')

@@ -5,6 +5,9 @@ WORKDIR /app
 COPY . /app
 RUN pip install --no-cache-dir /app yt-dlp
 ENV LECTIC_HOME=/data
+# YouTube throttles datacenter networks. Give the container a route it accepts:
+#   -e LECTIC_YTDLP_PROXY=http://user:pass@host:port      (a residential proxy)
+#   -e LECTIC_YTDLP_COOKIES=/data/cookies.txt              (exported from a signed-in browser)
 VOLUME /data
 EXPOSE 8787
 HEALTHCHECK CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8787/health')" || exit 1

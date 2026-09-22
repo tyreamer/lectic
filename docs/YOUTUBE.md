@@ -6,7 +6,18 @@ Paste YouTube links and explain why you are keeping them. Lectic saves each link
 
 Python remains standard-library-only. Linked YouTube retrieval additionally requires a current **`yt-dlp` executable on the assistant process's PATH**, with network access to YouTube. Lectic detects it and gives an actionable error if absent. It never installs software or downloads binaries automatically. Ask your assistant to install it if you want to authorize that setup; see [yt-dlp's official installation instructions](https://github.com/yt-dlp/yt-dlp#installation). Skill updates do not install or update yt-dlp.
 
-The adapter invokes yt-dlp without a shell, reads video metadata, selects one caption track, then downloads only that track. Both commands use `--skip-download` and `--no-playlist`. User configuration, plugins and remote components are disabled so they cannot introduce media downloads or hidden behavior. No audio, video, speech-to-text, cookies/login setup, paid API or model call is used. Metadata and captions have size checks, and subprocesses have bounded retries and timeouts.
+The adapter invokes yt-dlp without a shell, reads video metadata, selects one caption track, then downloads only that track. Both commands use `--skip-download` and `--no-playlist`. User configuration, plugins and remote components are disabled so they cannot introduce media downloads or hidden behavior. No audio, video, speech-to-text, paid API or model call is used. Metadata and captions have size checks, and subprocesses have bounded retries and timeouts.
+
+## When YouTube blocks the network
+
+YouTube throttles requests from datacenter addresses ("sign in to confirm you're not a bot", HTTP 429). Hosted transcript websites fetch the same caption tracks Lectic does; they simply arrive from a network YouTube accepts. Lectic recognizes the block and tells you so, distinguishing it from a video that truly has no captions. Give it another route once, and every retrieval uses it:
+
+| Setting | What it is |
+| --- | --- |
+| `LECTIC_YTDLP_PROXY` | A proxy URL passed to yt-dlp's `--proxy`. A residential proxy (a few dollars a month) is the reliable choice for an always-on server. |
+| `LECTIC_YTDLP_COOKIES` | Path to a `cookies.txt` exported from a browser signed in to YouTube, passed to `--cookies`. Often enough on its own; expires when the session does. |
+
+Set them in the environment of whatever runs the server (`lectic share`, or the container's `-e` flags). `lectic status` shows the route in use. A home connection usually needs neither; a saved link that failed on a hosted server can be processed later from a machine that reaches YouTube, and the captions are cached in the home.
 
 Selection prefers usable manual English captions (`en`, then English variants), followed by automatic English captions (`en-orig`, then `en`, then other English variants). VTT is preferred, with SRT accepted when available. Non-English-only videos are reported as unavailable. An English track may be a platform-generated translation; the adapter does not independently verify its language accuracy or translation origin. Automatic captions can contain errors, and transcripts do not capture visual-only evidence.
 
