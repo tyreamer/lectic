@@ -5,6 +5,10 @@
     lectic connect URL      point Claude Code and Codex at a Lectic running elsewhere
     lectic pack NAME        one shareable file carrying a collection's knowledge (add --include-sources for your own material)
     lectic install FILE|URL add someone's pack to your knowledge (--inspect to look first)
+    lectic backup [--out F] every collection, source and build in one archive file
+    lectic push LINK        move this knowledge onto a Lectic running elsewhere
+    lectic pull LINK        bring that Lectic's knowledge here
+    lectic restore FILE     merge a backup archive into this knowledge
     lectic status           where knowledge lives, what is saved, which assistants are connected
     lectic serve [--http]   run the MCP server (what the assistants launch; you rarely run it yourself)
     lectic ec ...           the deterministic utilities, for contributors
@@ -346,6 +350,56 @@ def install(argv):
     return 0
 
 
+def describe_merge(report):
+    if report.get('collections_added'): print('  added      ' + ', '.join(report['collections_added']))
+    if report.get('collections_present'): print('  already there  ' + ', '.join(report['collections_present']))
+    for name in report.get('collections_diverged', []):
+        print(f'  kept apart {name}: it exists on both sides and differs, so neither copy was changed')
+    counts = f"  {report.get('blobs_added', 0)} sources, {report.get('captures_added', 0)} captures, {report.get('other_files_added', 0)} other records added"
+    print(counts)
+    for issue in report.get('issues', []): print('  needs attention: ' + issue)
+
+
+def backup(argv):
+    from home_archive import backup as run
+    result = run(os.getcwd(), option(argv, '--out'))
+    names = ', '.join(result['collections']) or 'no named collections yet'
+    print(f"Backed up {names} ({result['blobs']} sources) -> {result['file']} ({result['bytes'] // 1024} KB)")
+    print('Restore it anywhere with:  lectic restore ' + Path(result['file']).name)
+    return 0
+
+
+def push(argv):
+    from home_archive import push as run
+    link = next((a for a in argv if a.startswith('http')), None)
+    if not link: print('Usage: lectic push https://host/t/SECRET/mcp   (the link that Lectic printed)'); return 2
+    report = run(os.getcwd(), link)
+    print(f"Sent {report['sent_bytes'] // 1024} KB to {report['destination']}")
+    describe_merge(report)
+    print('\nThat Lectic now holds this knowledge. Point this machine at it with:  lectic connect ' + link)
+    return 0
+
+
+def pull(argv):
+    from home_archive import pull as run
+    link = next((a for a in argv if a.startswith('http')), None)
+    if not link: print('Usage: lectic pull https://host/t/SECRET/mcp'); return 2
+    report = run(os.getcwd(), link)
+    print(f"Received {report['received_bytes'] // 1024} KB from {report['source']}")
+    describe_merge(report)
+    return 0
+
+
+def restore(argv):
+    from home_archive import restore as run
+    location = next((a for a in argv if not a.startswith('--')), None)
+    if not location: print('Usage: lectic restore FILE   (an archive from `lectic backup`)'); return 2
+    report = run(os.getcwd(), location)
+    print('Restored into ' + str(Path(os.getcwd())) + "'s knowledge home.")
+    describe_merge(report)
+    return 0
+
+
 def ec(argv):
     sys.argv = ['ec.py'] + argv
     import ec as core
@@ -355,7 +409,9 @@ def ec(argv):
 def main(argv=None):
     argv = list(sys.argv[1:] if argv is None else argv)
     command = argv[0] if argv else 'status'
-    handlers = {'setup': setup, 'share': share, 'connect': connect, 'pack': pack, 'install': install, 'status': status, 'serve': serve, 'ec': ec}
+    handlers = {'setup': setup, 'share': share, 'connect': connect, 'pack': pack, 'install': install,
+                'backup': backup, 'push': push, 'pull': pull, 'restore': restore,
+                'status': status, 'serve': serve, 'ec': ec}
     if command in {'-h', '--help', 'help'} or command not in handlers:
         print(__doc__.strip()); return 0 if command in {'-h', '--help', 'help'} else 2
     return handlers[command](argv[1:])

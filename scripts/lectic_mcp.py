@@ -111,6 +111,12 @@ TOOLS = [
     tool('lectic_install', 'Install a knowledge pack from a file or https link into this home, or inspect it first. Sources are retrieved on this network and verified against the pack; the report says what was verified.',
          {'project': PROJECT, 'location': S('Path or https link to a .lectic file.'), 'name': S('Collection name to use instead of the pack\'s.'),
           'inspect': B('Only describe the pack; install nothing.')}, ['location']),
+    tool('lectic_backup', 'Write this home\'s whole knowledge to one archive file: every collection, source, capture and build. The file restores onto any machine.',
+         {'project': PROJECT, 'out': S('Destination file or folder (default: a timestamped file in the project).')}),
+    tool('lectic_transfer', 'Move knowledge between this home and a Lectic running elsewhere: push sends this home there, pull brings that one here, restore merges a local archive file. Nothing is overwritten; a collection that differs on both sides is reported as diverged.',
+         {'project': PROJECT, 'action': S('push | pull | restore', enum=['push', 'pull', 'restore']),
+          'link': S('The link a Lectic server printed (…/t/SECRET/mcp), for push and pull.'),
+          'file': S('Archive file, for restore.')}, ['action']),
     tool('lectic_validate_build', 'Deterministically verify a saved build: hashes, evidence linkage, bound review acknowledgement. Does not establish effectiveness.',
          {'project': PROJECT, 'folder': S('Build folder path from a complete response.')}, ['folder']),
     tool('lectic_read', 'Read a prompt, schema, fixture, source document, knowledge file, brief or draft named by a workflow response. Paths must be inside the Lectic home or the installed skill.',
@@ -235,6 +241,18 @@ class Server:
     def tool_install(self, project=None, location=None, name=None, inspect=False):
         from packs import inspect_pack, install_pack
         return inspect_pack(location) if inspect else install_pack(self.resolve_project(project), location, name)
+
+    def tool_backup(self, project=None, out=None):
+        from home_archive import backup
+        return backup(self.resolve_project(project), out)
+
+    def tool_transfer(self, project=None, action=None, link=None, file=None):
+        import home_archive
+        project = self.resolve_project(project)
+        if action == 'push': require(link, 'Give the link of the Lectic to push to'); return home_archive.push(project, link)
+        if action == 'pull': require(link, 'Give the link of the Lectic to pull from'); return home_archive.pull(project, link)
+        require(action == 'restore' and file, 'Choose push, pull, or restore with a file')
+        return home_archive.restore(project, file)
 
     def tool_validate_build(self, project=None, folder=None):
         from goal_workflow import validate_build
@@ -418,9 +436,9 @@ class HttpHandler(BaseHTTPRequestHandler):
         if host in {'localhost', '127.0.0.1', '::1'}: return True
         return host in self.server.allowed_origins
 
-    def body(self):
+    def body(self, limit=32 * 1024 * 1024):
         length = int(self.headers.get('Content-Length') or 0)
-        require(length <= 32 * 1024 * 1024, 'Request body too large')
+        require(length <= limit, 'Request body too large')
         return self.rfile.read(length) if length else b''
 
     # ---- verbs
@@ -430,6 +448,15 @@ class HttpHandler(BaseHTTPRequestHandler):
         if path == '/mcp':
             if not authorized: return self.send(401, {'error': 'unauthorized'})
             return self.send(405, {'error': 'This server does not open server-to-client streams'}, headers=[('Allow', 'POST, DELETE')])
+        if path == '/home':
+            if not authorized: return self.send(401, {'error': 'unauthorized'})
+            from home_archive import archive_home
+            try:
+                with self.server.lock:
+                    raw = archive_home(self.server.home)
+            except (Invalid, ValueError, OSError) as exc:
+                return self.send(409, {'error': str(exc)})
+            return self.send(200, raw, content_type='application/zip')
         return self.send(404, {'error': 'not found'})
 
     def do_DELETE(self):
@@ -440,13 +467,14 @@ class HttpHandler(BaseHTTPRequestHandler):
     def do_POST(self):
         path, authorized = self.route()
         if not self.origin_ok(): return self.send(403, {'error': 'origin not allowed'})
-        if path not in {'/mcp', '/capture'}: return self.send(404, {'error': 'not found'})
+        if path not in {'/mcp', '/capture', '/home'}: return self.send(404, {'error': 'not found'})
         if not authorized: return self.send(401, {'error': 'unauthorized'})
         try:
-            raw = self.body()
+            raw = self.body(512 * 1024 * 1024 if path == '/home' else 32 * 1024 * 1024)
         except Invalid as exc:
             return self.send(413, {'error': str(exc)})
         if path == '/capture': return self.capture(raw)
+        if path == '/home': return self.receive_home(raw)
         try:
             message = json.loads(raw.decode('utf-8'))
         except ValueError:
@@ -464,6 +492,16 @@ class HttpHandler(BaseHTTPRequestHandler):
         headers = [('Mcp-Session-Id', self.server.session_id)]
         if not responses: return self.send(202, headers=headers)
         return self.send(200, responses if isinstance(message, list) else responses[0], headers=headers)
+
+    def receive_home(self, raw):
+        """Someone is moving their knowledge onto this server. Merge it; never overwrite."""
+        from home_archive import merge_archive
+        try:
+            with self.server.lock:
+                report = merge_archive(self.server.mcp.project, raw, home=self.server.home)
+        except (Invalid, ValueError, OSError, KeyError) as exc:
+            return self.send(400, {'error': str(exc)})
+        return self.send(200, report)
 
     def capture(self, raw):
         """What a phone posts: the shared thing, an optional note, optional collections. Storage only."""
@@ -494,6 +532,8 @@ def serve_http(project='.', host='127.0.0.1', port=8787, token=None, allowed_ori
     httpd = ThreadingHTTPServer((host, port), HttpHandler)
     httpd.daemon_threads = True
     httpd.mcp = Server(project)
+    # One server serves one home, fixed when it starts.
+    httpd.home = storage_root(project)
     httpd.token = token
     httpd.lock = threading.Lock()
     httpd.session_id = secrets.token_hex(16)

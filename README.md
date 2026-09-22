@@ -68,6 +68,8 @@ The installed skill (`/lectic` in Claude Code, `$lectic` in Codex) drives the sa
 
 **Build once, reuse everywhere.** A method built from your Sales Training today reviews a different call tomorrow, from ChatGPT, Claude, Gemini, Codex or Claude Code, in any project, with no re-upload. Add sources later and earlier work is preserved.
 
+**Take it with you.** `lectic backup` puts every collection, source and build in one file; `lectic restore` merges it onto another machine. `lectic push` sends your knowledge to a Lectic running somewhere always-on, and `lectic pull` brings it back. Merging only ever adds, so repeating it is safe ([guide →](https://github.com/tyreamer/lectic/blob/main/docs/CLOUD.md#moving-your-knowledge)).
+
 **Share what you know.** `lectic pack "FC 27"` turns a collection into one file. Anyone runs `lectic install` on it and every assistant they use can apply it. Sources travel as links and are verified on the installer's own network, so nothing is redistributed ([packs →](https://github.com/tyreamer/lectic/blob/main/docs/PACKS.md)).
 
 ## What you can build
@@ -129,7 +131,7 @@ From a phone, a two-action Share Sheet Shortcut posts straight to your Lectic li
 
 ### Toward portable knowledge
 
-One knowledge store reachable from a phone, ChatGPT, Claude, Gemini, Codex and Claude Code alike, with local storage as the offline/private mode rather than the only mode. In place: one home per user behind a storage seam built for object storage ([design →](https://github.com/tyreamer/lectic/blob/main/DESIGN.md#storage-one-home-cloud-shaped)); an [MCP server](https://github.com/tyreamer/lectic/blob/main/docs/MCP.md) over stdio and Streamable HTTP so any client operates the compiler through validated tools; `lectic share`, an always-on container and phone capture over one private link ([guide →](https://github.com/tyreamer/lectic/blob/main/docs/CLOUD.md)). Still ahead: a remote object store behind the seam, so several machines can share one home without one of them being the server.
+One knowledge store reachable from a phone, ChatGPT, Claude, Gemini, Codex and Claude Code alike, with local storage as the offline/private mode rather than the only mode. In place: one home per user behind a storage seam built for object storage ([design →](https://github.com/tyreamer/lectic/blob/main/DESIGN.md#storage-one-home-cloud-shaped)); an [MCP server](https://github.com/tyreamer/lectic/blob/main/docs/MCP.md) over stdio and Streamable HTTP so any client operates the compiler through validated tools; `lectic share`, an always-on container and phone capture over one private link ([guide →](https://github.com/tyreamer/lectic/blob/main/docs/CLOUD.md)). Still ahead: offline use against a hosted home, which is what the storage seam was built for.
 
 ## Test the idea with us
 

@@ -539,6 +539,9 @@ def main():
     p = sub.add_parser('pack', help='Write one shareable file carrying a collection\'s compiled knowledge')
     p.add_argument('--project', default='.'); p.add_argument('--collection', required=True); p.add_argument('--out')
     p.add_argument('--include-sources', action='store_true')
+    p = sub.add_parser('home-archive', help='Move a whole home: backup, restore, push or pull')
+    p.add_argument('--project', default='.'); p.add_argument('--action', choices=['backup', 'restore', 'push', 'pull'], default='backup')
+    p.add_argument('--out'); p.add_argument('--file'); p.add_argument('--link')
     p = sub.add_parser('install', help='Install a knowledge pack (file or https link) into this home')
     p.add_argument('--project', default='.'); p.add_argument('location'); p.add_argument('--name'); p.add_argument('--inspect', action='store_true')
     p = sub.add_parser('compile', help='Agent coordinator: start/resume and advance to the next reasoning task')
@@ -588,6 +591,14 @@ def main():
         elif args.command == 'pack':
             from packs import build_pack
             result = build_pack(args.project, args.collection, args.out, args.include_sources)
+        elif args.command == 'home-archive':
+            import home_archive
+            if args.action == 'backup': result = home_archive.backup(args.project, args.out)
+            elif args.action == 'restore':
+                require(args.file, 'Choose an archive file to restore')
+                result = home_archive.restore(args.project, args.file)
+            elif args.action == 'push': result = home_archive.push(args.project, args.link)
+            else: result = home_archive.pull(args.project, args.link)
         elif args.command == 'install':
             from packs import inspect_pack, install_pack
             result = inspect_pack(args.location) if args.inspect else install_pack(args.project, args.location, args.name)

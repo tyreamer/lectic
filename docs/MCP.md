@@ -51,7 +51,7 @@ npx @modelcontextprotocol/inspector --cli python /path/to/lectic/scripts/lectic_
 
 ## Transports
 
-The same `Server` answers over two transports. **stdio** (`lectic serve`): one JSON-RPC message per line, what `lectic setup` registers. **Streamable HTTP** (`lectic serve --http`, `lectic share`): `POST /mcp` with JSON-RPC, plain JSON responses, `202` for notifications, `405` on `GET` because the server never opens a stream to the client. The secret travels in the path (`/t/<secret>/mcp`, what hosted connectors accept without OAuth) or as `Authorization: Bearer <secret>`. A browser page from another origin cannot drive a server bound to this machine. Tool calls are serialized: the coordinators expect one writer per home. `POST /t/<secret>/capture` accepts a phone's share. Both transports are verified against the official MCP Inspector.
+The same `Server` answers over two transports. **stdio** (`lectic serve`): one JSON-RPC message per line, what `lectic setup` registers. **Streamable HTTP** (`lectic serve --http`, `lectic share`): `POST /mcp` with JSON-RPC, plain JSON responses, `202` for notifications, `405` on `GET` because the server never opens a stream to the client. The secret travels in the path (`/t/<secret>/mcp`, what hosted connectors accept without OAuth) or as `Authorization: Bearer <secret>`. A browser page from another origin cannot drive a server bound to this machine. Tool calls are serialized: the coordinators expect one writer per home. `POST /t/<secret>/capture` accepts a phone's share, and `GET`/`POST /t/<secret>/home` move a whole home to or from the server ([moving your knowledge](CLOUD.md#moving-your-knowledge)). A server serves one home, fixed when it starts. Both transports are verified against the official MCP Inspector.
 
 ## Tools
 
@@ -67,6 +67,8 @@ The same `Server` answers over two transports. **stdio** (`lectic serve`): one J
 | `lectic_compile` | Legacy numbered-capability coordinator |
 | `lectic_pack` | One shareable `.lectic` file carrying a collection's knowledge |
 | `lectic_install` | Install or inspect a pack from a file or https link |
+| `lectic_backup` | Write the whole home to one archive file |
+| `lectic_transfer` | push, pull or restore a home |
 | `lectic_validate_build` | Deterministic build verification |
 | `lectic_read` | Read a prompt, schema, source, knowledge file, brief or draft the workflow named |
 | `lectic_write_json` | Save a record the workflow asked for, validated against its schema |

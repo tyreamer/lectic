@@ -76,6 +76,17 @@ Tell them plainly: the link works while that command keeps running, a quick tunn
 
 If it reports that `cloudflared` is missing, install it with their approval (`winget install Cloudflare.cloudflared`, `brew install cloudflared`) and run it again.
 
+## If they are moving to a new machine, or want a backup
+
+```
+<python> -m lectic.cli backup              # one archive file with everything
+<python> -m lectic.cli restore <file>      # merge it in on the other machine
+<python> -m lectic.cli push <link>         # send this knowledge to a Lectic running elsewhere
+<python> -m lectic.cli pull <link>         # bring that one's knowledge here
+```
+
+Merging only ever adds. Report what the command says: collections added, ones already present, and any it kept apart because they exist on both sides and differ — do not describe that as a failure, and never suggest deleting one side to "fix" it. Repeating any of these is safe.
+
 ## If they asked you to install a knowledge pack
 
 ```

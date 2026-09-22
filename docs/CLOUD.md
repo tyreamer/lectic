@@ -22,6 +22,35 @@ lectic share --tunnel NAME --hostname https://lectic.yourdomain.com
 
 Already have a public address for this machine (Tailscale Funnel, ngrok, a reverse proxy)? Point it at `127.0.0.1:8787` and run `lectic share --public https://that-address`.
 
+## Moving your knowledge
+
+Wherever the server runs, that home *is* the knowledge — so the only question is getting yours there.
+
+```bash
+lectic backup                      # everything in one archive file
+lectic restore FILE                # merge it into this machine's knowledge
+lectic push  https://…/t/SECRET/mcp   # send this home to a Lectic running elsewhere
+lectic pull  https://…/t/SECRET/mcp   # bring that one's knowledge here
+```
+
+All four move the same archive: every collection, source, capture, map and build, minus the things that belong to one machine (its secret, its live share link, its per-project session pointers). Because sources are content-addressed and collections carry stable IDs, a merge **adds what is missing and never overwrites**:
+
+- a collection that is already there, byte for byte, is recognised and skipped;
+- a collection that exists on both sides and differs is reported as diverged and both copies are left exactly as they were;
+- an incoming collection whose name is taken lands beside the local one as `Name (2)`;
+- sources you already have are not re-sent or re-stored.
+
+Repeating a restore or push is therefore safe. The report names every collection added, already present, or kept apart, and anything that failed to validate afterwards.
+
+A practical first move onto a hosted Lectic:
+
+```bash
+lectic push https://your-host/t/SECRET/mcp
+lectic connect https://your-host/t/SECRET/mcp
+```
+
+Back up on a schedule once the hosted home is the one you rely on — `lectic backup --out /path/to/backups` writes a timestamped archive, and nothing but the file is needed to rebuild.
+
 ## Option 2: always on
 
 When the laptop should not be the server, run the same code in a container on any host with a persistent volume (Fly.io, Railway, a VPS with Docker):
@@ -33,7 +62,7 @@ docker run -d --name lectic -p 8787:8787 -v lectic-data:/data -e LECTIC_TOKEN=<a
 
 Put HTTPS in front of it (the host's own proxy, or a Cloudflare Tunnel on the box) and the link is `https://your-host/t/<secret>/mcp`. `LECTIC_PUBLIC_URL=https://your-host` makes the container print the finished link at start. Knowledge lives on the volume; back it up like any personal data.
 
-Then, on each computer where you use Claude Code or Codex:
+Move your existing knowledge onto it with `lectic push <link>` (above). Then, on each computer where you use Claude Code or Codex:
 
 ```bash
 lectic connect https://your-host/t/<secret>/mcp
