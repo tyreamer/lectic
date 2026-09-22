@@ -4,15 +4,19 @@
 
 ### Save what you trust. Your AI learns the method, not just the words.
 
-[![Status: Alpha](https://img.shields.io/badge/status-alpha-f0b44d)](#current-status)
-[![License: MIT](https://img.shields.io/badge/license-MIT-4b8bba)](https://github.com/tyreamer/lectic/blob/main/LICENSE)
+[![Tests](https://github.com/tyreamer/lectic/actions/workflows/tests.yml/badge.svg)](https://github.com/tyreamer/lectic/actions/workflows/tests.yml)
+[![PyPI](https://img.shields.io/pypi/v/lectic?color=4b8bba)](https://pypi.org/project/lectic/)
 [![Python: 3.10+](https://img.shields.io/badge/python-3.10%2B-3776ab)](https://github.com/tyreamer/lectic/blob/main/docs/DEVELOPING.md)
+[![License: MIT](https://img.shields.io/badge/license-MIT-4b8bba)](https://github.com/tyreamer/lectic/blob/main/LICENSE)
+[![Status: Alpha](https://img.shields.io/badge/status-alpha-f0b44d)](#current-status)
 
 **[Start](#start)** · **[What it does](#what-it-does)** · **[Examples](#what-you-can-build)** · **[How it works](#how-it-works)** · **[Status](#current-status)**
 
+Works with **Claude Code** · **Codex** · **ChatGPT** · **Claude** · **Gemini CLI** · any MCP client
+
 </div>
 
-You watch a great talk, read a course, keep a transcript from someone who really knows their craft. Lectic turns that material into expertise your assistant can *apply*: reviewers, checklists, decision frameworks, lessons — each one traceable back to the exact words that support it. Save once; every assistant and every project on your machine can use it.
+You watch a great talk, read a course, keep a transcript from someone who really knows their craft. Lectic turns that material into expertise your assistant can *apply*: reviewers, checklists, decision frameworks, lessons — each one traceable back to the exact words that support it. Save once; every assistant you use can apply it, from any project, on any machine you point at it.
 
 ## Start
 
@@ -113,11 +117,11 @@ From a phone, a two-action Share Sheet Shortcut posts straight to your Lectic li
 | Validation | Schemas, hashes, evidence references and artifact structure | Does not establish sound judgment or effectiveness |
 | Evaluation | Matched prompts, structured checks and effort records | Independent runs, human review and refinement need coordination |
 
-**Your knowledge, your server, any assistant.** No hosted backend you don't control, no model API key: your assistant does the reasoning under its own subscription, and Lectic keeps the results honest and reusable. `lectic share` or an always-on container gives ChatGPT, Claude, Gemini and your phone the same home through one private link.
+**Your knowledge, your server, any assistant.** Lectic is a single-user server you run wherever you like: a laptop, a container, a home box. Your assistant does the reasoning; Lectic keeps the results evidence-linked, reusable and yours. Nothing leaves your machine except through the private link you choose to hand out.
 
 ### Toward portable knowledge
 
-One knowledge store reachable from a phone, ChatGPT, Claude, Gemini, Codex and Claude Code alike, with local storage as the offline/private mode rather than the only mode. In place: one home per user behind a storage seam built for object storage ([design →](https://github.com/tyreamer/lectic/blob/main/DESIGN.md#storage-one-home-cloud-shaped)); an [MCP server](https://github.com/tyreamer/lectic/blob/main/docs/MCP.md) over stdio and Streamable HTTP so any client operates the compiler through validated tools; `lectic share`, an always-on container and phone capture over one private link ([guide →](https://github.com/tyreamer/lectic/blob/main/docs/CLOUD.md)). Still ahead: a remote object store behind the seam so several machines can share one home without one of them being the server, and a published PyPI release.
+One knowledge store reachable from a phone, ChatGPT, Claude, Gemini, Codex and Claude Code alike, with local storage as the offline/private mode rather than the only mode. In place: one home per user behind a storage seam built for object storage ([design →](https://github.com/tyreamer/lectic/blob/main/DESIGN.md#storage-one-home-cloud-shaped)); an [MCP server](https://github.com/tyreamer/lectic/blob/main/docs/MCP.md) over stdio and Streamable HTTP so any client operates the compiler through validated tools; `lectic share`, an always-on container and phone capture over one private link ([guide →](https://github.com/tyreamer/lectic/blob/main/docs/CLOUD.md)). Still ahead: a remote object store behind the seam, so several machines can share one home without one of them being the server.
 
 ## Test the idea with us
 
