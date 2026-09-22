@@ -3,6 +3,8 @@
     lectic setup            connect the assistants on this machine, verify the connection, offer YouTube support
     lectic share            give ChatGPT, Claude, Gemini or any hosted assistant one link to your knowledge
     lectic connect URL      point Claude Code and Codex at a Lectic running elsewhere
+    lectic pack NAME        one shareable file carrying a collection's knowledge (add --include-sources for your own material)
+    lectic install FILE|URL add someone's pack to your knowledge (--inspect to look first)
     lectic status           where knowledge lives, what is saved, which assistants are connected
     lectic serve [--http]   run the MCP server (what the assistants launch; you rarely run it yourself)
     lectic ec ...           the deterministic utilities, for contributors
@@ -298,6 +300,32 @@ def connect(argv):
     return 0
 
 
+def pack(argv):
+    from packs import build_pack
+    name = next((a for a in argv if not a.startswith('--') and a != option(argv, '--out')), None)
+    if not name: print('Usage: lectic pack "Collection Name" [--out FILE] [--include-sources]'); return 2
+    result = build_pack(os.getcwd(), name, option(argv, '--out'), '--include-sources' in argv)
+    print(f"Packed {result['name']}: {result['units']} knowledge units, {result['sources']} sources, {result['methods']} methods -> {result['pack']} ({result['bytes'] // 1024} KB)")
+    print(result['share_note'])
+    print('\nShare the file or a link to it. Anyone with Lectic installs it with:  lectic install <file or link>')
+    return 0
+
+
+def install(argv):
+    from packs import inspect_pack, install_pack
+    location = next((a for a in argv if not a.startswith('--') and a != option(argv, '--name')), None)
+    if not location: print('Usage: lectic install FILE|URL [--name NAME] [--inspect]'); return 2
+    if '--inspect' in argv:
+        print(inspect_pack(location)['readme']); return 0
+    report = install_pack(os.getcwd(), location, option(argv, '--name'))
+    state = 'verified' if report['verification'] == 'verified' else f"partial: {report['sources_verified']} of {report['sources_total']} sources, {report['units_installed']} of {report['units_in_pack']} units"
+    print(f"Installed {report['collection']} ({state}).")
+    for item in report['sources_unavailable']: print(f"  could not verify {item['source']}: {item['reason']}")
+    if report['methods']: print('Ready methods: ' + ', '.join(m['title'] for m in report['methods']))
+    print(f"\nOpen any connected assistant and say: Use my {report['collection']} to ...")
+    return 0
+
+
 def ec(argv):
     sys.argv = ['ec.py'] + argv
     import ec as core
@@ -307,7 +335,7 @@ def ec(argv):
 def main(argv=None):
     argv = list(sys.argv[1:] if argv is None else argv)
     command = argv[0] if argv else 'status'
-    handlers = {'setup': setup, 'share': share, 'connect': connect, 'status': status, 'serve': serve, 'ec': ec}
+    handlers = {'setup': setup, 'share': share, 'connect': connect, 'pack': pack, 'install': install, 'status': status, 'serve': serve, 'ec': ec}
     if command in {'-h', '--help', 'help'} or command not in handlers:
         print(__doc__.strip()); return 0 if command in {'-h', '--help', 'help'} else 2
     return handlers[command](argv[1:])

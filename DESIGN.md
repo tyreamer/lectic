@@ -26,7 +26,8 @@ Build intent ultimately needs independent inclusion/exclusion choices: reasoning
 | Assistant interfaces | SKILL.md, agents/openai.yaml, operator prompts, installer | Gather intent and operate core; no provider dependence in IR |
 | CLI interface | command dispatch in scripts/ec.py | Invoke core operations; do not define the product |
 | MCP interface | scripts/lectic_mcp.py | Same operations over tools, stdio or Streamable HTTP; every client-produced record enters through one validated write door |
-| Command line for people | cli.py | setup, share, connect, status: connect assistants, hand out one private link |
+| Command line for people | cli.py | setup, share, connect, pack, install, status |
+| Knowledge packs | scripts/packs.py; pack schema | One content-addressed file; sources travel as links and are re-verified on install; partial verification is reported, never hidden |
 
 New capture and discovery modules sit alongside the existing compiler without moving its public entry points. The installer includes their contracts, prompts and documentation, including the north-star document, so the distributed interface retains the architecture guidance.
 

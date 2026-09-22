@@ -65,6 +65,8 @@ The same `Server` answers over two transports. **stdio** (`lectic serve`): one J
 | `lectic_capture` | Inbox: import a synced folder, list, show, memberships, notes, process, trace |
 | `lectic_capture_save` | Save a link, pasted text or files shared right now; storage only |
 | `lectic_compile` | Legacy numbered-capability coordinator |
+| `lectic_pack` | One shareable `.lectic` file carrying a collection's knowledge |
+| `lectic_install` | Install or inspect a pack from a file or https link |
 | `lectic_validate_build` | Deterministic build verification |
 | `lectic_read` | Read a prompt, schema, source, knowledge file, brief or draft the workflow named |
 | `lectic_write_json` | Save a record the workflow asked for, validated against its schema |

@@ -536,6 +536,11 @@ def main():
     p.add_argument('--before-knowledge'); p.add_argument('--after-knowledge')
     p.add_argument('--adopt'); p.add_argument('--reconciled', action='store_true'); p.add_argument('--reviewed', action='store_true')
     p = sub.add_parser('validate-build'); p.add_argument('folder')
+    p = sub.add_parser('pack', help='Write one shareable file carrying a collection\'s compiled knowledge')
+    p.add_argument('--project', default='.'); p.add_argument('--collection', required=True); p.add_argument('--out')
+    p.add_argument('--include-sources', action='store_true')
+    p = sub.add_parser('install', help='Install a knowledge pack (file or https link) into this home')
+    p.add_argument('--project', default='.'); p.add_argument('location'); p.add_argument('--name'); p.add_argument('--inspect', action='store_true')
     p = sub.add_parser('compile', help='Agent coordinator: start/resume and advance to the next reasoning task')
     p.add_argument('input', nargs='?'); p.add_argument('output', nargs='?')
     p.add_argument('--run', dest='run_path', help='Adopt/resume a specific existing run without new input')
@@ -580,6 +585,12 @@ def main():
         elif args.command == 'validate-build':
             from goal_workflow import validate_build
             result = validate_build(args.folder)
+        elif args.command == 'pack':
+            from packs import build_pack
+            result = build_pack(args.project, args.collection, args.out, args.include_sources)
+        elif args.command == 'install':
+            from packs import inspect_pack, install_pack
+            result = inspect_pack(args.location) if args.inspect else install_pack(args.project, args.location, args.name)
         elif args.command == 'compile':
             from workflow import compile_workflow
             require(not args.run_path or not (args.input or args.output), '--run cannot be combined with input/output positionals')

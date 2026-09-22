@@ -1,0 +1,157 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "pack",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": "1.0",
+      "type": "string"
+    },
+    "pack_id": {
+      "type": "string",
+      "pattern": "^pack-[a-f0-9]{24}$"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120
+    },
+    "created_at": {
+      "type": "string",
+      "minLength": 1
+    },
+    "lectic_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "corpus_id": {
+      "type": "string",
+      "pattern": "^corpus-[a-f0-9]{64}$"
+    },
+    "ir_hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "unit_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "sources_included": {
+      "type": "boolean"
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "source_id": {
+            "type": "string",
+            "pattern": "^src-[a-f0-9]{24}$"
+          },
+          "filename": {
+            "type": "string",
+            "minLength": 1
+          },
+          "title": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "creator": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "url": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "caption_type": {
+            "type": "string",
+            "minLength": 1
+          },
+          "content_hash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "document_hash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        },
+        "required": [
+          "source_id",
+          "filename",
+          "title",
+          "creator",
+          "url",
+          "caption_type",
+          "content_hash",
+          "document_hash"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "maps": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "methods": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "build_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "build_id",
+          "title",
+          "description"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "share_note": {
+      "type": "string",
+      "minLength": 1
+    },
+    "files": {
+      "type": "object"
+    }
+  },
+  "required": [
+    "schema_version",
+    "pack_id",
+    "name",
+    "created_at",
+    "lectic_version",
+    "corpus_id",
+    "ir_hash",
+    "unit_count",
+    "sources_included",
+    "sources",
+    "maps",
+    "methods",
+    "share_note",
+    "files"
+  ],
+  "additionalProperties": false
+}

@@ -12,6 +12,15 @@ python /path/to/lectic/scripts/lectic_mcp.py --project .
 
 Speaks MCP over stdio for Claude Code, Codex and other clients; the tools mirror the commands below. See [MCP](MCP.md).
 
+## Knowledge packs
+
+```text
+python /path/to/lectic/scripts/ec.py pack --project . --collection "FC 27" [--out FILE] [--include-sources]
+python /path/to/lectic/scripts/ec.py install --project . FILE_OR_URL [--name NAME] [--inspect]
+```
+
+See [packs](PACKS.md).
+
 ## Storage location
 
 ```text

@@ -56,6 +56,8 @@ The installed skill (`/lectic` in Claude Code, `$lectic` in Codex) drives the sa
 
 **Build once, reuse everywhere.** A method built from your Sales Training today reviews a different call tomorrow, from ChatGPT, Claude, Gemini, Codex or Claude Code, in any project, with no re-upload. Add sources later and earlier work is preserved.
 
+**Share what you know.** `lectic pack "FC 27"` turns a collection into one file. Anyone runs `lectic install` on it and every assistant they use can apply it. Sources travel as links and are verified on the installer's own network, so nothing is redistributed ([packs →](docs/PACKS.md)).
+
 ## What you can build
 
 | Material | Useful capability | Give it → get back |
@@ -106,7 +108,7 @@ From a phone, a two-action Share Sheet Shortcut posts straight to your Lectic li
 | --- | --- | --- |
 | Processing | Text/transcript files and deferred YouTube English-caption retrieval | Optional `yt-dlp` required for YouTube; no arbitrary URL or audio/video acquisition |
 | Discovery | Grounded, ranked Capability Maps with version history | Quality depends on source support and assistant interpretation |
-| Outputs | Reusable text methods, work products and optional skill exports | No standalone agent runtime or persistent coaching service |
+| Outputs | Reusable text methods, work products, optional skill exports, shareable knowledge packs | No standalone agent runtime or persistent coaching service |
 | Capture | Phone or assistant posts to `/capture`; synced-folder import; annotations and multiple memberships | Saving stores what was shared; only YouTube captions are retrieved, on request |
 | Validation | Schemas, hashes, evidence references and artifact structure | Does not establish sound judgment or effectiveness |
 | Evaluation | Matched prompts, structured checks and effort records | Independent runs, human review and refinement need coordination |
@@ -132,6 +134,7 @@ We are testing with **AI builders, consultants, creators and knowledge-heavy pro
 | [Installation](docs/INSTALLATION.md) | Setup, updates and troubleshooting |
 | [MCP server](docs/MCP.md) | Connect Claude Code, Codex or any MCP client; tools and write policy |
 | [Anywhere](docs/CLOUD.md) | ChatGPT, Claude, Gemini, your phone, a second computer: one private link |
+| [Packs](docs/PACKS.md) | Share a collection as one file; install someone else's |
 | [YouTube retrieval](docs/YOUTUBE.md) | Paste links, retrieve captions on demand, preserve evidence and reuse it |
 | [Guided use](docs/GUIDED-USE.md) | See what is saved, discover concrete applications and reuse it |
 | [iPhone Shortcut](docs/iphone-shortcut.md) | Capture setup and exact first live test |

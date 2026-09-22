@@ -39,6 +39,7 @@ Be effortless to use:
 - "What have I saved?" / "What could this become?" / "What should I build first?": lectic_library, then lectic_map. Show concrete jobs with what to give and what comes back; the user should not have to invent a goal.
 - A real task ("use my X to review this", "teach me", "help me decide"): write a brief, run lectic_work to completion, and lead with the result. Only then mention the saved method and one concrete next use.
 - Speak in outcomes and plain names. Never show IDs, hashes, paths, phases or JSON to the user, and never ask them to run commands or edit files.
+- "Share my X" / "pack this": lectic_pack, then tell the user the file path and that recipients run `lectic install`. "Install this pack": lectic_install; report verified or partial exactly as returned.
 - Ask a question only when the answer materially changes the work.
 
 How the tools work:
@@ -104,6 +105,12 @@ TOOLS = [
           'metadata': S('Metadata JSON path.'), 'intent': S('compile | discover | build | use | compare', enum=['compile', 'discover', 'build', 'use', 'compare']),
           'select': S('Capability number, ID or title.'), 'build_all': B('Build every discovered capability.'),
           'reconciled': B('Acknowledge reconciliation.'), 'tasks': S('Evaluation tasks JSON path.'), 'rubric': S('Evaluation rubric JSON path.')}),
+    tool('lectic_pack', 'Write one shareable .lectic file carrying a collection\'s compiled knowledge, evidence excerpts, map and methods. Sources travel as links unless include_sources is set.',
+         {'project': PROJECT, 'collection': S('Collection name or ID.'), 'out': S('Destination file or folder (default: <name>.lectic in the project).'),
+          'include_sources': B('Bundle full source text (only for material the user may redistribute).')}, ['collection']),
+    tool('lectic_install', 'Install a knowledge pack from a file or https link into this home, or inspect it first. Sources are retrieved on this network and verified against the pack; the report says what was verified.',
+         {'project': PROJECT, 'location': S('Path or https link to a .lectic file.'), 'name': S('Collection name to use instead of the pack\'s.'),
+          'inspect': B('Only describe the pack; install nothing.')}, ['location']),
     tool('lectic_validate_build', 'Deterministically verify a saved build: hashes, evidence linkage, bound review acknowledgement. Does not establish effectiveness.',
          {'project': PROJECT, 'folder': S('Build folder path from a complete response.')}, ['folder']),
     tool('lectic_read', 'Read a prompt, schema, fixture, source document, knowledge file, brief or draft named by a workflow response. Paths must be inside the Lectic home or the installed skill.',
@@ -220,6 +227,14 @@ class Server:
         from workflow import compile_workflow
         require(not run or not input, 'Give either input or run, not both')
         return compile_workflow(input, run, project=self.resolve_project(project), **kwargs)
+
+    def tool_pack(self, project=None, collection=None, out=None, include_sources=False):
+        from packs import build_pack
+        return build_pack(self.resolve_project(project), collection, out, bool(include_sources))
+
+    def tool_install(self, project=None, location=None, name=None, inspect=False):
+        from packs import inspect_pack, install_pack
+        return inspect_pack(location) if inspect else install_pack(self.resolve_project(project), location, name)
 
     def tool_validate_build(self, project=None, folder=None):
         from goal_workflow import validate_build

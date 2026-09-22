@@ -32,6 +32,12 @@ def library_view(project='.', collection=None):
             row.update(source_revision=data['active_revision'], ir_hash=fingerprint(ir) if ir else None,
                        knowledge_status='processed' if ir and ir['units'] else 'sources_saved')
             row['sources'] = [{'title': d['title'] or d['filename'], 'url': d['url']} for d in docs.values()]
+            if (folder / 'pack-origin.json').is_file():
+                origin = read(folder / 'pack-origin.json')
+                row['pack'] = {'pack_id': origin['manifest']['pack_id'], 'verification': origin['install']['verification'],
+                               'installed_at': origin['install']['installed_at'], 'readable': origin['install']['readable'],
+                               'methods': [{'title': m['title'], 'description': m['description'],
+                                            'method': str(folder / 'pack' / 'methods' / m['build_id'] / 'method.md')} for m in origin['manifest']['methods']]}
         except (OSError, ValueError, KeyError) as exc:
             row['issues'].append(str(exc))
             continue
