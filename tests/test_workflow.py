@@ -233,7 +233,7 @@ class WorkflowTests(unittest.TestCase):
         self.assertFalse(result['recording_duration_known'])
 
     def test_youtube_boundary_is_optional_and_offline(self):
-        with patch('ingestors.youtube.shutil.which', return_value=None):
+        with patch('ingestors.youtube.shutil.which', return_value=None), patch('ingestors.youtube.module_launcher', return_value=None):
             for url in ['youtube.com/watch?v=o64cI6tebnU', 'https://youtu.be/o64cI6tebnU']:
                 self.assertIsInstance(adapter_for(url), YouTubeIngestor)
                 with self.assertRaisesRegex(ec.Invalid, 'yt-dlp is not installed'):

@@ -1,6 +1,13 @@
 # Install Lectic
 
-Lectic has two interfaces to the same knowledge: an [MCP server](MCP.md) any MCP client can connect to, and the installed skill described here. Both need Python 3.10+ and nothing else.
+The recommended way is two commands, then talk to your assistant:
+
+```bash
+pip install git+https://github.com/tyreamer/lectic
+lectic setup
+```
+
+That connects Claude Code and Codex through the [MCP server](MCP.md). The installed skill below is the other interface to the same knowledge; it works through your assistant's own file and command access. Both need Python 3.10+ and nothing else.
 
 ## As a skill
 

@@ -2,93 +2,51 @@
 
 # Lectic
 
-### Turn trusted human content into reusable expertise for AI.
+### Save what you trust. Your AI learns the method, not just the words.
 
 [![Status: Alpha](https://img.shields.io/badge/status-alpha-f0b44d)](#current-status)
 [![License: MIT](https://img.shields.io/badge/license-MIT-4b8bba)](LICENSE)
 [![Python: 3.10+](https://img.shields.io/badge/python-3.10%2B-3776ab)](docs/DEVELOPING.md)
 
-**[Get started](#get-started)** · **[Examples](#what-you-can-build)** · **[Capture](#capture-now-use-later)** · **[Architecture](DESIGN.md)** · **[Testing guide](docs/testing-guide.md)**
+**[Start](#start)** · **[What it does](#what-it-does)** · **[Examples](#what-you-can-build)** · **[How it works](#how-it-works)** · **[Status](#current-status)**
 
 </div>
 
-Lectic turns useful content into structured knowledge, reasoning patterns and methods with traceable evidence. Discover what a collection can become, build a capability, and reuse the same expertise for a different goal tomorrow.
+You watch a great talk, read a course, keep a transcript from someone who really knows their craft. Lectic turns that material into expertise your assistant can *apply*: reviewers, checklists, decision frameworks, lessons — each one traceable back to the exact words that support it. Save once; every assistant and every project on your machine can use it.
 
-Built for developers, AI builders, consultants, creators and teams turning human methods into AI workflows.
-
-**One collection. Multiple builds. Preserved evidence.**
-
-> [!NOTE]
-> **Alpha:** the local compiler runs through your existing Codex or Claude Code assistant. Text methods and skill exports work today. Capture has an iPhone Shortcut setup recipe. Automatic baseline execution, refinement and behavioral certification are not yet an end-to-end feature.
-
-<a id="use-the-current-skill-interface"></a>
-
-## Get started
-
-You need **local Codex or Claude Code**, file and command access, and **Python 3.10+**. Your assistant handles setup and operates the compiler; no model API key or additional Python runtime packages are required.
-
-### 1. Connect an assistant
-
-Two interfaces reach the same knowledge. **MCP** is the direction of travel: one process, any MCP client, no file access needed. The **installed skill** remains supported.
-
-**As an MCP server** (Claude Code shown; Codex and the Inspector are in the [MCP guide](docs/MCP.md)):
+## Start
 
 ```bash
-claude mcp add --scope user lectic -- python /path/to/lectic/scripts/lectic_mcp.py
+pip install git+https://github.com/tyreamer/lectic
+lectic setup
 ```
 
-**As an installed skill, in Codex, send:**
+`lectic setup` connects Claude Code and Codex if they are installed, verifies the connection, and offers YouTube support. Then open either assistant, in any folder, and talk:
 
-```text
-Use $skill-installer to install the repository root at
-https://github.com/tyreamer/lectic as a personal skill named lectic,
-including all supporting files.
-```
+> Save this for later: https://www.youtube.com/watch?v=…
 
-**In Claude Code, send:**
+> What could my saved material become?
 
-```text
-Install https://github.com/tyreamer/lectic as my personal
-lectic skill. Download and review the repository, then use
-its bundled installer to copy the complete skill to
-~/.claude/skills/lectic. Preserve any existing installation.
-```
+> Use my Sales Training to review this call transcript.
 
-New installations use `lectic` (`$lectic` in Codex, `/lectic` in Claude Code). Existing `expertise-compiler` installations remain supported; update that copy in place rather than installing a duplicate. A project that already holds `.expertise-compiler/` keeps using it, so saved work does not need moving.
+That's the whole interface. No commands to learn, no goal to invent up front, nothing to re-upload later. `lectic status` shows where your knowledge lives and what is connected.
 
-Restart the assistant if the skill does not appear. For an existing installation, follow the update guidance rather than overwriting it. [Installation and troubleshooting →](docs/INSTALLATION.md)
+<details>
+<summary>Prefer an installed skill, or using a plain ChatGPT chat?</summary>
 
-**Stay current:** ask “Update Lectic and enable automatic updates on this PC.” The optional Windows updater checks GitHub about once a day while you're logged in, keeps the previous installation, and pauses replacement if installed files have local edits. Saved collections and built capabilities remain in their projects. Updating a local skill does not update a separate ChatGPT workspace skill. [Update controls →](docs/INSTALLATION.md#updates)
+The installed skill (`/lectic` in Claude Code, `$lectic` in Codex) drives the same compiler through your assistant's file access and remains supported; see [installation](docs/INSTALLATION.md). A plain web chat without command access cannot run Lectic yet; a hosted server is the next step ([status](#toward-portable-knowledge)). Python 3.10+ is the only requirement.
 
-### 2. Bring valuable material
+</details>
 
-Paste YouTube links, or supply a folder of UTF-8 `.txt`, `.md`, `.vtt` or `.srt` files. You don't need a build idea:
+## What it does
 
-> Use the transcripts in ./input. Save them as My Research, show me the strongest things they could become, and recommend what to build first. Explain what I would give each one, what I would get back, and its limits.
+**Saving is free.** Share a link, paste text, or point at a folder of transcripts. Nothing is processed until you want something from it, and your reason for saving stays separate from the source.
 
-For YouTube, paste your links after: **“Save these as My Research, process the collection, and show me what I could use it for.”** Lectic saves the links first, then retrieves available English captions when processing is requested. This requires the optional local `yt-dlp` executable; the assistant helps with setup after your authorization. [YouTube setup and limits →](docs/YOUTUBE.md)
+**You don't need a plan.** Ask what a collection could become and Lectic returns a ranked map of concrete jobs it can support: what you'd give it, what you'd get back, and where the evidence runs out. Pick one and it builds it.
 
-The assistant returns a ranked **Capability Map** grounded in the collection. Each opportunity explains its purpose, inputs, outputs, supporting evidence and repeat-use value. A fact-heavy collection may support reference and learning without supporting a reliable reviewer.
+**Results carry their evidence.** A review, a checklist, a lesson, a decision — every point cites the source passage behind it, and source statements stay distinct from the assistant's inference.
 
-### 3. Build and use it
-
-Choose a shown opportunity:
-
-> Build #2.
-
-The compiler carries its evidence, boundaries and input/output contract into a reusable method. No technical artifact choice is required. Apply it to real work, or ask for a skill export when you need one.
-
-Afterward, the assistant explains **what was saved**, **what you can use now**, and **what else you could produce**. Expect a few concrete input/output examples and a suggested first use, with existing methods separated from possible new builds. Relevant context you've actually shared can help tailor those suggestions.
-
-Already know your goal? Go directly to the task:
-
-> Use My Research to review my plan in ./plan.md. Preserve the original, save an improved version, and explain the changes using the sources.
-
-Return in a new session, **from this project or any other on the same machine**, to use the collection again. Your sources and earlier builds remain available without another upload, whichever assistant you open.
-
-> Show me what Lectic has saved here. What can I use now, and what are three useful things I could do next?
-
-Lectic reads the saved library and can reopen its next-use guide. It does not assume access to another platform's memory or to every project on your computer. [Saved library and guided use →](docs/GUIDED-USE.md)
+**Build once, reuse everywhere.** A method built from your Sales Training today reviews a different call tomorrow, from Codex or Claude Code, in any project, with no re-upload. Add sources later and earlier work is preserved.
 
 ## What you can build
 
@@ -99,22 +57,7 @@ Lectic reads the saved library and can reopen its next-use guide. It does not as
 | Architecture talks | **Architecture Review Checklist** | Access-control design → scoped issues and verification steps |
 | Business strategy lessons | **Market Decision Framework** | Market hypotheses → conditional comparison and missing evidence |
 
-These examples come from small synthetic fixtures using the same generic pipeline. They illustrate supported transformations, not measured effectiveness or domain-specific product branches. [Explore the fixtures →](fixtures/opportunities/README.md)
-
-**Capabilities follow the evidence.** If the material lacks procedures, criteria, examples or necessary conditions, the map explains the gap. A compelling title does not create expertise the sources don't contain.
-
-## Why compile expertise?
-
-Ordinary transcript chat can be useful. This project is designed to reduce the repeated work of turning source material into a method you can apply consistently:
-
-- **Keep the expertise.** A durable intermediate representation survives changes in goals, assistants and output formats.
-- **Inspect the reasoning.** Source statements retain evidence and stay distinct from compiler inference and personal context.
-- **Apply concrete methods.** Reuse procedures, decision rules, evaluation criteria and examples on new work.
-- **Preserve revisions.** Revisit sources, compare maps and create new builds without erasing earlier work or disagreements.
-
-The advantage over ordinary chat remains a hypothesis to test. Our [pilot strategy](docs/testing-guide.md) compares quality, setup cost, corrections, reuse and voluntary return.
-
-Digital person platforms package the person. **Lectic packages reusable pieces of the expertise.** The goal is portable methods and reasoning, with independently selectable components as the architecture evolves. [Read the north star →](NORTH_STAR.md)
+**Capabilities follow the evidence.** If the material lacks procedures, criteria, examples or conditions, the map says so instead of inventing them. These examples come from small synthetic fixtures and illustrate the kinds of transformation supported, not measured effectiveness. [Explore the fixtures →](fixtures/opportunities/README.md)
 
 ## How it works
 
@@ -129,7 +72,7 @@ flowchart TD
     G -. Optional facilitated comparison .-> H[Evaluate and refine]
 ```
 
-The **Expertise IR** is the durable asset. Capability Maps are versioned interpretations of it; methods and outputs are builds from it. The installed skill is one interface to the compiler, and Agent Skills is one output target. The core remains independent of a particular AI provider.
+The **Expertise IR** is the durable asset. Capability Maps are versioned interpretations of it; methods and outputs are builds from it. The MCP server and the installed skill are two interfaces to the same compiler, and Agent Skills is one output target. The core remains independent of a particular AI provider.
 
 Knowledge lives in one **Lectic home** per user (`~/.lectic`, or `LECTIC_HOME`): original sources as content-addressed blobs, normalized segments, knowledge revisions, maps, private briefs and saved builds. Interrupted workflows retain checkpoints. Every project and every assistant on the machine sees the same collections. A project that already contains a `.expertise-compiler/` folder keeps using it; ask “Where does Lectic store my knowledge?” to see which applies.
 
@@ -137,19 +80,15 @@ Knowledge lives in one **Lectic home** per user (`~/.lectic`, or `LECTIC_HOME`):
 
 ## Capture now, use later
 
-A collection can grow from content encountered during normal life. Save an item to **Inbox** without choosing a goal, add an optional reason for saving it, and assign it to one or more collections later.
+Save things as you meet them, with a reason if you have one, and sort them into collections later or never:
 
-> Save this architecture talk. Important perspective on permission boundaries, but don't treat it as company policy.
-
-Later:
+> Save this architecture talk. Great on permission boundaries, but don't treat it as company policy.
 
 > Use my AI Architecture collection to review this design.
 
-Capture stores supplied data without running extraction or rebuilding capabilities. Personal notes remain separate from source content. A source can belong to several collections while sharing its underlying files.
+Saving stores exactly what you shared and your note, nothing more. Processing happens when a use needs it. YouTube links become English captions on request (through `yt-dlp`, which `lectic setup` offers to install); other links stay saved as links. Lectic does not fetch article bodies, parse PDFs, OCR images, scrape social platforms or transcribe audio, and an unavailable caption stays a visible gap rather than a made-up summary.
 
-**The first phone adapter is an [iPhone Share Sheet Shortcut proof of concept](docs/iphone-shortcut.md).** It writes URL/text records to a synced folder, which the desktop imports on request. The one-time setup uses four actions; the desktop generates IDs and record metadata. It is not an installable mobile app, and real-device/iCloud testing remains outstanding.
-
-A saved link is not retrieved content. On requested processing, YouTube links can supply English captions through local `yt-dlp`; successful acquisitions are saved for reuse. Other linked platforms remain capture-only. Lectic does not fetch article bodies, parse PDFs, perform OCR, scrape Instagram/TikTok or transcribe audio/video. Unavailable captions remain a visible gap, never a fabricated summary.
+From a phone, an [iPhone Share Sheet Shortcut](docs/iphone-shortcut.md) drops captures into a synced folder that the desktop imports; posting straight to Lectic is on the roadmap below.
 
 [Capture contract, states and sync details →](docs/CAPTURE.md)
 
@@ -164,11 +103,11 @@ A saved link is not retrieved content. On requested processing, YouTube links ca
 | Validation | Schemas, hashes, evidence references and artifact structure | Does not establish sound judgment or effectiveness |
 | Evaluation | Matched prompts, structured checks and effort records | Independent runs, human review and refinement need coordination |
 
-**Local storage today; your choice of assistant.** The compiler has no hosted backend or paid model API dependency. Your chosen AI service may still process content remotely and have subscription or usage limits. A plain web chat without local file/tool access cannot operate the installed compiler autonomously.
+**Local storage today; your choice of assistant.** No hosted backend, no model API key: your assistant does the reasoning under its own subscription, and Lectic keeps the results honest and reusable.
 
 ### Toward portable knowledge
 
-The target is one knowledge store reachable from a phone capture, ChatGPT, Codex and Claude Code alike, with local storage as the offline/private mode rather than the only place Lectic works. Two of the steps are in place: every persisted record is either an immutable content-addressed object or a small mutable index behind one `LocalStore` seam ([design →](DESIGN.md#storage-one-home-cloud-shaped)), and a [local MCP server](docs/MCP.md) lets any client operate the compiler through validated tools instead of writing files. Next, in order: a remote store implementing the same seam, which is also what lets ChatGPT connect; then a phone Shortcut that posts captures to it. Those are direction, not shipped features.
+The target is one knowledge store reachable from a phone, ChatGPT, Codex and Claude Code alike, with local storage as the offline/private mode rather than the only mode. Done: one home per user behind a storage seam built for object storage ([design →](DESIGN.md#storage-one-home-cloud-shaped)), and an [MCP server](docs/MCP.md) so any client operates the compiler through validated tools. Next: a hosted store behind the same seam (which is what lets ChatGPT connect), then phone captures posted straight to it. Those are direction, not shipped features.
 
 ## Test the idea with us
 

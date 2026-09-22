@@ -6,7 +6,16 @@ It is stdlib-only Python 3.10+, like the rest of the compiler. There is nothing 
 
 ## Connect a client
 
-Use a Python 3.10+ interpreter path. On machines where `python` resolves to an older interpreter, name the newer one explicitly.
+The short way:
+
+```bash
+pip install git+https://github.com/tyreamer/lectic
+lectic setup
+```
+
+`lectic setup` registers the server with Claude Code (through `claude mcp add`, or its user config when the CLI is absent) and Codex (`~/.codex/config.toml`), runs a real handshake to prove the server starts, and offers to add YouTube support. It is safe to repeat. `lectic status` shows what is connected. The server is launched as `python -m lectic.cli serve` with the interpreter pip used, so nothing depends on PATH.
+
+The manual way, from a checkout, with a Python 3.10+ interpreter path:
 
 **Claude Code** (once, from any folder):
 

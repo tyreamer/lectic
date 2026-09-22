@@ -117,9 +117,18 @@ class YouTubeTests(unittest.TestCase):
 
     def test_unavailable_dependency_is_actionable_and_installs_nothing(self):
         self.which.return_value = None
-        with self.assertRaisesRegex(ec.Invalid, 'with your approval'):
+        with patch('ingestors.youtube.module_launcher', return_value=None), self.assertRaisesRegex(ec.Invalid, 'lectic setup'):
             YouTubeIngestor(URL).collect()
         self.boundary.assert_not_called()
+
+    def test_pip_installed_yt_dlp_module_works_without_a_path_entry(self):
+        self.which.return_value = None
+        with patch('ingestors.youtube.importlib.util.find_spec', return_value=object()):
+            self.assertEqual(YouTubeIngestor.launcher(), [sys.executable, '-m', 'yt_dlp'])
+        with patch('ingestors.youtube.module_launcher', return_value=None):
+            self.assertIsNone(YouTubeIngestor.launcher())
+        self.which.return_value = 'yt-dlp'
+        self.assertEqual(YouTubeIngestor.launcher(), ['yt-dlp'])
 
     def test_missing_captions_never_substitutes_metadata(self):
         info = metadata(); info['subtitles'] = {}; info['automatic_captions'] = {}
@@ -226,6 +235,7 @@ class YouTubeCaptureTests(unittest.TestCase):
 
     def test_unavailable_dependency_retains_all_urls_without_sources(self):
         h=self.helper; self.which.return_value=None
+        patch('ingestors.youtube.module_launcher', return_value=None).start()
         h.capture(url=URL, collections=['Missing dependency']); h.imported()
         result=h.store.process('Missing dependency')
         self.assertEqual(result['phase'], 'needs_sources')

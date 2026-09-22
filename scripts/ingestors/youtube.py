@@ -1,14 +1,25 @@
 """Optional, bounded YouTube caption acquisition. Never download video or audio."""
+import importlib.util
 import json
 from pathlib import Path
 import re
 import shutil
+import sys
 import subprocess
 import tempfile
 from urllib.parse import parse_qs, urlparse
 
 from ec import Invalid, require
 from . import TranscriptInput
+
+
+def module_launcher():
+    """yt_dlp installed as a module next to Lectic (what `lectic setup` does) needs no PATH entry."""
+    try:
+        if importlib.util.find_spec('yt_dlp') is not None: return [sys.executable, '-m', 'yt_dlp']
+    except (ImportError, ValueError):
+        pass
+    return None
 
 
 class YouTubeIngestor:
@@ -71,6 +82,12 @@ class YouTubeIngestor:
         raise Invalid('No usable English captions are available for this YouTube video. The link remains saved; no video, audio, or metadata summary was substituted.')
 
     @staticmethod
+    def launcher():
+        """A yt-dlp executable on PATH, or the yt_dlp module in this interpreter (pip-installed)."""
+        executable = shutil.which('yt-dlp')
+        return [executable] if executable else module_launcher()
+
+    @staticmethod
     def run(command, folder):
         try:
             result = subprocess.run(command, cwd=folder, stdin=subprocess.DEVNULL,
@@ -90,9 +107,9 @@ class YouTubeIngestor:
     def collect(self, metadata=None):
         require(metadata is None, 'YouTube source metadata comes from retrieval; preserve personal annotations in capture notes.')
         canonical = self.canonical_url  # Bound playlists before dependency/network access.
-        executable = shutil.which('yt-dlp')
-        require(executable, 'yt-dlp is not installed or not on PATH. Ask your assistant to install a current yt-dlp executable with your approval, then process this collection again. Nothing was installed automatically.')
-        common = [executable, '--ignore-config', '--no-plugin-dirs', '--no-remote-components',
+        launcher = self.launcher()
+        require(launcher, 'yt-dlp is not installed. Run `lectic setup` to add YouTube support (it asks before installing anything), or `pip install yt-dlp`; then process this collection again. Nothing was installed automatically.')
+        common = launcher + ['--ignore-config', '--no-plugin-dirs', '--no-remote-components',
                   '--no-cache-dir', '--no-playlist', '--skip-download', '--ignore-no-formats-error',
                   '--no-progress', '--encoding', 'utf-8', '--socket-timeout', '15',
                   '--retries', '1', '--extractor-retries', '1']
