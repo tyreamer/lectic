@@ -20,12 +20,20 @@ You watch a great talk, read a course, keep a transcript from someone who really
 
 ## Start
 
+**Ask your assistant to set it up.** Paste this link into Claude Code, Codex, or anything that can run commands on your computer:
+
+> Set up Lectic for me: https://github.com/tyreamer/lectic
+
+It reads [AGENTS.md](https://github.com/tyreamer/lectic/blob/main/AGENTS.md) and handles the rest — the right Python, the install, connecting itself. Restart it once when it says to, and you're done. You never see a command.
+
+**Or do it yourself:**
+
 ```bash
 pip install lectic
 lectic setup
 ```
 
-`lectic setup` connects Claude Code and Codex if they are installed, verifies the connection, and offers YouTube support. Then open either assistant, in any folder, and talk:
+Either way, `lectic setup` finds Claude Code and Codex, writes their configuration, verifies the server really starts, and offers YouTube support. Then open either assistant, in any folder, and talk:
 
 > Save this for later: https://www.youtube.com/watch?v=…
 

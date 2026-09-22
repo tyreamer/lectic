@@ -167,12 +167,12 @@ def setup(argv):
     print(f'  {"YouTube":<12} {offer_youtube(interactive)}')
     print(f'\nKnowledge lives in {home["home"]} and is shared by every project and assistant here.')
     if any(s == 'connected' for s in results.values()):
-        print('\nOpen a connected assistant, in any folder, and try one of these:\n')
+        print('\nOne step left: restart the assistant so it picks up the connection.')
+        print('Then open it in any folder and just talk:\n')
         for line in ('Save this for later: https://www.youtube.com/watch?v=...',
                      'What could my saved material become?',
                      'Use my Sales Training to review this call transcript.'):
             print('  ' + line)
-        print('\nIf the assistant was already open, restart it once so it sees the new connection.')
     else:
         print('\nNo supported assistant was found. Install Claude Code or Codex, then run `lectic setup` again,')
         print('or connect any MCP client with:  ' + ' '.join(server_command()))

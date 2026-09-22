@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "lectic"
-version = "0.1.0"
+version = "0.1.1"
 description = "Turn the talks, courses and transcripts you trust into expertise your AI assistants can apply, with evidence, across Claude Code, Codex, ChatGPT, Claude and Gemini."
 keywords = ["mcp", "knowledge", "transcripts", "youtube", "claude-code", "codex", "chatgpt", "agent-skills", "evidence"]
 readme = "README.md"
@@ -36,7 +36,7 @@ include-package-data = true
 
 [tool.setuptools.package-data]
 lectic = [
-    "SKILL.md", "README.md", "LICENSE", "NORTH_STAR.md", "DESIGN.md",
+    "SKILL.md", "README.md", "LICENSE", "NORTH_STAR.md", "DESIGN.md", "AGENTS.md",
     "agents/*.yaml", "prompts/*.md", "schemas/*.json", "docs/*.md",
     "fixtures/*", "fixtures/**/*",
 ]
