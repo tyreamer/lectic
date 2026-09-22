@@ -9,6 +9,7 @@ import tempfile
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
+from support import isolate_home
 import ec
 from capture_store import CaptureStore
 
@@ -20,6 +21,7 @@ class CaptureInputTests(unittest.TestCase):
         self.inbox = self.base / 'Inbox'
         self.inbox.mkdir()
         self.project = self.base / 'Project'
+        self.home = isolate_home(self, self.base)
         self.store = CaptureStore(self.project)
 
     def tearDown(self):

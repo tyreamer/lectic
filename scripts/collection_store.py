@@ -6,12 +6,13 @@ import tempfile
 import uuid
 from ec import VERSION, Invalid, digest, fingerprint, ingest, read, require, safe_child, validate_schema, validate_sources, validate_ir, validate_units, write
 from ingestors import adapter_for
+from home import storage_root
 
 
 class Library:
-    def __init__(self, project):
+    def __init__(self, project, home=None):
         self.project = Path(project).resolve()
-        self.root = self.project / '.expertise-compiler'
+        self.root = Path(home).resolve() if home else storage_root(self.project)
         self.path = self.root / 'library.json'
         self.index = read(self.path) if self.path.exists() else {'schema_version':VERSION,'collections':[], 'active_collection':None}
         require(type(self.index) is dict and self.index.get('schema_version') == VERSION and type(self.index.get('collections')) is list, 'Malformed collection library')

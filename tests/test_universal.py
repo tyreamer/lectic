@@ -11,6 +11,7 @@ import tempfile
 import unittest
 
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'scripts'))
+from support import isolate_home
 import ec
 from collection_store import Library
 from goal_workflow import work,validate_build
@@ -21,6 +22,7 @@ class UniversalTests(unittest.TestCase):
     def setUp(self):
         self.temp=tempfile.TemporaryDirectory(); self.base=Path(self.temp.name)
         self.project=self.base/'Project'; self.project.mkdir()
+        self.home=isolate_home(self,self.base)
         self.cases=ec.read(ec.ROOT/'fixtures/universal/cases.json')
 
     def tearDown(self): self.temp.cleanup()
@@ -86,11 +88,12 @@ class UniversalTests(unittest.TestCase):
         for case in self.cases:
             with self.subTest(intent=case['intent'],domain=case['domain']):
                 self.project=self.base/case['intent'];self.project.mkdir()
+                self.home=isolate_home(self,self.project)
                 done=self.finish(self.start(case),case)
                 build=Path(done['build'])
                 self.assertTrue((build/'method.md').exists())
                 self.assertFalse(any(build.rglob('SKILL.md')))
-                self.assertFalse((self.project/'.expertise-compiler/exports').exists())
+                self.assertFalse((self.home/'exports').exists())
                 self.assertIn(case['sections'][0][2],(build/'result.md').read_text(encoding='utf-8'))
                 saved=ec.read(build/'brief.json')
                 self.assertEqual(saved['intent_reason'],case['reason'])

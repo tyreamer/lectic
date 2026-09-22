@@ -5,6 +5,7 @@ import re
 from ec import (ROOT, VERSION, Invalid, assemble, digest, fingerprint, ingest_records, package, read,
                 require, safe_child, validate_capabilities, validate_ir, validate_package,
                 validate_schema, validate_sources, validate_units, write)
+from home import relative_run, resolve_run, session_path as legacy_session_path, storage_root
 
 
 def checkpoint_state(run, corpus, docs, segments):
@@ -58,8 +59,8 @@ def compile_workflow(input=None, output=None, *, project='.', metadata=None, int
                      select=None, build_all=False, reconciled=False, tasks=None, rubric=None):
     project = Path(project).resolve()
     project.mkdir(parents=True, exist_ok=True)
-    home = project / '.expertise-compiler'
-    session_path = home / 'session.json'
+    home = storage_root(project)
+    session_path = legacy_session_path(home, project)
     session = read(session_path) if session_path.exists() else {}
     require(type(session) is dict, 'Malformed saved compilation session')
     if session:
@@ -76,22 +77,26 @@ def compile_workflow(input=None, output=None, *, project='.', metadata=None, int
         snapshot = fingerprint([{'filename': r.filename, 'hash': digest(r.raw), 'metadata': r.metadata} for r in records])
         name = re.sub('[^a-z0-9]+', '-', Path(location).name.lower()).strip('-')[:32] or 'transcripts'
         run = (project / output).resolve() if output else home / 'runs' / f'{name}-{snapshot[:16]}'
-        require(run.is_relative_to(project), 'Compilation output must be inside the selected project')
+        relative_run(home, project, run)
         if hasattr(adapter, 'folder'):
             require(not run.is_relative_to(adapter.folder), 'Output must be outside input folder')
         ingest_records(records, run)
     elif output:
         run = (project / output).resolve()
-        require(run.is_relative_to(project), 'Compilation output must be inside the selected project')
+        relative_run(home, project, run)
     elif session.get('active_run'):
-        run = safe_child(project, session['active_run'])
+        run = resolve_run(home, project, session['active_run'])
     else:
         return {'phase': 'needs_input', 'message': 'Give me transcript files or point me at their folder.'}
     corpus, docs, segments = validate_sources(run)
-    session['active_run'] = run.relative_to(project).as_posix()
+    session['active_run'] = relative_run(home, project, run)
+    def recorded_is_active(recorded):
+        # Sessions written by project-local installs recorded a different relative form of the same run.
+        try: return bool(recorded) and resolve_run(home, project, recorded) == run
+        except Invalid: return False
     if intent is None and not select and not build_all and input is None and output is None:
         pending_request = session.get('pending_request', {})
-        if pending_request.get('run') == session['active_run']:
+        if recorded_is_active(pending_request.get('run')):
             intent, select, build_all = pending_request['intent'], pending_request['select'], pending_request['build_all']
     intent = intent or ('build' if select or build_all else 'compile')
     select = str(select) if select is not None else None
@@ -172,7 +177,7 @@ def compile_workflow(input=None, output=None, *, project='.', metadata=None, int
         require(len(chosen) == 1, 'That capability does not match a current option; resolve its name conversationally')
     elif intent in {'build', 'use', 'compare'}:
         previous = session.get('last_built', {})
-        if intent in {'use', 'compare'} and previous.get('run') == session['active_run']:
+        if intent in {'use', 'compare'} and recorded_is_active(previous.get('run')):
             chosen = [c for c in caps['capabilities'] if c['capability_id'] == previous.get('capability_id')]
         if not chosen and len(caps['capabilities']) == 1: chosen = caps['capabilities']
     if not chosen:

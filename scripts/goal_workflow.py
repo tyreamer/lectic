@@ -112,7 +112,9 @@ def work(*, project='.', input=None, metadata=None, collection=None, name=None, 
     path = lambda value: (project / value).resolve() if value else None
     require(action!='remove' or remove,'Source removal needs a source name')
     require(action not in {'add','replace'} or input,'Adding or replacing sources needs input files')
-    if action == 'list': return {'phase':'collections','collections':library.catalog()}
+    if action == 'list':
+        from home import storage_mode
+        return {'phase':'collections','home':str(library.root),'storage_mode':storage_mode(library.root,project),'collections':library.catalog()}
     if action == 'inspect': return {'phase':'collection_summary','summary':library.inspect(collection)}
     if action == 'compare': return {'phase':'revision_comparison','changes':library.compare(collection,before,after,before_knowledge,after_knowledge)}
     if action in {'archive','restore'}:

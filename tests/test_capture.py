@@ -9,6 +9,7 @@ import tempfile
 import unittest
 
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'scripts'))
+from support import isolate_home
 import ec
 from capture_store import CaptureStore, capture_command
 from capture_write import save_capture
@@ -20,6 +21,7 @@ class CaptureTests(unittest.TestCase):
     def setUp(self):
         self.temp=tempfile.TemporaryDirectory();self.base=Path(self.temp.name)
         self.project=self.base/'Local Project';self.project.mkdir()
+        self.home=isolate_home(self,self.base)
         self.inbox=self.base/'Synced Inbox';self.inbox.mkdir()
         self.store=CaptureStore(self.project)
         self.cases=ec.read(ec.ROOT/'fixtures/capture/workflows.json')
@@ -88,7 +90,7 @@ class CaptureTests(unittest.TestCase):
         row=self.rows('Inbox')[0];self.assertEqual(row['capture_id'],cid)
         self.assertEqual(row['processing_status'],'awaiting_retrieval')
         self.assertEqual(row['source_ids'],[])
-        self.assertFalse(list((self.project/'.expertise-compiler').rglob('ir.json')))
+        self.assertFalse(list(self.home.rglob('ir.json')))
 
     def test_reimport_is_idempotent_before_and_after_processing(self):
         self.capture(text='First inspect the input before changing the configuration.')

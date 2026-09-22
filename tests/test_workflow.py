@@ -10,6 +10,7 @@ from unittest.mock import patch
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
+from support import isolate_home
 import ec
 from demo import build
 from evaluate import score
@@ -25,6 +26,7 @@ class WorkflowTests(unittest.TestCase):
         self.base = Path(self.temp.name)
         self.project = self.base / 'User Project With Spaces'
         self.project.mkdir()
+        self.home = isolate_home(self, self.base, 'Lectic Home With Spaces')
         self.oracle = None
 
     def tearDown(self):
@@ -72,8 +74,9 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         payload = json.loads(result.stdout)
         self.assertEqual(payload['phase'], 'extract')
-        self.assertTrue(Path(payload['run']).is_relative_to(self.project))
-        self.assertTrue((self.project / '.expertise-compiler/session.json').is_file())
+        self.assertTrue(Path(payload['run']).is_relative_to(self.home))
+        self.assertTrue((self.home / 'sessions').is_dir())
+        self.assertFalse((self.project / '.expertise-compiler').exists())
         self.assertFalse((installed / '.expertise-compiler').exists())
         self.assertEqual(before, {p.relative_to(installed).as_posix() for p in installed.rglob('*') if p.is_file()})
         self.assertNotIn('.git/config', before)
@@ -236,7 +239,7 @@ class WorkflowTests(unittest.TestCase):
                 with self.assertRaisesRegex(ec.Invalid, 'yt-dlp is not installed'):
                     compile_workflow(url, project=self.project)
         self.assertFalse(YouTubeIngestor.accepts('https://youtube.com.evil.example/watch?v=abc'))
-        self.assertFalse((self.project / '.expertise-compiler').exists())
+        self.assertFalse(self.home.exists())
 
     def test_installer_refuses_to_overwrite_existing_edits(self):
         destination = install(self.base / 'installed/expertise-compiler')
@@ -263,7 +266,7 @@ class WorkflowTests(unittest.TestCase):
     def test_new_session_asks_for_content_not_commands(self):
         result = compile_workflow(project=self.project)
         self.assertEqual(result['phase'], 'needs_input')
-        self.assertFalse((self.project / '.expertise-compiler/session.json').exists())
+        self.assertFalse(self.home.exists())
 
     def test_build_intent_survives_interruption_without_reselection(self):
         start = compile_workflow(str(ec.ROOT / 'fixtures/transcripts'), project=self.project, intent='build', build_all=True)
@@ -280,7 +283,7 @@ class WorkflowTests(unittest.TestCase):
 
     def test_malformed_session_fails_with_a_validation_error(self):
         run = self.start('photography')
-        path = self.project / '.expertise-compiler/session.json'
+        path = next(self.home.glob('sessions/*.json'))
         session = ec.read(path); session['last_built'] = []; ec.write(path, session)
         with self.assertRaises(ec.Invalid): compile_workflow(project=self.project)
         ec.validate_sources(run)

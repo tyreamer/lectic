@@ -9,6 +9,7 @@ from unittest.mock import patch
 from urllib.parse import parse_qs, urlparse
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
+from support import isolate_home
 import ec
 from capture_store import CaptureStore, capture_command
 from ingestors import adapter_for
@@ -61,6 +62,7 @@ class YouTubeTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory(); self.addCleanup(self.temp.cleanup)
         self.base = Path(self.temp.name)
+        self.home = isolate_home(self, self.base)
         self.fake = FakeYtDlp()
         self.which = patch('ingestors.youtube.shutil.which', return_value='yt-dlp').start()
         self.boundary = patch('ingestors.youtube.subprocess.run', side_effect=self.fake.run).start()
@@ -238,7 +240,7 @@ class YouTubeCaptureTests(unittest.TestCase):
         self.assertEqual(row['retrieval_state']['status'],'retrieved')
         self.assertEqual(row['processing_status'],'needs_attention')
         self.assertEqual(row['source_ids'],[])
-        self.assertFalse(list((h.project/'.expertise-compiler').rglob('ir.json')))
+        self.assertFalse(list(h.home.rglob('ir.json')))
 
     def test_resume_after_normalization_failure_reuses_acquired_bytes(self):
         h=self.helper

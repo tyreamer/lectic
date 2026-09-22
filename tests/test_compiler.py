@@ -7,6 +7,7 @@ import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
+from support import isolate_home
 import ec
 from demo import build
 from evaluate import prepare, score
@@ -16,6 +17,7 @@ class CompilerTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.base = Path(self.temp.name)
+        self.home = isolate_home(self, self.base)
         self.run = build(self.base / 'demo')
 
     def tearDown(self):

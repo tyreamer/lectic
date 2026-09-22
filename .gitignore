@@ -1,5 +1,6 @@
 workspace/
 .expertise-compiler/
+.lectic/
 __pycache__/
 *.py[cod]
 .venv/

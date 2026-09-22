@@ -8,6 +8,7 @@ import tempfile
 import unittest
 
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'scripts'))
+from support import isolate_home
 import ec
 from collection_store import Library
 from goal_workflow import work, validate_build
@@ -17,6 +18,7 @@ from capability_maps import capability_map, CATEGORIES, validate_draft, compare_
 class CapabilityMapTests(unittest.TestCase):
     def setUp(self):
         self.temp=tempfile.TemporaryDirectory(); self.project=Path(self.temp.name)
+        self.home=isolate_home(self,self.project)
         self.cases=ec.read(ec.ROOT/'fixtures/opportunities/cases.json')
 
     def tearDown(self): self.temp.cleanup()
@@ -75,7 +77,8 @@ class CapabilityMapTests(unittest.TestCase):
     def test_unrelated_domains_same_discovery_and_multiple_categories(self):
         for case in self.cases:
             with self.subTest(domain=case['domain']), tempfile.TemporaryDirectory() as root:
-                self.project=Path(root);self.seed(case);record=self.save(self.draft(case))
+                self.project=Path(root);self.home=isolate_home(self,self.project)
+                self.seed(case);record=self.save(self.draft(case))
                 self.assertEqual(len(record['recommended_ids']),2)
                 self.assertEqual({c for o in record['draft']['opportunities'] for c in o['categories']},set(case['categories']+case['second_categories']))
                 self.assertEqual(record['source_coverage']['opportunity-1'],[next(iter(ec.validate_sources(self.run)[1]))])

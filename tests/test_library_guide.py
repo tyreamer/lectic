@@ -9,6 +9,7 @@ import tempfile
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
+from support import isolate_home
 import ec
 import test_capability_maps
 import test_goals
@@ -25,6 +26,7 @@ class LibraryGuideTests(unittest.TestCase):
         self.base = Path(self.temp.name)
         self.project = self.base / 'Project'
         self.project.mkdir()
+        self.home = isolate_home(self, self.base)
 
     def tearDown(self):
         self.temp.cleanup()
@@ -204,6 +206,7 @@ class LibraryGuideTests(unittest.TestCase):
             domain = case['domain']
             with self.subTest(domain=domain):
                 self.project = self.base / domain; self.project.mkdir()
+                self.home = isolate_home(self, self.project)
                 self.mapped(domain)
                 view = library_view(self.project)
                 draft = self.draft(view)
@@ -249,7 +252,7 @@ class LibraryGuideTests(unittest.TestCase):
 
     def test_guide_tampering_detected(self):
         self.build(); saved = self.save(self.draft())
-        path = self.project / '.expertise-compiler/use-guides' / (saved['guide_id'] + '.json')
+        path = self.home / 'use-guides' / (saved['guide_id'] + '.json')
         record = ec.read(path); record['draft']['cards'][0]['output'] = 'Changed output'
         ec.write(path, record)
         with self.assertRaisesRegex(ec.Invalid, 'hash'):
@@ -267,7 +270,7 @@ class LibraryGuideTests(unittest.TestCase):
     def test_legacy_package_visible_without_migration(self):
         done = self.build()
         package = Path(done['method']).parent
-        destination = self.project / '.expertise-compiler/capabilities/earlier' / package.name
+        destination = self.home / 'capabilities/earlier' / package.name
         shutil.copytree(package, destination)
         before = self.hashes()
         view = library_view(self.project)

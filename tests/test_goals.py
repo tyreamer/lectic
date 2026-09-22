@@ -10,6 +10,7 @@ import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
+from support import isolate_home
 import ec
 from collection_store import Library
 from goal_workflow import work, validate_build, GOAL_QUESTION
@@ -23,6 +24,7 @@ class GoalTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.base = Path(self.temp.name)
         self.project = self.base / 'Actual Work'; self.project.mkdir()
+        self.home = isolate_home(self, self.base)
         self.oracle = None
 
     def tearDown(self):
@@ -76,6 +78,7 @@ class GoalTests(unittest.TestCase):
         for domain in ['debugging','photography']:
             with self.subTest(domain=domain):
                 self.project=self.base / domain; self.project.mkdir()
+                self.home=isolate_home(self,self.project)
                 result=self.finish(self.start(domain))
                 self.assertTrue(validate_build(result['build'])['valid'])
                 rendered=Path(result['result']).read_text(encoding='utf-8')
@@ -187,7 +190,8 @@ class GoalTests(unittest.TestCase):
         self.assertEqual(process.returncode,0,process.stderr)
         self.assertEqual(json.loads(process.stdout)['phase'],'extract')
         self.assertEqual(ec.inventory(installed),before)
-        self.assertTrue((self.project / '.expertise-compiler/library.json').exists())
+        self.assertTrue((self.home / 'library.json').exists())
+        self.assertFalse((self.project / '.expertise-compiler').exists())
 
     def test_comparison_has_same_sources_context_and_empty_effort_observations(self):
         from evaluate import prepare_comparison, score
@@ -213,7 +217,7 @@ class GoalTests(unittest.TestCase):
         brief=self.brief(); value=ec.read(brief); value['constraints']='not an array'; ec.write(brief,value)
         with self.assertRaises(ec.Invalid):
             work(project=self.project,input=str(ec.ROOT / 'fixtures/debugging'),brief=str(brief))
-        ec.write(self.project / '.expertise-compiler/library.json',{'schema_version':'1.0','collections':[{'name':'broken'}]})
+        ec.write(self.home / 'library.json',{'schema_version':'1.0','collections':[{'name':'broken'}]})
         with self.assertRaisesRegex(ec.Invalid,'Malformed collection entry'): Library(self.project)
 
 

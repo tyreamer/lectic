@@ -5,6 +5,7 @@ import json
 from ec import (ROOT, fingerprint, read, require, safe_child, text_write,
                 validate_ir, validate_package, validate_schema, validate_sources, write)
 from collection_store import Library
+from home import session_path as legacy_session_path, resolve_run, storage_mode
 
 
 def library_view(project='.', collection=None):
@@ -102,17 +103,17 @@ def library_view(project='.', collection=None):
     legacy, legacy_runs = [], []
     if not collection:
         runs = {p.parent for p in (library.root / 'runs').glob('*/corpus.json')}
-        session_path = library.root / 'session.json'
+        session_path = legacy_session_path(library.root, library.project)
         if session_path.exists():
             try:
                 session = read(session_path)
                 if session.get('active_run'):
-                    runs.add(safe_child(library.project, session['active_run']))
+                    runs.add(resolve_run(library.root, library.project, session['active_run']))
             except (OSError, ValueError, KeyError, AttributeError) as exc:
                 issues.append('Earlier session: ' + str(exc))
         for run in sorted(runs):
             try:
-                safe_child(library.project, run.relative_to(library.project).as_posix())
+                require(run.is_relative_to(library.root) or run.is_relative_to(library.project), 'Earlier run lives outside this home and project')
                 _, docs, _ = validate_sources(run)
                 ir = validate_ir(run) if (run / 'ir.json').exists() else None
                 legacy_runs.append({'location': str(run), 'source_count': len(docs),
@@ -138,7 +139,8 @@ def library_view(project='.', collection=None):
                 references[ref] = item
             except (OSError, ValueError, KeyError) as exc:
                 issues.append(f'Earlier package {path.parent.name}: {exc}')
-    view = {'phase': 'lectic_library', 'scope': str(library.project), 'collection_filter': collection,
+    view = {'phase': 'lectic_library', 'scope': str(library.project), 'home': str(library.root),
+            'storage_mode': storage_mode(library.root, library.project), 'collection_filter': collection,
             'collections': rows, 'legacy_methods': legacy, 'legacy_runs': legacy_runs, 'references': references, 'issues': issues,
             'context_policy': 'Use only relevant context actually available in this conversation, saved user context, or explicitly supplied host memory. Do not infer a user profile from saved sources.'}
     view['binding_hash'] = fingerprint(view)
@@ -219,7 +221,7 @@ def render_guide(record):
 def use_guide(*, project='.', collection=None, action='prepare', draft=None, guide_id=None, select=None):
     from capability_maps import capability_map
     view = library_view(project, collection)
-    root = Path(project).resolve() / '.expertise-compiler/use-guides'
+    root = Library(project).root / 'use-guides'
     index_path = root / 'index.json'
     index = read(index_path) if index_path.exists() else {'guides': [], 'last_shown': None}
     require(type(index) is dict and type(index.get('guides')) is list and

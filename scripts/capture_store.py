@@ -16,6 +16,7 @@ import uuid
 from ec import (VERSION, Invalid, digest, fingerprint, normalize, read, require, safe_child,
                 validate_ir, validate_schema, validate_sources, validate_units, write)
 from collection_store import Library
+from home import storage_root
 
 TEXT_EXTENSIONS={'.txt','.md','.vtt','.srt'}
 
@@ -55,7 +56,8 @@ def validate_capture(event):
 class CaptureStore:
     def __init__(self,project='.'):
         self.project=Path(project).resolve()
-        self.root=self.project/'.expertise-compiler/capture'
+        self.home=storage_root(self.project)
+        self.root=self.home/'capture'
 
     @contextmanager
     def writer(self):
