@@ -1,0 +1,8 @@
+.git
+.expertise-compiler
+workspace
+website
+tests
+__pycache__
+*.pyc
+.venv

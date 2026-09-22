@@ -15,6 +15,8 @@ lectic setup
 
 `lectic setup` registers the server with Claude Code (through `claude mcp add`, or its user config when the CLI is absent) and Codex (`~/.codex/config.toml`), runs a real handshake to prove the server starts, and offers to add YouTube support. It is safe to repeat. `lectic status` shows what is connected. The server is launched as `python -m lectic.cli serve` with the interpreter pip used, so nothing depends on PATH.
 
+For ChatGPT, Claude on the web, Gemini, your phone or another computer, `lectic share` serves the same server over Streamable HTTP behind one private link; see [Anywhere](CLOUD.md).
+
 The manual way, from a checkout, with a Python 3.10+ interpreter path:
 
 **Claude Code** (once, from any folder):
@@ -39,13 +41,17 @@ args = ["/path/to/lectic/scripts/lectic_mcp.py"]
 
 The server treats its working directory as the user's project; every tool also accepts an explicit `project`. Set `LECTIC_HOME` in the client's environment to point all of them at one home (see [installation](INSTALLATION.md#where-knowledge-is-stored)).
 
-**ChatGPT** connectors require a remotely hosted MCP server over HTTP, not a local stdio process. That is the next step ([design](../DESIGN.md#storage-one-home-cloud-shaped)); until then ChatGPT can only operate Lectic through a host with command access.
+**Hosted assistants** (ChatGPT, Claude on the web, Gemini) need an HTTPS address rather than a local process: `lectic share`, or the always-on container. [Anywhere →](CLOUD.md)
 
 Check the server independently with the MCP Inspector:
 
 ```bash
 npx @modelcontextprotocol/inspector --cli python /path/to/lectic/scripts/lectic_mcp.py --method tools/list
 ```
+
+## Transports
+
+The same `Server` answers over two transports. **stdio** (`lectic serve`): one JSON-RPC message per line, what `lectic setup` registers. **Streamable HTTP** (`lectic serve --http`, `lectic share`): `POST /mcp` with JSON-RPC, plain JSON responses, `202` for notifications, `405` on `GET` because the server never opens a stream to the client. The secret travels in the path (`/t/<secret>/mcp`, what hosted connectors accept without OAuth) or as `Authorization: Bearer <secret>`. A browser page from another origin cannot drive a server bound to this machine. Tool calls are serialized: the coordinators expect one writer per home. `POST /t/<secret>/capture` accepts a phone's share. Both transports are verified against the official MCP Inspector.
 
 ## Tools
 

@@ -146,10 +146,14 @@ class McpWorkflowTests(unittest.TestCase):
             c.call('lectic_read', path=str(self.base / 'oracle-secret.txt'))
         # A capture saved through the tool lands in the home's Inbox without any retrieval.
         saved = c.call('lectic_capture_save', url='https://example.com/talk', note='Good framing; not policy', collections=['Ideas'])
-        self.assertEqual(saved['phase'], 'captured'); self.assertEqual(saved['import']['items'][0]['saved'], True)
-        rows = c.call('lectic_capture', action='list', collection='Ideas')['items']
-        self.assertEqual(rows[0]['processing_status'], 'awaiting_retrieval')
-        self.assertEqual(rows[0]['user_context'][0]['note'], 'Good framing; not policy')
+        self.assertEqual(saved['phase'], 'captured'); self.assertTrue(saved['new'])
+        again = c.call('lectic_capture_save', text='a second thought', collections=['Ideas'])
+        self.assertTrue(again['new']); self.assertNotEqual(again['capture_id'], saved['capture_id'])
+        rows = {r['capture_id']: r for r in c.call('lectic_capture', action='list', collection='Ideas')['items']}
+        self.assertEqual(len(rows), 2)
+        self.assertEqual(rows[saved['capture_id']]['processing_status'], 'awaiting_retrieval')
+        self.assertEqual(rows[saved['capture_id']]['user_context'][0]['note'], 'Good framing; not policy')
+        self.assertEqual(rows[again['capture_id']]['processing_status'], 'pending')
 
 
 class McpStdioTests(unittest.TestCase):

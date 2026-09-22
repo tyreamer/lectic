@@ -2,6 +2,8 @@
 
 Save a link or selected text to Inbox. The **desktop generates the metadata**; your phone only sends what you shared and when you saved it.
 
+**If your Lectic has a link** (`lectic share`, or an always-on server), the two-action Shortcut in [Anywhere](CLOUD.md#your-phone) posts captures straight to it and needs no synced folder. This page is the folder-based alternative.
+
 This is a simpler manual setup, **not an installable Shortcut link yet**. The importer is tested; the action configuration and actual iCloud delivery still need testing on an iPhone. A prebuilt, device-tested iCloud Shortcut link remains the next distribution step.
 
 Existing shortcuts and an `Expertise Compiler/Inbox` folder still work. Keep importing your existing folder; you do not need to move saved captures or recreate a working Shortcut for the rebrand. New setups below use Lectic.

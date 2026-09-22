@@ -12,11 +12,17 @@ against its schema before it lands. Reasoning still belongs to the client.
 from __future__ import annotations
 
 import argparse
+from datetime import datetime, timezone
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 import os
 from pathlib import Path
+import re
+import secrets
 import sys
+import threading
 import traceback
+from urllib.parse import urlsplit
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from ec import (ROOT, VERSION, Invalid, read, require, safe_child, validate_capability_data, validate_ir,
@@ -205,8 +211,10 @@ class Server:
         record = save_capture(inbox, url=url or '', text=text or '', files=list(files or ()), note=note or '',
                               collections=list(collections or ()), title=title or '', origin='assistant-supplied')
         report = capture_command(project=project, action='import', inbox=str(inbox))
-        return {'phase': 'captured', 'record': str(record), 'import': report,
-                'note': 'Saved only. Nothing was retrieved, extracted or built; process the collection when a use needs it.'}
+        item = next((i for i in report['items'] if i['capture_id'] == record.stem), None)
+        require(item is not None and item['saved'], 'The capture was written but its import reported a problem: ' + json.dumps(report['needs_attention']))
+        return {'phase': 'captured', 'capture_id': item['capture_id'], 'new': item['new'], 'record': str(record),
+                'issues': item['issues'], 'note': 'Saved only. Nothing was retrieved, extracted or built; process the collection when a use needs it.'}
 
     def tool_compile(self, project=None, input=None, run=None, **kwargs):
         from workflow import compile_workflow
@@ -332,11 +340,166 @@ def serve(project='.'):
             stdout.write(json.dumps(response, ensure_ascii=False).encode('utf-8') + b'\n'); stdout.flush()
 
 
+# ---------------------------------------------------------------- HTTP transport
+
+def ensure_token(home):
+    """One secret per home, made once, never typed: it is the whole of the link's security."""
+    path = Path(home) / 'server.json'
+    if path.is_file():
+        record = read(path)
+        require(isinstance(record.get('token'), str) and len(record['token']) >= 32, 'Malformed server.json')
+        return record['token']
+    token = secrets.token_urlsafe(32)
+    write(path, {'schema_version': '1.0', 'token': token, 'created_at': datetime.now(timezone.utc).isoformat()})
+    try: path.chmod(0o600)
+    except OSError: pass
+    return token
+
+
+def connect_url(base, token):
+    return base.rstrip('/') + '/t/' + token + '/mcp'
+
+
+class HttpHandler(BaseHTTPRequestHandler):
+    """MCP Streamable HTTP: JSON-RPC over POST, plain JSON responses, one secret link.
+
+    The server never opens a stream to the client, so GET answers 405. Tool calls are
+    serialized: the compiler's coordinators expect one writer per home.
+    """
+    server_version = 'lectic/' + SERVER_VERSION
+    protocol_version = 'HTTP/1.1'
+
+    def log_message(self, format, *args):  # keep stdout clean; stderr gets one line per request
+        sys.stderr.write('%s %s\n' % (self.command, self.path.split('/t/')[0] + ('/t/...' if '/t/' in self.path else '')))
+
+    # ---- plumbing
+    def send(self, status, body=None, content_type='application/json', headers=()):
+        data = b'' if body is None else (body if isinstance(body, bytes) else json.dumps(body, ensure_ascii=False).encode('utf-8'))
+        self.send_response(status)
+        if data: self.send_header('Content-Type', content_type)
+        self.send_header('Content-Length', str(len(data)))
+        self.send_header('Cache-Control', 'no-store')
+        for key, value in headers: self.send_header(key, value)
+        self.end_headers()
+        if data: self.wfile.write(data)
+
+    def route(self):
+        """Return (endpoint, authorized). The secret may travel in the path or as a bearer header."""
+        path = urlsplit(self.path).path.rstrip('/') or '/'
+        token = self.server.token
+        supplied = None
+        match = re.fullmatch(r'/t/([A-Za-z0-9_-]+)(/.*)?', path)
+        if match:
+            supplied, path = match.group(1), match.group(2) or '/'
+        auth = self.headers.get('Authorization', '')
+        if auth.lower().startswith('bearer '): supplied = auth[7:].strip()
+        return path, supplied is not None and secrets.compare_digest(supplied, token)
+
+    def origin_ok(self):
+        # A browser page must not be able to drive a server bound to this machine (DNS rebinding).
+        origin = self.headers.get('Origin')
+        if not origin: return True
+        host = (urlsplit(origin).hostname or '').lower()
+        if host in {'localhost', '127.0.0.1', '::1'}: return True
+        return host in self.server.allowed_origins
+
+    def body(self):
+        length = int(self.headers.get('Content-Length') or 0)
+        require(length <= 32 * 1024 * 1024, 'Request body too large')
+        return self.rfile.read(length) if length else b''
+
+    # ---- verbs
+    def do_GET(self):
+        path, authorized = self.route()
+        if path == '/health': return self.send(200, {'ok': True, 'server': 'lectic', 'version': SERVER_VERSION})
+        if path == '/mcp':
+            if not authorized: return self.send(401, {'error': 'unauthorized'})
+            return self.send(405, {'error': 'This server does not open server-to-client streams'}, headers=[('Allow', 'POST, DELETE')])
+        return self.send(404, {'error': 'not found'})
+
+    def do_DELETE(self):
+        path, authorized = self.route()
+        if path == '/mcp' and authorized: return self.send(204)
+        return self.send(401 if path == '/mcp' else 404, {'error': 'unauthorized' if path == '/mcp' else 'not found'})
+
+    def do_POST(self):
+        path, authorized = self.route()
+        if not self.origin_ok(): return self.send(403, {'error': 'origin not allowed'})
+        if path not in {'/mcp', '/capture'}: return self.send(404, {'error': 'not found'})
+        if not authorized: return self.send(401, {'error': 'unauthorized'})
+        try:
+            raw = self.body()
+        except Invalid as exc:
+            return self.send(413, {'error': str(exc)})
+        if path == '/capture': return self.capture(raw)
+        try:
+            message = json.loads(raw.decode('utf-8'))
+        except ValueError:
+            return self.send(400, Server.error(None, -32700, 'Parse error'))
+        messages = message if isinstance(message, list) else [message]
+        responses = []
+        with self.server.lock:
+            for item in messages:
+                try:
+                    response = self.server.mcp.handle(item)
+                except Exception as exc:
+                    traceback.print_exc(file=sys.stderr)
+                    response = Server.error(item.get('id') if isinstance(item, dict) else None, -32603, 'Internal error: ' + str(exc))
+                if response is not None: responses.append(response)
+        headers = [('Mcp-Session-Id', self.server.session_id)]
+        if not responses: return self.send(202, headers=headers)
+        return self.send(200, responses if isinstance(message, list) else responses[0], headers=headers)
+
+    def capture(self, raw):
+        """What a phone posts: the shared thing, an optional note, optional collections. Storage only."""
+        content_type = (self.headers.get('Content-Type') or '').split(';')[0].strip().lower()
+        try:
+            if content_type == 'application/json':
+                payload = json.loads(raw.decode('utf-8'))
+                require(isinstance(payload, dict), 'Capture body must be a JSON object')
+            else:
+                payload = {'value': raw.decode('utf-8')}
+            value = str(payload.get('value') or payload.get('url') or payload.get('text') or '').strip()
+            require(value, 'Nothing to save: send value, url or text')
+            is_url = re.fullmatch(r'https?://\S+', value) is not None
+            collections = payload.get('collections') or ([payload['collection']] if payload.get('collection') else [])
+            with self.server.lock:
+                result = self.server.mcp.tool_capture_save(url=value if is_url else '', text='' if is_url else value,
+                                                           note=str(payload.get('note') or ''), collections=[str(c) for c in collections],
+                                                           title=str(payload.get('title') or ''))
+        except (Invalid, ValueError, KeyError, OSError) as exc:
+            return self.send(400, {'saved': False, 'error': str(exc)})
+        return self.send(200, {'saved': True, 'new': result['new'], 'capture_id': result['capture_id'],
+                               'collections': collections or ['Inbox'], 'note': result['note']})
+
+
+def serve_http(project='.', host='127.0.0.1', port=8787, token=None, allowed_origins=(), announce=print):
+    project = Path(project).resolve()
+    token = token or ensure_token(storage_root(project))
+    httpd = ThreadingHTTPServer((host, port), HttpHandler)
+    httpd.daemon_threads = True
+    httpd.mcp = Server(project)
+    httpd.token = token
+    httpd.lock = threading.Lock()
+    httpd.session_id = secrets.token_hex(16)
+    httpd.allowed_origins = {o.lower() for o in allowed_origins}
+    base = f'http://{host}:{httpd.server_address[1]}'
+    if announce: announce(connect_url(base, token))
+    return httpd
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--project', default=os.getcwd(), help='Working folder the user is in (default: current directory)')
+    parser.add_argument('--http', action='store_true', help='Serve MCP over HTTP instead of stdio')
+    parser.add_argument('--host', default='127.0.0.1'); parser.add_argument('--port', type=int, default=8787)
+    parser.add_argument('--token', default=os.environ.get('LECTIC_TOKEN') or None, help='Secret for the link (default: generated once per home)')
     args = parser.parse_args()
-    serve(args.project)
+    if not args.http:
+        return serve(args.project)
+    httpd = serve_http(args.project, args.host, args.port, args.token, announce=lambda url: print('Lectic link: ' + url, flush=True))
+    try: httpd.serve_forever()
+    except KeyboardInterrupt: pass
 
 
 if __name__ == '__main__':

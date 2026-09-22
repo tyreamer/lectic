@@ -72,6 +72,58 @@ class SetupTests(unittest.TestCase):
         self.assertIn('Claude Code  not installed', out); self.assertIn('Codex        not installed', out)
         self.assertIn('No supported assistant was found', out); self.assertIn(' '.join(cli.server_command()), out)
 
+    def fake_cloudflared(self, lines, exit_after=0.5):
+        """A stand-in for the real tunnel binary: prints what cloudflared prints, then exits."""
+        script = self.base / 'fake_cloudflared.py'
+        body = 'import sys, time\n' + ''.join(f'print({line!r}, flush=True)\n' for line in lines) + f'time.sleep({exit_after})\n'
+        script.write_text(body, encoding='utf-8')
+        if sys.platform == 'win32':
+            launcher = self.base / 'cloudflared.cmd'
+            launcher.write_text(f'@echo off\r\n"{sys.executable}" "{script}" %*\r\n', encoding='utf-8')
+        else:
+            launcher = self.base / 'cloudflared'
+            launcher.write_text(f'#!/bin/sh\nexec "{sys.executable}" "{script}" "$@"\n', encoding='utf-8'); launcher.chmod(0o755)
+        return str(launcher)
+
+    def test_share_opens_a_tunnel_and_prints_one_link_with_hosted_instructions(self):
+        launcher = self.fake_cloudflared(['2025-01-01 INF Requesting new quick Tunnel', '2025-01-01 INF |  https://brave-fox-1234.trycloudflare.com  |'])
+        which = lambda name: launcher if name == 'cloudflared' else None
+        with patch('cli.shutil.which', side_effect=which):
+            code, out = self.run_cli('share', '--port', '0')
+        self.assertEqual(code, 0, out)
+        token = json.loads((self.home / 'server.json').read_text(encoding='utf-8'))['token']
+        self.assertIn(f'https://brave-fox-1234.trycloudflare.com/t/{token}/mcp', out)
+        for expected in ('ChatGPT', 'Claude', 'Gemini CLI', 'lectic connect', 'The tunnel closed'):
+            self.assertIn(expected, out)
+        # The same secret is reused next time, unless a new link is requested.
+        with patch('cli.shutil.which', side_effect=which):
+            self.assertIn(token, self.run_cli('share', '--port', '0')[1])
+            self.assertNotIn(token, self.run_cli('share', '--port', '0', '--new-link')[1])
+
+    def test_share_explains_the_missing_tunnel_and_accepts_a_public_address(self):
+        code, out = self.run_cli('share', '--port', '0')
+        self.assertEqual(code, 1); self.assertIn('winget install Cloudflare.cloudflared', out); self.assertIn('brew install cloudflared', out)
+        with patch('cli.time.sleep', side_effect=KeyboardInterrupt):
+            code, out = self.run_cli('share', '--port', '0', '--public', 'https://lectic.example.com')
+        self.assertEqual(code, 0); self.assertIn('https://lectic.example.com/t/', out)
+
+    def test_connect_points_assistants_at_a_hosted_lectic_and_setup_switches_back(self):
+        (self.user / '.claude.json').write_text('{}', encoding='utf-8')
+        (self.user / '.codex').mkdir()
+        (self.user / '.codex/config.toml').write_text('model = "gpt-5"\n[mcp_servers.other]\ncommand = "x"\n', encoding='utf-8')
+        link = 'https://brave-fox-1234.trycloudflare.com/t/abc/mcp'
+        code, out = self.run_cli('connect', link)
+        self.assertEqual(code, 0); self.assertIn('Claude Code  connected', out)
+        self.assertEqual(json.loads((self.user / '.claude.json').read_text(encoding='utf-8'))['mcpServers']['lectic'], {'type': 'http', 'url': link})
+        codex = (self.user / '.codex/config.toml').read_text(encoding='utf-8')
+        self.assertIn(f"url = '{link}'", codex); self.assertIn('[mcp_servers.other]', codex); self.assertNotIn("'serve'", codex)
+        self.assertEqual(self.run_cli('setup', '--yes')[0], 0)
+        codex = (self.user / '.codex/config.toml').read_text(encoding='utf-8')
+        self.assertNotIn(link, codex); self.assertIn("'serve'", codex)
+        self.assertEqual(codex.count('[mcp_servers.lectic]'), 1); self.assertIn('[mcp_servers.other]', codex); self.assertIn('command = "x"', codex)
+        self.assertEqual(json.loads((self.user / '.claude.json').read_text(encoding='utf-8'))['mcpServers']['lectic']['type'], 'stdio')
+        self.assertEqual(self.run_cli('connect')[0], 2)
+
     def test_status_reports_home_connections_and_server_health(self):
         code, out = self.run_cli('status')
         self.assertEqual(code, 0)

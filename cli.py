@@ -1,9 +1,11 @@
 """`lectic`: the one command a person needs.
 
-    lectic setup     connect the assistants on this machine, verify the connection, offer YouTube support
-    lectic status    where knowledge lives, what is saved, which assistants are connected
-    lectic serve     run the MCP server (what the assistants launch; you rarely run it yourself)
-    lectic ec ...    the deterministic utilities, for contributors
+    lectic setup            connect the assistants on this machine, verify the connection, offer YouTube support
+    lectic share            give ChatGPT, Claude, Gemini or any hosted assistant one link to your knowledge
+    lectic connect URL      point Claude Code and Codex at a Lectic running elsewhere
+    lectic status           where knowledge lives, what is saved, which assistants are connected
+    lectic serve [--http]   run the MCP server (what the assistants launch; you rarely run it yourself)
+    lectic ec ...           the deterministic utilities, for contributors
 
 Everything else happens in conversation with the connected assistant.
 """
@@ -12,9 +14,12 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import sys
+import threading
+import time
 
 SCRIPTS = Path(__file__).resolve().parent / 'scripts'
 sys.path.insert(0, str(SCRIPTS))
@@ -51,15 +56,18 @@ def claude_connected():
     return SERVER_NAME in servers
 
 
-def connect_claude(runner=None):
-    """Prefer Claude Code's own CLI; fall back to its user config when the CLI is not on PATH."""
+def connect_claude(runner=None, url=None):
+    """Prefer Claude Code's own CLI; fall back to its user config when the CLI is not on PATH.
+
+    With a URL, Claude Code is pointed at a Lectic running elsewhere instead of a local process.
+    """
     runner = runner or subprocess.run
     command = server_command()
     claude = shutil.which('claude')
     if claude:
+        spec = ['--transport', 'http', SERVER_NAME, url] if url else [SERVER_NAME, '--'] + command
         for attempt in range(2):
-            result = runner([claude, 'mcp', 'add', '--scope', 'user', SERVER_NAME, '--'] + command,
-                            capture_output=True, text=True)
+            result = runner([claude, 'mcp', 'add', '--scope', 'user'] + spec, capture_output=True, text=True)
             if result.returncode == 0: return 'connected'
             if 'already exists' in (result.stdout + result.stderr) and attempt == 0:
                 runner([claude, 'mcp', 'remove', '--scope', 'user', SERVER_NAME], capture_output=True, text=True)
@@ -72,7 +80,7 @@ def connect_claude(runner=None):
     except ValueError:
         return 'failed: ~/.claude.json is not valid JSON'
     servers = config.setdefault('mcpServers', {})
-    servers[SERVER_NAME] = {'type': 'stdio', 'command': command[0], 'args': command[1:]}
+    servers[SERVER_NAME] = {'type': 'http', 'url': url} if url else {'type': 'stdio', 'command': command[0], 'args': command[1:]}
     path.write_text(json.dumps(config, indent=2) + '\n', encoding='utf-8')
     return 'connected'
 
@@ -82,16 +90,23 @@ def codex_connected():
     return path.is_file() and f'[mcp_servers.{SERVER_NAME}]' in path.read_text(encoding='utf-8')
 
 
-def connect_codex():
+CODEX_BLOCK = re.compile(r'\n?\[mcp_servers\.' + SERVER_NAME + r'\]\n(?:(?!\[).*\n?)*')
+
+
+def connect_codex(url=None):
     path = codex_config_path()
     if not path.parent.is_dir(): return 'not installed'
     existing = path.read_text(encoding='utf-8') if path.is_file() else ''
-    if f'[mcp_servers.{SERVER_NAME}]' in existing: return 'connected'
-    command = server_command()
     literal = lambda value: "'" + str(value).replace("'", "''") + "'"
-    block = (f'\n[mcp_servers.{SERVER_NAME}]\ncommand = {literal(command[0])}\n'
-             f'args = [{", ".join(literal(a) for a in command[1:])}]\n')
-    path.write_text(existing.rstrip('\n') + ('\n' if existing else '') + block, encoding='utf-8')
+    if url:
+        block = f'\n[mcp_servers.{SERVER_NAME}]\nurl = {literal(url)}\n'
+    else:
+        command = server_command()
+        block = (f'\n[mcp_servers.{SERVER_NAME}]\ncommand = {literal(command[0])}\n'
+                 f'args = [{", ".join(literal(a) for a in command[1:])}]\n')
+    if block.strip() in existing: return 'connected'
+    existing = CODEX_BLOCK.sub('\n', existing)  # replace an earlier Lectic entry, keep everything else
+    path.write_text(existing.rstrip('\n') + ('\n' if existing.strip() else '') + block, encoding='utf-8')
     return 'connected'
 
 
@@ -165,16 +180,111 @@ def status(argv):
     print(f'Claude Code {"connected" if claude_connected() else "not connected"}')
     print(f'Codex       {"connected" if codex_connected() else "not connected"}')
     print(f'YouTube     {"ready" if youtube_available() else "not installed"}')
+    print(f'Share link  {"made (lectic share to use it)" if (Path(info["home"]) / "server.json").is_file() else "none yet (lectic share)"}')
     ok, _ = verify_server()
     print(f'Server      {"ok" if ok else "FAILED"}')
     if not (claude_connected() or codex_connected()): print('\nRun `lectic setup` to connect an assistant.')
     return 0
 
 
+def option(argv, name, default=None):
+    return argv[argv.index(name) + 1] if name in argv and argv.index(name) + 1 < len(argv) else default
+
+
 def serve(argv):
-    from lectic_mcp import serve as run_server
-    project = argv[argv.index('--project') + 1] if '--project' in argv else os.getcwd()
-    run_server(project); return 0
+    from lectic_mcp import serve as run_server, serve_http
+    project = option(argv, '--project', os.getcwd())
+    if '--http' not in argv:
+        run_server(project); return 0
+    from lectic_mcp import connect_url
+    public = option(argv, '--public', os.environ.get('LECTIC_PUBLIC_URL') or None)
+    httpd = serve_http(project, option(argv, '--host', '127.0.0.1'), int(option(argv, '--port', '8787')),
+                       option(argv, '--token', os.environ.get('LECTIC_TOKEN') or None), announce=None)
+    print('Lectic link: ' + (connect_url(public, httpd.token) if public else connect_url(f'http://127.0.0.1:{httpd.server_address[1]}', httpd.token)), flush=True)
+    try: httpd.serve_forever()
+    except KeyboardInterrupt: pass
+    return 0
+
+
+HOSTED_HELP = '''
+Paste that link where the assistant lets you add a connector:
+
+  ChatGPT      Settings > Apps & Connectors > Create. Authentication: none. (Developer mode may need enabling.)
+  Claude       Settings > Connectors > Add custom connector.
+  Gemini CLI   gemini mcp add --transport http lectic <link>
+  Claude Code  lectic connect <link>      (also Codex)
+
+Anyone with the link can read and change your knowledge. Keep it private; `lectic share --new-link` makes a new one.
+'''
+
+
+def share(argv):
+    """Serve over HTTP and open a tunnel, so hosted assistants reach this machine's knowledge."""
+    from home import storage_root
+    from lectic_mcp import connect_url, serve_http
+    project = os.getcwd()
+    if '--new-link' in argv:
+        (storage_root(project) / 'server.json').unlink(missing_ok=True)
+    port = int(option(argv, '--port', '8787'))
+    httpd = serve_http(project, '127.0.0.1', port, announce=None)
+    threading.Thread(target=httpd.serve_forever, daemon=True).start()
+    local = f'http://127.0.0.1:{httpd.server_address[1]}'
+    public = option(argv, '--public')
+    tunnel = None
+    if not public:
+        cloudflared = shutil.which('cloudflared')
+        if not cloudflared:
+            print('Lectic is serving on ' + connect_url(local, httpd.token))
+            print('\nTo reach it from ChatGPT, Claude or Gemini you need a public address. Install Cloudflare Tunnel once:')
+            print('  Windows: winget install Cloudflare.cloudflared      macOS: brew install cloudflared')
+            print('then run `lectic share` again. Already have a public address for this machine? `lectic share --public https://...`')
+            httpd.shutdown(); httpd.server_close(); return 1
+        name = option(argv, '--tunnel')
+        args = [cloudflared, '--no-autoupdate', 'tunnel'] + (['run', '--url', local, name] if name else ['--url', local])
+        tunnel = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, encoding='utf-8', errors='replace')
+        print('Opening a secure tunnel' + (' ' + name if name else '') + '...', flush=True)
+        if name:
+            public = option(argv, '--hostname') or None
+            if not public:
+                print('A named tunnel needs its hostname: lectic share --tunnel NAME --hostname https://lectic.example.com'); tunnel.terminate(); tunnel.stdout.close(); httpd.shutdown(); httpd.server_close(); return 1
+        else:
+            deadline = time.time() + 45
+            for line in tunnel.stdout:
+                found = re.search(r'https://[a-z0-9-]+\.trycloudflare\.com', line)
+                if found: public = found.group(0); break
+                if time.time() > deadline: break
+            if not public:
+                print('The tunnel did not come up. Check your connection and try again.'); tunnel.terminate(); tunnel.stdout.close(); httpd.shutdown(); httpd.server_close(); return 1
+    link = connect_url(public, httpd.token)
+    print('\nYour Lectic link:\n\n  ' + link + '\n' + HOSTED_HELP)
+    if tunnel and not option(argv, '--tunnel'):
+        print('This link lasts while `lectic share` is running; a quick tunnel gets a new address each time. For a permanent one see docs/CLOUD.md.')
+    print('\nSharing. Press Ctrl+C to stop.', flush=True)
+    try:
+        while True:
+            time.sleep(1)
+            if tunnel and tunnel.poll() is not None:
+                print('The tunnel closed.'); break
+    except KeyboardInterrupt:
+        pass
+    finally:
+        if tunnel:
+            if tunnel.poll() is None: tunnel.terminate()
+            tunnel.stdout.close()
+        httpd.shutdown(); httpd.server_close()
+    return 0
+
+
+def connect(argv):
+    """Point the assistants on this machine at a Lectic that runs somewhere else."""
+    url = next((a for a in argv if a.startswith('http')), None)
+    if not url:
+        print('Usage: lectic connect https://host/t/TOKEN/mcp   (the link `lectic share` or your server printed)'); return 2
+    results = {'Claude Code': connect_claude(url=url), 'Codex': connect_codex(url=url)}
+    for name, state in results.items(): print(f'  {name:<12} {state}')
+    if any(v == 'connected' for v in results.values()):
+        print('\nConnected. Restart the assistant once if it was already open. `lectic setup` switches back to this machine\'s own knowledge.')
+    return 0
 
 
 def ec(argv):
@@ -186,7 +296,7 @@ def ec(argv):
 def main(argv=None):
     argv = list(sys.argv[1:] if argv is None else argv)
     command = argv[0] if argv else 'status'
-    handlers = {'setup': setup, 'status': status, 'serve': serve, 'ec': ec}
+    handlers = {'setup': setup, 'share': share, 'connect': connect, 'status': status, 'serve': serve, 'ec': ec}
     if command in {'-h', '--help', 'help'} or command not in handlers:
         print(__doc__.strip()); return 0 if command in {'-h', '--help', 'help'} else 2
     return handlers[command](argv[1:])

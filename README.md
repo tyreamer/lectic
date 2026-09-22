@@ -31,10 +31,18 @@ lectic setup
 
 That's the whole interface. No commands to learn, no goal to invent up front, nothing to re-upload later. `lectic status` shows where your knowledge lives and what is connected.
 
-<details>
-<summary>Prefer an installed skill, or using a plain ChatGPT chat?</summary>
+**Use ChatGPT, Claude on the web, or Gemini?** One more command gives them the same knowledge:
 
-The installed skill (`/lectic` in Claude Code, `$lectic` in Codex) drives the same compiler through your assistant's file access and remains supported; see [installation](docs/INSTALLATION.md). A plain web chat without command access cannot run Lectic yet; a hosted server is the next step ([status](#toward-portable-knowledge)). Python 3.10+ is the only requirement.
+```bash
+lectic share
+```
+
+It prints a private link and where to paste it. Your phone can post captures to the same link. To keep the link up when the laptop is closed, run the same server always-on ([guide](docs/CLOUD.md)). Windows and macOS alike; Python 3.10+ is the only requirement.
+
+<details>
+<summary>Prefer an installed skill?</summary>
+
+The installed skill (`/lectic` in Claude Code, `$lectic` in Codex) drives the same compiler through your assistant's file access and remains supported; see [installation](docs/INSTALLATION.md).
 
 </details>
 
@@ -46,7 +54,7 @@ The installed skill (`/lectic` in Claude Code, `$lectic` in Codex) drives the sa
 
 **Results carry their evidence.** A review, a checklist, a lesson, a decision — every point cites the source passage behind it, and source statements stay distinct from the assistant's inference.
 
-**Build once, reuse everywhere.** A method built from your Sales Training today reviews a different call tomorrow, from Codex or Claude Code, in any project, with no re-upload. Add sources later and earlier work is preserved.
+**Build once, reuse everywhere.** A method built from your Sales Training today reviews a different call tomorrow, from ChatGPT, Claude, Gemini, Codex or Claude Code, in any project, with no re-upload. Add sources later and earlier work is preserved.
 
 ## What you can build
 
@@ -88,7 +96,7 @@ Save things as you meet them, with a reason if you have one, and sort them into 
 
 Saving stores exactly what you shared and your note, nothing more. Processing happens when a use needs it. YouTube links become English captions on request (through `yt-dlp`, which `lectic setup` offers to install); other links stay saved as links. Lectic does not fetch article bodies, parse PDFs, OCR images, scrape social platforms or transcribe audio, and an unavailable caption stays a visible gap rather than a made-up summary.
 
-From a phone, an [iPhone Share Sheet Shortcut](docs/iphone-shortcut.md) drops captures into a synced folder that the desktop imports; posting straight to Lectic is on the roadmap below.
+From a phone, a two-action Share Sheet Shortcut posts straight to your Lectic link ([guide](docs/CLOUD.md#your-phone)); a [synced-folder Shortcut](docs/iphone-shortcut.md) remains for phones that cannot reach it.
 
 [Capture contract, states and sync details →](docs/CAPTURE.md)
 
@@ -99,15 +107,15 @@ From a phone, an [iPhone Share Sheet Shortcut](docs/iphone-shortcut.md) drops ca
 | Processing | Text/transcript files and deferred YouTube English-caption retrieval | Optional `yt-dlp` required for YouTube; no arbitrary URL or audio/video acquisition |
 | Discovery | Grounded, ranked Capability Maps with version history | Quality depends on source support and assistant interpretation |
 | Outputs | Reusable text methods, work products and optional skill exports | No standalone agent runtime or persistent coaching service |
-| Capture | Local inbox import, annotations and multiple memberships | Phone adapter is a setup recipe; captures still reach the home through a desktop import |
+| Capture | Phone or assistant posts to `/capture`; synced-folder import; annotations and multiple memberships | Saving stores what was shared; only YouTube captions are retrieved, on request |
 | Validation | Schemas, hashes, evidence references and artifact structure | Does not establish sound judgment or effectiveness |
 | Evaluation | Matched prompts, structured checks and effort records | Independent runs, human review and refinement need coordination |
 
-**Local storage today; your choice of assistant.** No hosted backend, no model API key: your assistant does the reasoning under its own subscription, and Lectic keeps the results honest and reusable.
+**Your knowledge, your server, any assistant.** No hosted backend you don't control, no model API key: your assistant does the reasoning under its own subscription, and Lectic keeps the results honest and reusable. `lectic share` or an always-on container gives ChatGPT, Claude, Gemini and your phone the same home through one private link.
 
 ### Toward portable knowledge
 
-The target is one knowledge store reachable from a phone, ChatGPT, Codex and Claude Code alike, with local storage as the offline/private mode rather than the only mode. Done: one home per user behind a storage seam built for object storage ([design →](DESIGN.md#storage-one-home-cloud-shaped)), and an [MCP server](docs/MCP.md) so any client operates the compiler through validated tools. Next: a hosted store behind the same seam (which is what lets ChatGPT connect), then phone captures posted straight to it. Those are direction, not shipped features.
+One knowledge store reachable from a phone, ChatGPT, Claude, Gemini, Codex and Claude Code alike, with local storage as the offline/private mode rather than the only mode. In place: one home per user behind a storage seam built for object storage ([design →](DESIGN.md#storage-one-home-cloud-shaped)); an [MCP server](docs/MCP.md) over stdio and Streamable HTTP so any client operates the compiler through validated tools; `lectic share`, an always-on container and phone capture over one private link ([guide →](docs/CLOUD.md)). Still ahead: a remote object store behind the seam so several machines can share one home without one of them being the server, and a published PyPI release.
 
 ## Test the idea with us
 
@@ -123,6 +131,7 @@ We are testing with **AI builders, consultants, creators and knowledge-heavy pro
 | --- | --- |
 | [Installation](docs/INSTALLATION.md) | Setup, updates and troubleshooting |
 | [MCP server](docs/MCP.md) | Connect Claude Code, Codex or any MCP client; tools and write policy |
+| [Anywhere](docs/CLOUD.md) | ChatGPT, Claude, Gemini, your phone, a second computer: one private link |
 | [YouTube retrieval](docs/YOUTUBE.md) | Paste links, retrieve captions on demand, preserve evidence and reuse it |
 | [Guided use](docs/GUIDED-USE.md) | See what is saved, discover concrete applications and reuse it |
 | [iPhone Shortcut](docs/iphone-shortcut.md) | Capture setup and exact first live test |
