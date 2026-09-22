@@ -5,8 +5,8 @@
 ### Save what you trust. Your AI learns the method, not just the words.
 
 [![Status: Alpha](https://img.shields.io/badge/status-alpha-f0b44d)](#current-status)
-[![License: MIT](https://img.shields.io/badge/license-MIT-4b8bba)](LICENSE)
-[![Python: 3.10+](https://img.shields.io/badge/python-3.10%2B-3776ab)](docs/DEVELOPING.md)
+[![License: MIT](https://img.shields.io/badge/license-MIT-4b8bba)](https://github.com/tyreamer/lectic/blob/main/LICENSE)
+[![Python: 3.10+](https://img.shields.io/badge/python-3.10%2B-3776ab)](https://github.com/tyreamer/lectic/blob/main/docs/DEVELOPING.md)
 
 **[Start](#start)** · **[What it does](#what-it-does)** · **[Examples](#what-you-can-build)** · **[How it works](#how-it-works)** · **[Status](#current-status)**
 
@@ -17,7 +17,7 @@ You watch a great talk, read a course, keep a transcript from someone who really
 ## Start
 
 ```bash
-pip install git+https://github.com/tyreamer/lectic
+pip install lectic
 lectic setup
 ```
 
@@ -37,12 +37,12 @@ That's the whole interface. No commands to learn, no goal to invent up front, no
 lectic share
 ```
 
-It prints a private link and where to paste it. Your phone can post captures to the same link. To keep the link up when the laptop is closed, run the same server always-on ([guide](docs/CLOUD.md)). Windows and macOS alike; Python 3.10+ is the only requirement.
+It prints a private link and where to paste it. Your phone can post captures to the same link. To keep the link up when the laptop is closed, run the same server always-on ([guide](https://github.com/tyreamer/lectic/blob/main/docs/CLOUD.md)). Windows and macOS alike; Python 3.10+ is the only requirement.
 
 <details>
 <summary>Prefer an installed skill?</summary>
 
-The installed skill (`/lectic` in Claude Code, `$lectic` in Codex) drives the same compiler through your assistant's file access and remains supported; see [installation](docs/INSTALLATION.md).
+The installed skill (`/lectic` in Claude Code, `$lectic` in Codex) drives the same compiler through your assistant's file access and remains supported; see [installation](https://github.com/tyreamer/lectic/blob/main/docs/INSTALLATION.md).
 
 </details>
 
@@ -56,7 +56,7 @@ The installed skill (`/lectic` in Claude Code, `$lectic` in Codex) drives the sa
 
 **Build once, reuse everywhere.** A method built from your Sales Training today reviews a different call tomorrow, from ChatGPT, Claude, Gemini, Codex or Claude Code, in any project, with no re-upload. Add sources later and earlier work is preserved.
 
-**Share what you know.** `lectic pack "FC 27"` turns a collection into one file. Anyone runs `lectic install` on it and every assistant they use can apply it. Sources travel as links and are verified on the installer's own network, so nothing is redistributed ([packs →](docs/PACKS.md)).
+**Share what you know.** `lectic pack "FC 27"` turns a collection into one file. Anyone runs `lectic install` on it and every assistant they use can apply it. Sources travel as links and are verified on the installer's own network, so nothing is redistributed ([packs →](https://github.com/tyreamer/lectic/blob/main/docs/PACKS.md)).
 
 ## What you can build
 
@@ -67,7 +67,7 @@ The installed skill (`/lectic` in Claude Code, `$lectic` in Codex) drives the sa
 | Architecture talks | **Architecture Review Checklist** | Access-control design → scoped issues and verification steps |
 | Business strategy lessons | **Market Decision Framework** | Market hypotheses → conditional comparison and missing evidence |
 
-**Capabilities follow the evidence.** If the material lacks procedures, criteria, examples or conditions, the map says so instead of inventing them. These examples come from small synthetic fixtures and illustrate the kinds of transformation supported, not measured effectiveness. [Explore the fixtures →](fixtures/opportunities/README.md)
+**Capabilities follow the evidence.** If the material lacks procedures, criteria, examples or conditions, the map says so instead of inventing them. These examples come from small synthetic fixtures and illustrate the kinds of transformation supported, not measured effectiveness. [Explore the fixtures →](https://github.com/tyreamer/lectic/blob/main/fixtures/opportunities/README.md)
 
 ## How it works
 
@@ -86,7 +86,7 @@ The **Expertise IR** is the durable asset. Capability Maps are versioned interpr
 
 Knowledge lives in one **Lectic home** per user (`~/.lectic`, or `LECTIC_HOME`): original sources as content-addressed blobs, normalized segments, knowledge revisions, maps, private briefs and saved builds. Interrupted workflows retain checkpoints. Every project and every assistant on the machine sees the same collections. A project that already contains a `.expertise-compiler/` folder keeps using it; ask “Where does Lectic store my knowledge?” to see which applies.
 
-[Architecture and remaining boundaries →](DESIGN.md)
+[Architecture and remaining boundaries →](https://github.com/tyreamer/lectic/blob/main/DESIGN.md)
 
 ## Capture now, use later
 
@@ -98,9 +98,9 @@ Save things as you meet them, with a reason if you have one, and sort them into 
 
 Saving stores exactly what you shared and your note, nothing more. Processing happens when a use needs it. YouTube links become English captions on request (through `yt-dlp`, which `lectic setup` offers to install); other links stay saved as links. Lectic does not fetch article bodies, parse PDFs, OCR images, scrape social platforms or transcribe audio, and an unavailable caption stays a visible gap rather than a made-up summary.
 
-From a phone, a two-action Share Sheet Shortcut posts straight to your Lectic link ([guide](docs/CLOUD.md#your-phone)); a [synced-folder Shortcut](docs/iphone-shortcut.md) remains for phones that cannot reach it.
+From a phone, a two-action Share Sheet Shortcut posts straight to your Lectic link ([guide](https://github.com/tyreamer/lectic/blob/main/docs/CLOUD.md#your-phone)); a [synced-folder Shortcut](https://github.com/tyreamer/lectic/blob/main/docs/iphone-shortcut.md) remains for phones that cannot reach it.
 
-[Capture contract, states and sync details →](docs/CAPTURE.md)
+[Capture contract, states and sync details →](https://github.com/tyreamer/lectic/blob/main/docs/CAPTURE.md)
 
 ## Current status
 
@@ -117,7 +117,7 @@ From a phone, a two-action Share Sheet Shortcut posts straight to your Lectic li
 
 ### Toward portable knowledge
 
-One knowledge store reachable from a phone, ChatGPT, Claude, Gemini, Codex and Claude Code alike, with local storage as the offline/private mode rather than the only mode. In place: one home per user behind a storage seam built for object storage ([design →](DESIGN.md#storage-one-home-cloud-shaped)); an [MCP server](docs/MCP.md) over stdio and Streamable HTTP so any client operates the compiler through validated tools; `lectic share`, an always-on container and phone capture over one private link ([guide →](docs/CLOUD.md)). Still ahead: a remote object store behind the seam so several machines can share one home without one of them being the server, and a published PyPI release.
+One knowledge store reachable from a phone, ChatGPT, Claude, Gemini, Codex and Claude Code alike, with local storage as the offline/private mode rather than the only mode. In place: one home per user behind a storage seam built for object storage ([design →](https://github.com/tyreamer/lectic/blob/main/DESIGN.md#storage-one-home-cloud-shaped)); an [MCP server](https://github.com/tyreamer/lectic/blob/main/docs/MCP.md) over stdio and Streamable HTTP so any client operates the compiler through validated tools; `lectic share`, an always-on container and phone capture over one private link ([guide →](https://github.com/tyreamer/lectic/blob/main/docs/CLOUD.md)). Still ahead: a remote object store behind the seam so several machines can share one home without one of them being the server, and a published PyPI release.
 
 ## Test the idea with us
 
@@ -125,28 +125,28 @@ The automated suite covers provenance, revisions, capture, discovery, builds and
 
 We are testing with **AI builders, consultants, creators and knowledge-heavy professionals**. The study includes fair baseline comparisons, fresh-session reuse, source changes and refinement on unseen tasks.
 
-**[Start with the concept-validation guide →](docs/testing-guide.md)**
+**[Start with the concept-validation guide →](https://github.com/tyreamer/lectic/blob/main/docs/testing-guide.md)**
 
 ## Documentation
 
 | Guide | Purpose |
 | --- | --- |
-| [Installation](docs/INSTALLATION.md) | Setup, updates and troubleshooting |
-| [MCP server](docs/MCP.md) | Connect Claude Code, Codex or any MCP client; tools and write policy |
-| [Anywhere](docs/CLOUD.md) | ChatGPT, Claude, Gemini, your phone, a second computer: one private link |
-| [Packs](docs/PACKS.md) | Share a collection as one file; install someone else's |
-| [YouTube retrieval](docs/YOUTUBE.md) | Paste links, retrieve captions on demand, preserve evidence and reuse it |
-| [Guided use](docs/GUIDED-USE.md) | See what is saved, discover concrete applications and reuse it |
-| [iPhone Shortcut](docs/iphone-shortcut.md) | Capture setup and exact first live test |
-| [Evaluation](docs/EVALUATION.md) | Compare against capable ordinary transcript chat |
-| [Architecture](DESIGN.md) | Current boundaries, storage and limitations |
-| [North star](NORTH_STAR.md) | Product direction and extensible build targets |
-| [Development](docs/DEVELOPING.md) | Code structure, tests and contribution workflow |
-| [CLI reference](docs/CLI.md) | Deterministic utilities operated by the assistant |
+| [Installation](https://github.com/tyreamer/lectic/blob/main/docs/INSTALLATION.md) | Setup, updates and troubleshooting |
+| [MCP server](https://github.com/tyreamer/lectic/blob/main/docs/MCP.md) | Connect Claude Code, Codex or any MCP client; tools and write policy |
+| [Anywhere](https://github.com/tyreamer/lectic/blob/main/docs/CLOUD.md) | ChatGPT, Claude, Gemini, your phone, a second computer: one private link |
+| [Packs](https://github.com/tyreamer/lectic/blob/main/docs/PACKS.md) | Share a collection as one file; install someone else's |
+| [YouTube retrieval](https://github.com/tyreamer/lectic/blob/main/docs/YOUTUBE.md) | Paste links, retrieve captions on demand, preserve evidence and reuse it |
+| [Guided use](https://github.com/tyreamer/lectic/blob/main/docs/GUIDED-USE.md) | See what is saved, discover concrete applications and reuse it |
+| [iPhone Shortcut](https://github.com/tyreamer/lectic/blob/main/docs/iphone-shortcut.md) | Capture setup and exact first live test |
+| [Evaluation](https://github.com/tyreamer/lectic/blob/main/docs/EVALUATION.md) | Compare against capable ordinary transcript chat |
+| [Architecture](https://github.com/tyreamer/lectic/blob/main/DESIGN.md) | Current boundaries, storage and limitations |
+| [North star](https://github.com/tyreamer/lectic/blob/main/NORTH_STAR.md) | Product direction and extensible build targets |
+| [Development](https://github.com/tyreamer/lectic/blob/main/docs/DEVELOPING.md) | Code structure, tests and contribution workflow |
+| [CLI reference](https://github.com/tyreamer/lectic/blob/main/docs/CLI.md) | Deterministic utilities operated by the assistant |
 
 ## Contributing
 
-Useful contributions include reproducible failures, evidence-quality improvements and observations from real tasks. Follow the [development guide](docs/DEVELOPING.md) and preserve the separation between source content, personal context, expertise and builds.
+Useful contributions include reproducible failures, evidence-quality improvements and observations from real tasks. Follow the [development guide](https://github.com/tyreamer/lectic/blob/main/docs/DEVELOPING.md) and preserve the separation between source content, personal context, expertise and builds.
 
 Run the existing suite from a checkout:
 
@@ -158,4 +158,4 @@ python -m unittest discover -s tests -v
 
 ## License
 
-[MIT](LICENSE). Imported content retains its original ownership and licensing; a citation does not grant redistribution rights.
+[MIT](https://github.com/tyreamer/lectic/blob/main/LICENSE). Imported content retains its original ownership and licensing; a citation does not grant redistribution rights.

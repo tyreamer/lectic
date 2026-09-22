@@ -1,0 +1,30 @@
+# The suite on every platform a user might be on. Nothing here has network access to YouTube; retrieval is mocked.
+name: Tests
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python: ["3.10", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Run the suite
+        run: python -m unittest discover -s tests
+      - name: Install and smoke-test the package
+        shell: bash
+        run: |
+          python -m pip install --quiet .
+          cd "$RUNNER_TEMP"
+          LECTIC_HOME="$RUNNER_TEMP/lectic-home" lectic status
+          printf '{"jsonrpc":"2.0","id":1,"method":"ping"}\n' | LECTIC_HOME="$RUNNER_TEMP/lectic-home" python -m lectic.cli serve | grep -q '"result": {}'

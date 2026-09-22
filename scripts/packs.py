@@ -124,7 +124,7 @@ def render_readme(manifest, ir, files, maps, methods):
     lines = ['# ' + manifest['name'], '',
              f"A Lectic knowledge pack: {manifest['unit_count']} evidence-backed knowledge units compiled from "
              f"{len(manifest['sources'])} source{'s' if len(manifest['sources']) != 1 else ''}. Install it and every connected assistant can apply it.", '',
-             '```', 'pip install git+https://github.com/tyreamer/lectic', 'lectic install <this file or its link>', '```', '']
+             '```', 'pip install lectic', 'lectic install <this file or its link>', '```', '']
     for map_id in maps:
         record = files['maps/' + map_id + '.json']
         opportunities = {o['opportunity_id']: o for o in record['draft']['opportunities']}

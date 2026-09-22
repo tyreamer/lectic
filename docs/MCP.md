@@ -9,7 +9,7 @@ It is stdlib-only Python 3.10+, like the rest of the compiler. There is nothing 
 The short way:
 
 ```bash
-pip install git+https://github.com/tyreamer/lectic
+pip install lectic
 lectic setup
 ```
 

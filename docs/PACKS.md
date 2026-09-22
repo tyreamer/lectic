@@ -38,7 +38,7 @@ Installing the same pack twice keeps both copies apart (`FC 27`, `FC 27 (2)`); `
 
 ## Sharing
 
-The file goes wherever files go: a GitHub release, a gist, a bucket, a message. The tweet is a link and a sentence. Recipients need Lectic (`pip install git+https://github.com/tyreamer/lectic`); the pack's own README tells them so.
+The file goes wherever files go: a GitHub release, a gist, a bucket, a message. The tweet is a link and a sentence. Recipients need Lectic (`pip install lectic`); the pack's own README tells them so.
 
 Packs are content-addressed: the same knowledge over the same sources produces the same `pack_id`, so two people can tell they hold the same thing.
 

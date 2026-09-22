@@ -3,7 +3,7 @@
 The recommended way is two commands, then talk to your assistant:
 
 ```bash
-pip install git+https://github.com/tyreamer/lectic
+pip install lectic
 lectic setup
 ```
 
