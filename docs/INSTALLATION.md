@@ -1,8 +1,12 @@
-# Install Lectic as a skill
+# Install Lectic
+
+Lectic has two interfaces to the same knowledge: an [MCP server](MCP.md) any MCP client can connect to, and the installed skill described here. Both need Python 3.10+ and nothing else.
+
+## As a skill
 
 Install new copies as `lectic`. The repository root is the skill; include all supporting folders, not just SKILL.md. Existing `expertise-compiler` installations remain supported and should be updated in place instead of duplicated. Both names use the same knowledge home, so saved collections and capabilities do not need moving. Give the installation message in the README to your assistant; no manual terminal setup is needed.
 
-## Codex
+### Codex
 
 Ask:
 
@@ -12,7 +16,7 @@ The repository-relative skill path is `.`. The installed helper resolves its sup
 
 New installations are normally detected automatically; restart if absent. Describe your actual task, for example: “Use the transcripts in ./input to review my draft in ./plan.md for missing steps. Save this collection as Project Training for future work.” An explicit `$lectic` mention is an optional fallback (`$expertise-compiler` for a legacy installation). [Official Codex installation guidance](https://learn.chatgpt.com/docs/build-skills).
 
-## Claude Code
+### Claude Code
 
 Ask:
 

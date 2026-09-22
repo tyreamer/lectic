@@ -27,9 +27,17 @@ Built for developers, AI builders, consultants, creators and teams turning human
 
 You need **local Codex or Claude Code**, file and command access, and **Python 3.10+**. Your assistant handles setup and operates the compiler; no model API key or additional Python runtime packages are required.
 
-### 1. Install the assistant interface
+### 1. Connect an assistant
 
-**In Codex, send:**
+Two interfaces reach the same knowledge. **MCP** is the direction of travel: one process, any MCP client, no file access needed. The **installed skill** remains supported.
+
+**As an MCP server** (Claude Code shown; Codex and the Inspector are in the [MCP guide](docs/MCP.md)):
+
+```bash
+claude mcp add --scope user lectic -- python /path/to/lectic/scripts/lectic_mcp.py
+```
+
+**As an installed skill, in Codex, send:**
 
 ```text
 Use $skill-installer to install the repository root at
@@ -160,7 +168,7 @@ A saved link is not retrieved content. On requested processing, YouTube links ca
 
 ### Toward portable knowledge
 
-The target is one knowledge store reachable from a phone capture, ChatGPT, Codex and Claude Code alike, with local storage as the offline/private mode rather than the only place Lectic works. The storage layer is now shaped for that: every persisted record is either an immutable content-addressed object or a small mutable index, and all filesystem-specific behavior sits behind one `LocalStore` seam ([design →](DESIGN.md#storage-one-home-cloud-shaped)). Next steps, in order: a local MCP server so any assistant reaches the same home through tools instead of an installed skill; a remote store implementing the same seam; a phone Shortcut that posts captures directly. These are direction, not shipped features.
+The target is one knowledge store reachable from a phone capture, ChatGPT, Codex and Claude Code alike, with local storage as the offline/private mode rather than the only place Lectic works. Two of the steps are in place: every persisted record is either an immutable content-addressed object or a small mutable index behind one `LocalStore` seam ([design →](DESIGN.md#storage-one-home-cloud-shaped)), and a [local MCP server](docs/MCP.md) lets any client operate the compiler through validated tools instead of writing files. Next, in order: a remote store implementing the same seam, which is also what lets ChatGPT connect; then a phone Shortcut that posts captures to it. Those are direction, not shipped features.
 
 ## Test the idea with us
 
@@ -175,6 +183,7 @@ We are testing with **AI builders, consultants, creators and knowledge-heavy pro
 | Guide | Purpose |
 | --- | --- |
 | [Installation](docs/INSTALLATION.md) | Setup, updates and troubleshooting |
+| [MCP server](docs/MCP.md) | Connect Claude Code, Codex or any MCP client; tools and write policy |
 | [YouTube retrieval](docs/YOUTUBE.md) | Paste links, retrieve captions on demand, preserve evidence and reuse it |
 | [Guided use](docs/GUIDED-USE.md) | See what is saved, discover concrete applications and reuse it |
 | [iPhone Shortcut](docs/iphone-shortcut.md) | Capture setup and exact first live test |

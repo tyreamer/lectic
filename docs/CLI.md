@@ -4,6 +4,14 @@ For a returning user's saved library, run `python scripts/ec.py library --projec
 
 These commands are for the assistant, contributors, and advanced debugging. Normal users install the skill and talk to it; see [README](../README.md). Run from a user's project and resolve the installed scripts by absolute path. Relative input/output/metadata paths resolve against `--project` for the coordinator.
 
+## MCP server
+
+```text
+python /path/to/lectic/scripts/lectic_mcp.py --project .
+```
+
+Speaks MCP over stdio for Claude Code, Codex and other clients; the tools mirror the commands below. See [MCP](MCP.md).
+
 ## Storage location
 
 ```text

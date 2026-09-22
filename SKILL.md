@@ -22,6 +22,8 @@ Requires local file/command access and Python 3.10+. No model API calls or third
 
 For “Is Lectic up to date?”, “Update Lectic”, “Enable automatic updates” or “Pause updates”, follow [installation and updates](docs/INSTALLATION.md). Updates manage this installed interface only. Check its receipt and actual local files; a published commit does not prove the installation is current. Periodic updates are opt-in, never a side effect of compiling content. Verify an OS schedule before claiming it is enabled, and distinguish local skills from separate ChatGPT workspace installations.
 
+If the host exposes `lectic_*` MCP tools, prefer them over running scripts: they drive the same workflows, read prompts and records through `lectic_read`, and save records through `lectic_write_json`, which validates them. [MCP guide](docs/MCP.md).
+
 ## Understand the work
 
 For “What did we save?”, “What can I use?”, “What else can I do with it?” or returning to a collection, read the saved library and follow [guide-use.md](prompts/guide-use.md). Distinguish saved sources, ready methods, previous results and possible new builds. Proactively show concrete input/output examples and a next-use request; don't make the user invent the applications. Tailor suggestions using only relevant user context actually available, never a guessed profile or an assumed connection to platform memory.
