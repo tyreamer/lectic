@@ -186,9 +186,8 @@ def ingest(input_dir, output, metadata=None):
     return ingest_records(adapter.collect(metadata), output)
 
 
-def ingest_records(records, output):
-    """Normalize an already acquired snapshot without fetching it a second time."""
-    output = Path(output).resolve()
+def plan_records(records):
+    """Deterministic source documents and corpus identity for acquired records, without writing."""
     docs, blobs = [], {}
     for record in records:
         filename, raw, m = record.filename, record.raw, record.metadata
@@ -210,27 +209,38 @@ def ingest_records(records, output):
                        'document_hash': fingerprint(d)} for d in docs]
     corpus = {'schema_version': VERSION, 'sources': source_entries,
               'corpus_id': 'corpus-' + fingerprint(source_entries)}
+    return docs, corpus, blobs
+
+
+def write_run(docs, corpus, blobs, staging, store=None):
+    """Lay out a source run. With a store, raw bytes are canonical blobs materialized into the run."""
+    staging = Path(staging)
+    for doc in docs:
+        write(staging / f"sources/{doc['source_id']}.json", doc)
+    for name, raw in blobs.items():
+        if store is not None:
+            store.materialize(store.put_blob(raw), staging / name)
+        else:
+            target = staging / name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(raw)
+    write(staging / 'corpus.json', corpus)
+    (staging / 'units').mkdir(exist_ok=True)
+
+
+def ingest_records(records, output, store=None):
+    """Normalize an already acquired snapshot without fetching it a second time."""
+    from store import staged
+    output = Path(output).resolve()
+    docs, corpus, blobs = plan_records(records)
     if output.exists():
         require((output / 'corpus.json').is_file(), 'Output exists without a corpus; choose a new output folder')
         validate_sources(output)
         require(read(output / 'corpus.json') == corpus, 'Inputs or metadata changed; choose a new run folder to preserve history')
         return corpus
-    output.parent.mkdir(parents=True, exist_ok=True)
-    staging = Path(tempfile.mkdtemp(prefix='.ingest-', dir=output.parent))
-    try:
-        for doc, entry in zip(docs, source_entries):
-            write(staging / entry['path'], doc)
-        for name, raw in blobs.items():
-            target = staging / name
-            target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_bytes(raw)
-        write(staging / 'corpus.json', corpus)
-        (staging / 'units').mkdir()
+    with staged(output, '.ingest-') as staging:
+        write_run(docs, corpus, blobs, staging, store)
         validate_sources(staging)
-        staging.rename(output)
-    finally:
-        if staging.exists():
-            shutil.rmtree(staging)
     return corpus
 
 
@@ -397,11 +407,8 @@ def package_audit(run, capability_id, destination):
     require(not destination.exists(), 'Package exists; choose a new parent directory to preserve previous build')
     require(not destination.is_relative_to(run.resolve()), 'Export outside the run folder')
     ir = validate_ir(run)
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    temp = Path(tempfile.mkdtemp(prefix='.package-', dir=destination.parent))
-    staging = temp / capability_id
-    staging.mkdir()
-    try:
+    from store import staged
+    with staged(destination, '.package-') as staging:
         selected = [u for u in ir['units'] if u['unit_id'] in cap['unit_ids']]
         text_write(staging / 'SKILL.md', skill_text(cap))
         write(staging / 'capability.json', cap)
@@ -423,10 +430,6 @@ def package_audit(run, capability_id, destination):
                     'ir_hash': fingerprint(ir), 'files': inventory(staging)}
         write(staging / 'manifest.json', manifest)
         validate_package(staging)
-        staging.rename(destination)
-    finally:
-        if temp.exists():
-            shutil.rmtree(temp)
     return destination
 
 

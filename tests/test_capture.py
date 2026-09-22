@@ -187,7 +187,7 @@ class CaptureTests(unittest.TestCase):
         self.imported();self.store.process('Inbox')
         for row in self.rows():
             self.assertEqual(row['source_ids'],[]);self.assertEqual(row['processing_status'],'needs_attention')
-        self.assertEqual(len(list((self.store.root/'blobs').iterdir())),1)
+        self.assertEqual(len(list((self.home/'blobs').iterdir())),1)  # identical bytes are one canonical blob
 
     def test_link_with_shared_excerpt_is_partial_not_retrieved(self):
         self.capture(url='https://example.com/talk',text='Check action boundaries before permitting a tool call.')

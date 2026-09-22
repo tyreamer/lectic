@@ -1,7 +1,6 @@
 """Portable method + selected evidence excerpts. Full originals stay in local collections."""
 from pathlib import Path
 import shutil
-import tempfile
 from ec import (ROOT, VERSION, require, fingerprint, read, write, text_write, inventory,
                 validate_schema, validate_units, validate_sources, validate_capability_data, skill_text)
 
@@ -36,10 +35,8 @@ def export_method(run, ir, cap, destination):
     require(destination.name == cap['capability_id'] and not destination.exists(), 'Use a new export folder named after the method')
     require(not destination.is_relative_to(Path(run).resolve()), 'Export outside the source run')
     selected = [u for u in ir['units'] if u['unit_id'] in cap['unit_ids']]
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    temp = Path(tempfile.mkdtemp(prefix='.export-', dir=destination.parent))
-    staging = temp / destination.name; staging.mkdir()
-    try:
+    from store import staged
+    with staged(destination, '.export-') as staging:
         text_write(staging / 'SKILL.md', rendered_skill(cap))
         write(staging / 'capability.json', cap)
         write(staging / 'references/knowledge.json', selected)
@@ -56,9 +53,6 @@ def export_method(run, ir, cap, destination):
         write(staging / 'manifest.json', manifest)
         from ec import validate_package
         validate_package(staging)
-        staging.rename(destination)
-    finally:
-        if temp.exists(): shutil.rmtree(temp)
     return destination
 
 

@@ -2,7 +2,6 @@
 from pathlib import Path
 import json
 import shutil
-import tempfile
 from ec import (ROOT, VERSION, Invalid, assemble, digest, fingerprint, inventory, read, require, safe_child,
                 text_write, validate_capability_data, validate_ir, validate_package, validate_schema,
                 validate_sources, validate_units, write)
@@ -173,7 +172,8 @@ def work(*, project='.', input=None, metadata=None, collection=None, name=None, 
                 export_method(source_run,old_ir,method,destination)
             else:
                 source = build / 'method' / method['capability_id']
-                destination.parent.mkdir(parents=True, exist_ok=True); shutil.copytree(source,destination)
+                with library.store.stage(destination, '.export-') as staging:
+                    shutil.copytree(source, staging, dirs_exist_ok=True)
         validate_package(destination)
         return respond('exported', skill=str(destination / 'SKILL.md'), limits='Relevant excerpts included; no full originals, brief or work product. Review before sharing. Nothing was published or installed globally.')
     if brief:
@@ -271,10 +271,7 @@ def work(*, project='.', input=None, metadata=None, collection=None, name=None, 
     build_id='build-'+fingerprint({**binding,'target':target,'compiler':compiler_hash()})[:24]
     destination=folder / 'builds' / build_id
     if not destination.exists():
-        destination.parent.mkdir(parents=True,exist_ok=True)
-        temp=Path(tempfile.mkdtemp(prefix='.build-',dir=destination.parent))
-        staging=temp / build_id; staging.mkdir()
-        try:
+        with library.store.stage(destination, '.build-') as staging:
             write(staging / 'brief.json',brief_data); write(staging / 'method.json',method); write(staging / 'result.json',result)
             cap=method['capability']
             if generic:
@@ -303,9 +300,6 @@ def work(*, project='.', input=None, metadata=None, collection=None, name=None, 
             if generic: manifest['result_format']='outcome-1'
             write(staging / 'manifest.json',manifest)
             validate_build(staging, collection=folder)
-            staging.rename(destination)
-        finally:
-            if temp.exists(): shutil.rmtree(temp)
     try: verification=validate_build(destination)
     except Exception:
         # A failed build is preserved for diagnosis, never announced as completed.

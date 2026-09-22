@@ -1,18 +1,18 @@
 """Private local collections layered on immutable source snapshots and IR history."""
 from pathlib import Path
-import os
 import shutil
-import tempfile
 import uuid
-from ec import VERSION, Invalid, digest, fingerprint, ingest, read, require, safe_child, validate_schema, validate_sources, validate_ir, validate_units, write
-from ingestors import adapter_for
+from ec import VERSION, Invalid, fingerprint, plan_records, read, require, safe_child, validate_schema, validate_sources, validate_ir, validate_units, write, write_run
+from ingestors import TranscriptInput, adapter_for
 from home import storage_root
+from store import LocalStore
 
 
 class Library:
     def __init__(self, project, home=None):
         self.project = Path(project).resolve()
         self.root = Path(home).resolve() if home else storage_root(self.project)
+        self.store = LocalStore(self.root)
         self.path = self.root / 'library.json'
         self.index = read(self.path) if self.path.exists() else {'schema_version':VERSION,'collections':[], 'active_collection':None}
         require(type(self.index) is dict and self.index.get('schema_version') == VERSION and type(self.index.get('collections')) is list, 'Malformed collection library')
@@ -60,76 +60,53 @@ class Library:
             data = {'schema_version':VERSION,'collection_id':cid,'name':name,'active_revision':'pending','revisions':[],'briefs':[],'builds':[]}
         folder.mkdir(parents=True, exist_ok=True)
         previous = self.run(folder, data) if data['revisions'] else None
-        with tempfile.TemporaryDirectory(prefix='.archive-', dir=folder) as temporary:
-            temp = Path(temporary)
-            if adopt:
-                original = Path(adopt).resolve()
-                validate_sources(original)
-                require(not any(p.is_symlink() for p in original.rglob('*')), 'Cannot adopt symlinked run content')
-                candidate = temp / 'run'
-                shutil.copytree(original, candidate)
-            else:
-                records = {}
-                if previous:
-                    _, docs, _ = validate_sources(previous)
-                    for doc in docs.values():
-                        records[doc['filename']] = ((previous / doc['raw_path']).read_bytes(),
-                                                   {k:doc[k] for k in ('title','creator','url','caption_type')})
-                if remove:
-                    require(previous is not None, 'Source removal needs an existing collection')
-                    for selector in remove:
-                        matches=[d for d in docs.values() if selector in {d['source_id'],d['filename'],d['title']}]
-                        require(len(matches)==1,'Source name is missing or ambiguous: '+selector)
-                        records.pop(matches[0]['filename'],None)
-                for record in (adapter_for(input).collect(metadata) if input else []):
-                    filename = record.filename
-                    if filename in records and not replace:
-                        if records[filename][0] == record.raw: continue
-                        filename = '_imports/' + digest(record.raw)[:16] + '/' + filename
-                    records[filename] = (record.raw, record.metadata)
-                inputs = temp / 'inputs'; inputs.mkdir()
-                meta = {}
-                for filename, (raw, m) in records.items():
-                    target = safe_child(inputs, filename); target.parent.mkdir(parents=True, exist_ok=True); target.write_bytes(raw)
-                    meta[filename] = m
-                write(temp / 'metadata.json', meta)
-                candidate = temp / 'run'
-                if records:
-                    ingest(inputs, candidate, temp / 'metadata.json')
-                    if previous:
-                        # Retain shared storage for unchanged sources during legacy additions too.
-                        _,new_docs,_=validate_sources(candidate)
-                        for sid,doc in new_docs.items():
-                            if sid not in docs or docs[sid]!=doc: continue
-                            for relative in (f'sources/{sid}.json',doc['raw_path']):
-                                target=safe_child(candidate,relative)
-                                linked=target.with_name(target.name+'.link')
-                                try:
-                                    os.link(safe_child(previous,relative),linked)
-                                    os.replace(linked,target)
-                                except OSError:
-                                    # Legacy ingestion also supports filesystems without links.
-                                    if linked.exists(): linked.unlink()
-                else:
-                    write(candidate / 'corpus.json', {'schema_version':VERSION,'sources':[], 'corpus_id':'corpus-'+fingerprint([])})
-                    (candidate / 'units').mkdir()
-            corpus, docs, _ = validate_sources(candidate)
-            revision_id = 'source-' + corpus['corpus_id'].split('-')[1][:24]
-            destination = folder / 'sources' / revision_id
-            if destination.exists():
-                require(validate_sources(destination)[0] == corpus, 'Source revision identity collision')
-            else:
-                destination.parent.mkdir(parents=True, exist_ok=True)
-                if previous and not adopt:
-                    self.carry_checkpoints(previous,candidate)
-                candidate.rename(destination)
-            history=data.get('revision_history',[r['revision_id'] for r in data['revisions']])
-            if not history or history[-1]!=revision_id: history.append(revision_id)
-            data['revision_history']=history
-            if revision_id not in {r['revision_id'] for r in data['revisions']}:
-                data['revisions'].append({'revision_id':revision_id,'corpus_id':corpus['corpus_id'],'run':destination.relative_to(folder).as_posix()})
-            data['active_revision'] = revision_id
-            self.save(folder, data)
+        if adopt:
+            original = Path(adopt).resolve()
+            corpus, _, _ = validate_sources(original)
+            require(not any(p.is_symlink() for p in original.rglob('*')), 'Cannot adopt symlinked run content')
+            def assemble(staging): shutil.copytree(original, staging, dirs_exist_ok=True)
+        else:
+            records = {}
+            if previous:
+                _, docs, _ = validate_sources(previous)
+                for doc in docs.values():
+                    records[doc['filename']] = ((previous / doc['raw_path']).read_bytes(),
+                                               {k:doc[k] for k in ('title','creator','url','caption_type')})
+            if remove:
+                require(previous is not None, 'Source removal needs an existing collection')
+                for selector in remove:
+                    matches=[d for d in docs.values() if selector in {d['source_id'],d['filename'],d['title']}]
+                    require(len(matches)==1,'Source name is missing or ambiguous: '+selector)
+                    records.pop(matches[0]['filename'],None)
+            for record in (adapter_for(input).collect(metadata) if input else []):
+                filename = record.filename
+                if filename in records and not replace:
+                    if records[filename][0] == record.raw: continue
+                    filename = '_imports/' + self.store.put_blob(record.raw)[:16] + '/' + filename
+                records[filename] = (record.raw, record.metadata)
+            for filename in records: safe_child(folder, filename)
+            plan = plan_records([TranscriptInput(name, raw, {k:v for k,v in m.items() if v is not None})
+                                 for name, (raw, m) in sorted(records.items())])
+            corpus = plan[1]
+            def assemble(staging):
+                # Unchanged sources share their canonical blobs; nothing is stored twice.
+                write_run(*plan, staging, self.store)
+                if previous: self.carry_checkpoints(previous, staging)
+        revision_id = 'source-' + corpus['corpus_id'].split('-')[1][:24]
+        destination = folder / 'sources' / revision_id
+        if destination.exists():
+            require(validate_sources(destination)[0] == corpus, 'Source revision identity collision')
+        else:
+            with self.store.stage(destination, '.archive-') as staging:
+                assemble(staging)
+                require(validate_sources(staging)[0] == corpus, 'Assembled sources differ from their plan')
+        history=data.get('revision_history',[r['revision_id'] for r in data['revisions']])
+        if not history or history[-1]!=revision_id: history.append(revision_id)
+        data['revision_history']=history
+        if revision_id not in {r['revision_id'] for r in data['revisions']}:
+            data['revisions'].append({'revision_id':revision_id,'corpus_id':corpus['corpus_id'],'run':destination.relative_to(folder).as_posix()})
+        data['active_revision'] = revision_id
+        self.save(folder, data)
         return folder, data
 
     @staticmethod
@@ -162,8 +139,9 @@ class Library:
     def attach_shared(self, selector, sources, managed_ids):
         """Set capture-owned memberships; keep manual sources and all old snapshots.
 
-        Source runs are canonical, already normalized records. Hard links keep the
-        existing self-contained snapshot paths without storing payload copies.
+        Source runs are canonical, already normalized records. Raw bytes come from the
+        blob store, so the snapshot keeps its self-contained layout without owning a
+        second copy of any payload the filesystem can share.
         """
         folder,data=self.resolve(selector); previous=self.run(folder,data)
         old,docs,_=validate_sources(previous)
@@ -180,18 +158,17 @@ class Library:
         revision_id='source-'+corpus['corpus_id'].split('-')[1][:24]
         destination=folder/'sources'/revision_id
         if not destination.exists():
-            with tempfile.TemporaryDirectory(prefix='.shared-',dir=folder) as temporary:
-                candidate=Path(temporary)/'run'
+            with self.store.stage(destination,'.shared-') as candidate:
                 for area in ('sources','raw','units'): (candidate/area).mkdir(parents=True,exist_ok=True)
                 for sid,(origin,doc) in files.items():
-                    for relative in (f'sources/{sid}.json',doc['raw_path']):
-                        try: os.link(safe_child(origin,relative),safe_child(candidate,relative))
-                        except OSError as exc:
-                            raise Invalid('Shared capture sources require local hard-link support on this filesystem; originals are preserved: '+str(exc)) from exc
+                    write(safe_child(candidate,f'sources/{sid}.json'),doc)
+                    # Legacy snapshots predate the blob store; registering their bytes is idempotent.
+                    blob=self.store.put_blob(safe_child(origin,doc['raw_path']).read_bytes())
+                    require(blob==doc['content_hash'],'Source raw bytes differ from their recorded hash')
+                    self.store.materialize(blob,safe_child(candidate,doc['raw_path']))
                 write(candidate/'corpus.json',corpus)
                 self.carry_checkpoints(previous,candidate)
                 validate_sources(candidate)
-                destination.parent.mkdir(parents=True,exist_ok=True);candidate.rename(destination)
         else: require(validate_sources(destination)[0]==corpus,'Shared source revision collision')
         if revision_id not in {r['revision_id'] for r in data['revisions']}:
             data['revisions'].append({'revision_id':revision_id,'corpus_id':corpus['corpus_id'],'run':destination.relative_to(folder).as_posix()})

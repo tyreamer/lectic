@@ -3,13 +3,10 @@
 Retrieval is an explicit processing operation; capture/import never fetch links.
 A synced folder is an input adapter, never the authoritative compiler workspace.
 """
-from contextlib import contextmanager
 from datetime import datetime, timezone
 import json
-import os
 from pathlib import Path
 import re
-import tempfile
 from urllib.parse import urlparse
 import uuid
 
@@ -17,6 +14,7 @@ from ec import (VERSION, Invalid, digest, fingerprint, normalize, read, require,
                 validate_ir, validate_schema, validate_sources, validate_units, write)
 from collection_store import Library
 from home import storage_root
+from store import LocalStore
 
 TEXT_EXTENSIONS={'.txt','.md','.vtt','.srt'}
 
@@ -58,27 +56,12 @@ class CaptureStore:
         self.project=Path(project).resolve()
         self.home=storage_root(self.project)
         self.root=self.home/'capture'
+        self.store=LocalStore(self.home)
 
-    @contextmanager
     def writer(self):
-        """OS lock releases on interruption; no stale lock cleanup protocol needed."""
+        """Capture mutations touch several index records; the store serializes them."""
         self.root.mkdir(parents=True,exist_ok=True)
-        with (self.root/'.writer.lock').open('a+b') as lock:
-            if lock.tell()==0: lock.write(b'0');lock.flush()
-            lock.seek(0)
-            try:
-                if os.name=='nt':
-                    import msvcrt
-                    msvcrt.locking(lock.fileno(),msvcrt.LK_NBLCK,1)
-                else:
-                    import fcntl
-                    fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
-            except OSError as exc: raise Invalid('Another capture operation is active; retry after it finishes') from exc
-            try: yield
-            finally:
-                lock.seek(0)
-                if os.name=='nt': msvcrt.locking(lock.fileno(),msvcrt.LK_UNLCK,1)
-                else: fcntl.flock(lock,fcntl.LOCK_UN)
+        return self.store.transaction('capture')
 
     def load(self,capture_id):
         event=validate_capture(read(safe_child(self.root/'records',capture_id+'.json')))
@@ -96,8 +79,8 @@ class CaptureStore:
                 require(retrieval['error'] and retrieval['retrieved_at'] is None and not retrieval['source_ids'],
                         'Malformed unavailable retrieval state')
         for item in state['attachment_blobs']:
-            blob=self.root/'blobs'/item['blob_hash']
-            require(blob.is_file() and digest(blob.read_bytes())==item['blob_hash'],'Capture attachment hash mismatch')
+            try: self.store.get_blob(item['blob_hash'])
+            except Invalid as exc: raise Invalid('Capture attachment hash mismatch: '+str(exc)) from exc
         for aid in state['annotation_ids']:
             note=read(safe_child(self.root/'annotations',aid+'.json'));validate_schema(note,'capture-annotation')
             require(note['capture_id']==capture_id and note['annotation_id']==aid,'Annotation identity mismatch')
@@ -118,14 +101,7 @@ class CaptureStore:
         return library.archive(name=name)[1]['collection_id']
 
     def blob(self,raw):
-        h=digest(raw);path=self.root/'blobs'/h
-        if path.exists(): require(digest(path.read_bytes())==h,'Canonical blob was modified')
-        else:
-            path.parent.mkdir(parents=True,exist_ok=True)
-            with tempfile.NamedTemporaryFile(dir=path.parent,delete=False) as f:
-                f.write(raw);temp=Path(f.name)
-            temp.replace(path)
-        return h
+        return self.store.put_blob(raw)
 
     def import_record(self,path):
         path=Path(path).resolve();supplied=read(path)
@@ -295,19 +271,18 @@ class CaptureStore:
         h=digest(raw);sid='src-'+digest((filename+'\0'+h).encode())[:24]
         destination=self.root/'sources'/sid
         if destination.exists(): validate_sources(destination);return sid
-        blob=self.root/'blobs'/self.blob(raw)
+        blob=self.blob(raw)
         doc={'schema_version':VERSION,'source_id':sid,'filename':filename,'title':metadata.get('title') or None,
              'creator':metadata.get('creator'),'url':metadata.get('url') or None,
              'caption_type':metadata.get('caption_type','unknown'),'content_hash':h,
              'raw_path':f'raw/{sid}{suffix}','segments':normalize(raw,suffix)}
         validate_schema(doc,'source');entry={'source_id':sid,'path':f'sources/{sid}.json','document_hash':fingerprint(doc)}
-        destination.parent.mkdir(parents=True,exist_ok=True)
-        with tempfile.TemporaryDirectory(prefix='.normalize-',dir=destination.parent) as temp:
-            staging=Path(temp)/'run';(staging/'raw').mkdir(parents=True);(staging/'units').mkdir()
-            os.link(blob,staging/doc['raw_path'])
+        with self.store.stage(destination,'.normalize-') as staging:
+            (staging/'units').mkdir()
+            self.store.materialize(blob,staging/doc['raw_path'])
             write(staging/entry['path'],doc)
             write(staging/'corpus.json',{'schema_version':VERSION,'corpus_id':'corpus-'+fingerprint([entry]),'sources':[entry]})
-            validate_sources(staging);staging.rename(destination)
+            validate_sources(staging)
         return sid
 
     def normalize_item(self,event,state):
@@ -324,7 +299,7 @@ class CaptureStore:
                 issues.append(a['filename']+': attachment not yet available; retry Inbox import after sync.');continue
             if suffix not in TEXT_EXTENSIONS:
                 issues.append(a['filename']+': original saved; no content adapter for this file type.');continue
-            try: sources.add(self.canonical_source((self.root/'blobs'/blobs[a['path']]).read_bytes(),suffix,event))
+            try: sources.add(self.canonical_source(self.store.get_blob(blobs[a['path']]),suffix,event))
             except (ValueError,OSError) as exc: issues.append(a['filename']+': '+str(exc))
         from linked_sources import resolver_for, retrieve
         adapter=resolver_for(self.url(event)) if self.url(event) else None
@@ -334,7 +309,7 @@ class CaptureStore:
                        'retrieved_at':None,'source_ids':[],'error':None}
             try:
                 retrieval['canonical_url']=adapter.canonical_url
-                acquired=retrieve(adapter,self.root,self.blob)
+                acquired=retrieve(adapter,self.root,self.store)
                 retrieval.update(status='retrieved',retrieved_at=acquired.receipt['retrieved_at'])
                 # Raw bytes are cached before normalization. A retry need not refetch them.
                 for record in acquired.records:

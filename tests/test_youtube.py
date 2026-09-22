@@ -261,7 +261,7 @@ class YouTubeCaptureTests(unittest.TestCase):
         with patch.object(h.store, 'canonical_source', side_effect=OSError('Temporary file lock')):
             h.store.process('Integrity')
         receipt=ec.read(next((h.store.root/'retrievals').glob('*.json')))
-        blob=h.store.root/'blobs'/receipt['records'][0]['blob_hash']
+        blob=h.store.store.blob_path(receipt['records'][0]['blob_hash'])
         blob.write_bytes(b'Changed caption bytes')
         result=h.store.process('Integrity')
         self.assertEqual(result['phase'], 'needs_sources')

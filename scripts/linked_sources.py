@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 
-from ec import digest, fingerprint, read, require, safe_child, validate_schema, write
+from ec import fingerprint, read, require, validate_schema, write
 from ingestors import TranscriptInput
 
 
@@ -21,8 +21,8 @@ class RetrievedSource:
     records: list[TranscriptInput]
 
 
-def retrieve(adapter, root, save_blob):
-    """Reuse caption bytes after interrupted normalization. Caller owns the capture lock."""
+def retrieve(adapter, root, store):
+    """Reuse caption bytes after interrupted normalization. Caller owns the capture transaction."""
     identity = {'adapter': adapter.adapter, 'adapter_version': adapter.version,
                 'canonical_url': adapter.canonical_url}
     path = root / 'retrievals' / (fingerprint(identity) + '.json')
@@ -34,7 +34,7 @@ def retrieve(adapter, root, save_blob):
         for record in records:
             require(Path(record.filename).name == record.filename and Path(record.filename).suffix in {'.vtt', '.srt', '.txt', '.md'},
                     'Retriever returned an unsafe transcript filename')
-            receipt['records'].append({'filename': record.filename, 'blob_hash': save_blob(record.raw), 'metadata': record.metadata})
+            receipt['records'].append({'filename': record.filename, 'blob_hash': store.put_blob(record.raw), 'metadata': record.metadata})
         validate_schema(receipt, 'linked-retrieval')
         write(path, receipt)
     receipt = read(path)
@@ -47,8 +47,8 @@ def retrieve(adapter, root, save_blob):
     require(captured.tzinfo is not None, 'Retrieval timestamp must include a timezone')
     records = []
     for item in receipt['records']:
-        raw = safe_child(root / 'blobs', item['blob_hash']).read_bytes()
-        require(digest(raw) == item['blob_hash'], 'Retrieved caption bytes were modified')
+        try: raw = store.get_blob(item['blob_hash'])
+        except ValueError as exc: raise ValueError('Retrieved caption bytes were modified or missing: ' + str(exc)) from exc
         require(Path(item['filename']).name == item['filename'], 'Unsafe cached transcript filename')
         records.append(TranscriptInput(item['filename'], raw, item['metadata']))
     return RetrievedSource(receipt, records)
