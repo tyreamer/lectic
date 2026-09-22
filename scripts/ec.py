@@ -509,6 +509,8 @@ def status(run):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest='command', required=True)
+    p = sub.add_parser('home', help='Show where Lectic stores knowledge for this project and why')
+    p.add_argument('--project', default='.')
     p = sub.add_parser('library', help='Read saved methods, results, possibilities and availability without processing')
     p.add_argument('--project', default='.'); p.add_argument('--collection')
     p = sub.add_parser('guide', help='Prepare, save, show or select grounded next uses from the saved library')
@@ -549,7 +551,10 @@ def main():
     p = sub.add_parser('validate-package'); p.add_argument('folder')
     args = parser.parse_args()
     try:
-        if args.command == 'library':
+        if args.command == 'home':
+            from home import describe
+            result = describe(args.project)
+        elif args.command == 'library':
             from library_guide import library_view
             result = library_view(args.project, args.collection)
         elif args.command == 'guide':

@@ -46,7 +46,7 @@ its bundled installer to copy the complete skill to
 ~/.claude/skills/lectic. Preserve any existing installation.
 ```
 
-New installations use `lectic` (`$lectic` in Codex, `/lectic` in Claude Code). Existing `expertise-compiler` installations remain supported; update that copy in place rather than installing a duplicate. Project data stays in `.expertise-compiler/`, so saved work does not need moving.
+New installations use `lectic` (`$lectic` in Codex, `/lectic` in Claude Code). Existing `expertise-compiler` installations remain supported; update that copy in place rather than installing a duplicate. A project that already holds `.expertise-compiler/` keeps using it, so saved work does not need moving.
 
 Restart the assistant if the skill does not appear. For an existing installation, follow the update guidance rather than overwriting it. [Installation and troubleshooting →](docs/INSTALLATION.md)
 
@@ -76,7 +76,7 @@ Already know your goal? Go directly to the task:
 
 > Use My Research to review my plan in ./plan.md. Preserve the original, save an improved version, and explain the changes using the sources.
 
-Return in a new session in the **same project** to use the collection again. Your sources and earlier builds remain available without another upload.
+Return in a new session, **from this project or any other on the same machine**, to use the collection again. Your sources and earlier builds remain available without another upload, whichever assistant you open.
 
 > Show me what Lectic has saved here. What can I use now, and what are three useful things I could do next?
 
@@ -123,7 +123,7 @@ flowchart TD
 
 The **Expertise IR** is the durable asset. Capability Maps are versioned interpretations of it; methods and outputs are builds from it. The installed skill is one interface to the compiler, and Agent Skills is one output target. The core remains independent of a particular AI provider.
 
-Project data lives in `.expertise-compiler/`: original sources, normalized segments, knowledge revisions, maps, private briefs and saved builds. Interrupted workflows retain checkpoints. Collections are project-local; they are not automatically available in unrelated projects.
+Knowledge lives in one **Lectic home** per user (`~/.lectic`, or `LECTIC_HOME`): original sources as content-addressed blobs, normalized segments, knowledge revisions, maps, private briefs and saved builds. Interrupted workflows retain checkpoints. Every project and every assistant on the machine sees the same collections. A project that already contains a `.expertise-compiler/` folder keeps using it; ask “Where does Lectic store my knowledge?” to see which applies.
 
 [Architecture and remaining boundaries →](DESIGN.md)
 
@@ -152,11 +152,15 @@ A saved link is not retrieved content. On requested processing, YouTube links ca
 | Processing | Text/transcript files and deferred YouTube English-caption retrieval | Optional `yt-dlp` required for YouTube; no arbitrary URL or audio/video acquisition |
 | Discovery | Grounded, ranked Capability Maps with version history | Quality depends on source support and assistant interpretation |
 | Outputs | Reusable text methods, work products and optional skill exports | No standalone agent runtime or persistent coaching service |
-| Capture | Local inbox import, annotations and multiple memberships | Phone adapter is a setup recipe; shared source storage requires local hard-link support |
+| Capture | Local inbox import, annotations and multiple memberships | Phone adapter is a setup recipe; captures still reach the home through a desktop import |
 | Validation | Schemas, hashes, evidence references and artifact structure | Does not establish sound judgment or effectiveness |
 | Evaluation | Matched prompts, structured checks and effort records | Independent runs, human review and refinement need coordination |
 
-**Local storage; your choice of assistant.** The compiler has no hosted backend or paid model API dependency. Your chosen AI service may still process content remotely and have subscription or usage limits. A plain web chat without local file/tool access cannot operate the installed compiler autonomously.
+**Local storage today; your choice of assistant.** The compiler has no hosted backend or paid model API dependency. Your chosen AI service may still process content remotely and have subscription or usage limits. A plain web chat without local file/tool access cannot operate the installed compiler autonomously.
+
+### Toward portable knowledge
+
+The target is one knowledge store reachable from a phone capture, ChatGPT, Codex and Claude Code alike, with local storage as the offline/private mode rather than the only place Lectic works. The storage layer is now shaped for that: every persisted record is either an immutable content-addressed object or a small mutable index, and all filesystem-specific behavior sits behind one `LocalStore` seam ([design →](DESIGN.md#storage-one-home-cloud-shaped)). Next steps, in order: a local MCP server so any assistant reaches the same home through tools instead of an installed skill; a remote store implementing the same seam; a phone Shortcut that posts captures directly. These are direction, not shipped features.
 
 ## Test the idea with us
 

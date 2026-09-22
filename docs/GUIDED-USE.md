@@ -42,7 +42,7 @@ Personalized guides record the origin of used context separately from evidence. 
 `scripts/library_guide.py` provides a read-only inventory and the separate use-guide coordinator. It validates saved build/package references, labels source/knowledge revision changes, includes archived collections and earlier compilation outputs, and reports unavailable or damaged artifacts without treating them as ready. Reading the inventory does not activate collections, start extraction or rewrite old results.
 
 ```text
-.expertise-compiler/
+LECTIC_HOME/
   use-guides/
     drafts/BINDING_HASH.json
     guide-ID.json
@@ -69,7 +69,7 @@ Saved guides are interpretations of what a person could do next. They do not alt
 ## Live acceptance
 
 1. Finish one real task. Without prompting for it, check that the assistant explains the saved method and a concrete way to reuse it.
-2. Open a fresh session in the same project. Ask the opening prompt above. Check real artifact links, correct availability and no re-upload request.
+2. Open a fresh session, in the same project or a different one. Ask the opening prompt above. Check real artifact links, correct availability and no re-upload request.
 3. Choose a shown use in ordinary language. Supply new work if required. Check it proceeds without asking you to translate the choice into a skill/agent format.
 4. State a relevant role, then correct it. Check recommendations adjust, the basis is clear and source knowledge/old results stay unchanged.
 5. Add a source and reopen an older guide. Check it flags the changed basis before interpreting an old number.

@@ -4,7 +4,7 @@ The assistant performs these operations. Paths below resolve against PROJECT unl
 
 ## Brief and collection
 
-Write a UTF-8 JSON brief in PROJECT/.expertise-compiler/inbox using `schemas/brief.schema.json`. For every new goal include intent and intent_reason following [intents.md](intents.md), plus schema_version "1.0", objective, context, constraints, work {label,text}, desired_result and success_criteria. Legacy briefs without intent remain readable, but new work must use an explicit inferred intent. Preserve supplied text verbatim; when using other accessible work, record what was actually observed and its origin without inventing observations. The brief is private context, not source evidence. Users do not write JSON.
+Write a UTF-8 JSON brief in HOME/inbox, where HOME is the `home` value reported by `ec.py home --project PROJECT` (never create a `.expertise-compiler` folder inside the project), using `schemas/brief.schema.json`. For every new goal include intent and intent_reason following [intents.md](intents.md), plus schema_version "1.0", objective, context, constraints, work {label,text}, desired_result and success_criteria. Legacy briefs without intent remain readable, but new work must use an explicit inferred intent. Preserve supplied text verbatim; when using other accessible work, record what was actually observed and its origin without inventing observations. The brief is private context, not source evidence. Users do not write JSON.
 
 Start with absolute paths:
 
@@ -43,7 +43,7 @@ No useful knowledge returns unsupported: explain the limitation; do not claim a 
 
 ## Reuse, export and evaluation
 
-Collections live at PROJECT/.expertise-compiler/collections/ID. collection.json maps source revisions, briefs and builds. Sources retain raw files, canonical documents, checkpoints and IR history. Builds retain brief, method, result and provenance bindings. requests contains resumable drafts, not completion artifacts. validation.json records reused/new/changed knowledge and unsupported requests.
+Collections live at HOME/collections/ID, shared by every project that resolves to the same Lectic home. collection.json maps source revisions, briefs and builds. Sources retain raw files, canonical documents, checkpoints and IR history. Builds retain brief, method, result and provenance bindings. requests contains resumable drafts, not completion artifacts. validation.json records reused/new/changed knowledge and unsupported requests.
 
 New outcome builds save method.json and readable method.md with selected knowledge/evidence, but no SKILL.md or package. On explicit request, `work --action export` compiles that exact historical method/IR into a scoped Agent Skill in the local exports directory. Older builds may already contain a package. Export validation checks internal linkage; validate-build also verifies against historical private originals and full IR. Briefs, drafts and unrelated transcripts stay out of exports. Review semantic privacy too: schemas cannot detect private details paraphrased into a method. No publication or global installation is implied.
 

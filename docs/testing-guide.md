@@ -75,7 +75,7 @@ Start a fresh assistant session in the **same project folder**. Name the saved c
 
 Don't reattach the original transcripts. Check whether the assistant finds the collection, reuses its expertise and produces the new result. It may need to read archived sources again for knowledge the first task didn't require. That is different from asking you to upload everything again.
 
-Record any repeated explanation, missing context or manual help. Collections are project-local; opening an unrelated project is not expected to find them automatically.
+Record any repeated explanation, missing context or manual help. Collections belong to your Lectic home, so opening an unrelated project on the same machine should find them; note if it does not.
 
 ## 4. Change the source material
 

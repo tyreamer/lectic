@@ -11,12 +11,12 @@ SYNCED_INBOX/
   capture-UUID/original.ext     # optional supplied attachment
   annotation-UUID.note.json     # optional personal context, after capture
 
-LOCAL_PROJECT/.expertise-compiler/
+LECTIC_HOME/                  # ~/.lectic, or a project's existing .expertise-compiler/
+  blobs/SHA256                # one payload per exact byte hash, shared by everything
   capture/
     records/capture-ID.json     # original validated envelope
     state/capture-ID.json       # memberships, processing state, source IDs
     annotations/annotation-ID.json
-    blobs/SHA256               # one payload per exact byte hash
     retrievals/HASH.json        # immutable linked acquisition receipts
     sources/SOURCE_ID/          # canonical normalized source run
   collections/COLLECTION_ID/  # normal source/IR/build history
@@ -66,7 +66,7 @@ An optional `retrieval` object in local state records adapter/version, original/
 
 `process` normalizes actually supplied text and `.txt/.md/.vtt/.srt` attachments, retrieves supported YouTube captions through a generic linked-source resolver, then enters the existing preparation coordinator. The assistant supplies semantic extraction and reconciliation. YouTube requires optional local yt-dlp; English captions are preferred manual then automatic, never video/audio. Successful acquisitions are hash-verified and reused across sessions and collections. Failed items retain their errors without blocking other URLs; retry processing after resolving the issue. Unsupported links and attachment bytes stay intact with a gap reported; there is no OCR, PDF parsing, audio/video transcription, article fetching or broad social scraping.
 
-Canonical raw and normalized document files are shared through local hard links in existing-format collection snapshots. NTFS and common local Unix filesystems support this arrangement; actual filesystem capabilities are checked by the link operation. Keep the compiler project outside the synced intake folder. If linking fails, original captures stay saved and processing reports the error; the capture adapter does not silently substitute duplicate payloads. Existing legacy ingestion still supports its prior filesystem behavior and is not globally migrated.
+Canonical raw bytes live once in the home's blob store; collection snapshots receive them by hard link where the filesystem allows it and by copy otherwise, and are hash-verified either way. Keep the compiler project outside the synced intake folder. Blobs written by earlier project-local installs under `capture/blobs/` remain readable.
 
 Repeated processing reuses matching sources and existing IR. A source-local extraction checkpoint can also be reused across collections or after a move when a historical validated IR and reconciliation receipt match, its source document is identical, and its unit IDs/relations are safe in the destination. Cross-source synthesis is not copied blindly; reconciliation is still needed. No model service is invoked by the Python utilities. Linked acquisition contacts YouTube only during requested processing; no background compilation runs when sync receives a file.
 
@@ -86,7 +86,7 @@ python scripts/ec.py capture --project PROJECT --action trace --build SAVED_BUIL
 
 The assistant translates ordinary requests into these operations and keeps IDs internal. Query supports lexical terms in original shared text, titles and notes; `--since` is inclusive and `--until` exclusive, both ISO timestamps with timezones. Compute “this week” using the user's timezone. This is not semantic search over unacquired pages.
 
-The intake directory can be imported again on demand. There is no automatic watcher, desktop-state sync back to the phone, shared account, cross-project catalog or multi-desktop merge. Local capture mutations invoked through the CLI use an OS writer lock; other legacy compiler commands should still be run serially in a project.
+The intake directory can be imported again on demand. There is no automatic watcher, desktop-state sync back to the phone, shared account or multi-desktop merge; every project on one machine shares the same home. Local capture mutations invoked through the CLI use an OS writer lock; other legacy compiler commands should still be run serially in a project.
 
 ## Acceptance and remaining work
 

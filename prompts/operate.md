@@ -12,7 +12,7 @@ PYTHON "SKILL_ROOT/scripts/ec.py" compile --project "PROJECT" --intent use
 PYTHON "SKILL_ROOT/scripts/ec.py" compile --project "PROJECT" --intent compare
 ```
 
-To adopt an existing run, use `--run RUN` without INPUT. The first positional argument always means transcript input. Optional metadata uses `--metadata PATH`. Relative paths resolve against PROJECT. New snapshots are named automatically under `.expertise-compiler/runs/`; changed inputs create new snapshots. The active run, requested intent, and last-built choice persist in `.expertise-compiler/session.json`. Omitting intent on resume preserves a pending build/use/compare request; explicit `--intent discover` changes that request.
+To adopt an existing run, use `--run RUN` without INPUT. The first positional argument always means transcript input. Optional metadata uses `--metadata PATH`. Relative paths resolve against PROJECT. New snapshots are named automatically under HOME/runs/; changed inputs create new snapshots. The active run, requested intent, and last-built choice persist in a per-project session file under HOME (`session.json` for a project-local legacy home). Omitting intent on resume preserves a pending build/use/compare request; explicit `--intent discover` changes that request.
 
 The coordinator performs available deterministic work and returns a `phase`:
 

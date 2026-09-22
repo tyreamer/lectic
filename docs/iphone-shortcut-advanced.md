@@ -82,7 +82,7 @@ Tell the assistant, using your actual synced folder path:
 
 > Import new captures from my synced Lectic Inbox at [folder path]. Show me what's saved and what still needs content. Don't compile anything yet.
 
-It runs the importer, which copies immutable records and content-addressed attachments into the local project's `.expertise-compiler/capture/`. Repeating import is safe. Sync files are never deleted or marked processed by the importer. Processing state, memberships and later local notes belong to this project; this proof does not sync desktop state back to the phone or combine separate desktop projects.
+It runs the importer, which copies immutable records and content-addressed attachments into your Lectic home. Repeating import is safe. Sync files are never deleted or marked processed by the importer. Processing state, memberships and later local notes belong to that home; this proof does not sync desktop state back to the phone or merge separate desktops.
 
 Later say “Move this to Dinner Ideas,” “Put this in AI Architecture and Security,” or “Process the unprocessed items in Dinner Ideas.” Processing normalizes supplied text and can retrieve YouTube English captions through optional local yt-dlp, then hands extraction to your assistant. [YouTube setup and limits](YOUTUBE.md). Other linked platforms remain unavailable unless usable text was supplied. No background watcher runs.
 

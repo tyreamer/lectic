@@ -14,6 +14,7 @@ from pathlib import Path
 from ec import Invalid, fingerprint, require, safe_child
 
 LEGACY_DIRNAME = '.expertise-compiler'
+LEGACY_MARKERS = ('library.json', 'session.json', 'runs', 'collections', 'capture', 'capabilities')
 DEFAULT_DIRNAME = '.lectic'
 ENV = 'LECTIC_HOME'
 
@@ -24,7 +25,8 @@ def storage_root(project='.'):
     if explicit:
         return Path(explicit).expanduser().resolve()
     legacy = project / LEGACY_DIRNAME
-    if legacy.is_dir():
+    # Only real storage counts; a scratch folder with the old name must not capture the home.
+    if legacy.is_dir() and any((legacy / marker).exists() for marker in LEGACY_MARKERS):
         return legacy
     return (Path.home() / DEFAULT_DIRNAME).resolve()
 

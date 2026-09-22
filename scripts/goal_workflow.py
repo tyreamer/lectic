@@ -134,7 +134,7 @@ def work(*, project='.', input=None, metadata=None, collection=None, name=None, 
     state_path = folder / 'conversation.json'
     state = read(state_path) if state_path.exists() else {}
     def respond(phase, **kwargs):
-        return {'phase':phase,'collection':data['name'],'collection_id':data['collection_id'],
+        return {'phase':phase,'home':str(library.root),'collection':data['name'],'collection_id':data['collection_id'],
                 'collection_location':str(folder),'source_revision':data['active_revision'],'run':str(run),**kwargs}
     if action=='prepare':
         parts,units,pending,errors=checkpoint_state(run,corpus,docs,segments)

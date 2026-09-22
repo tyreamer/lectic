@@ -1,6 +1,6 @@
 # Install Lectic as a skill
 
-Install new copies as `lectic`. The repository root is the skill; include all supporting folders, not just SKILL.md. Existing `expertise-compiler` installations remain supported and should be updated in place instead of duplicated. Both names use the same `.expertise-compiler/` project storage, so saved collections and capabilities do not need moving. Give the installation message in the README to your assistant; no manual terminal setup is needed.
+Install new copies as `lectic`. The repository root is the skill; include all supporting folders, not just SKILL.md. Existing `expertise-compiler` installations remain supported and should be updated in place instead of duplicated. Both names use the same knowledge home, so saved collections and capabilities do not need moving. Give the installation message in the README to your assistant; no manual terminal setup is needed.
 
 ## Codex
 
@@ -32,7 +32,11 @@ For a first real task and reuse checks, follow the [alpha testing guide](testing
 
 The bundled `scripts/install_skill.py` copies reviewed local skill files: scripts, prompts, schemas, fixtures, and guidance. It excludes `.git`, user workspaces, and caches and refuses to overwrite a differing installation. It makes no network requests; downloading is the host assistant/installer's responsibility.
 
-The installation may live outside your project, including paths with spaces. Runs live separately in the current project's `.expertise-compiler/`. Generated capabilities can be used immediately from their saved locations; global installation or publishing happens only when requested.
+The installation may live outside your project, including paths with spaces. Knowledge lives separately in your Lectic home (below). Generated capabilities can be used immediately from their saved locations; global installation or publishing happens only when requested.
+
+## Where knowledge is stored
+
+Lectic keeps one home per user, shared by every project and every assistant on the machine: `~/.lectic` by default, or the folder named by the `LECTIC_HOME` environment variable. A project that already contains a populated `.expertise-compiler/` folder keeps using it, so nothing moves on upgrade; to consolidate such a project into the shared home, copy its `.expertise-compiler/` contents into the home once and remove the project folder. Ask “Where does Lectic store my knowledge?” and the assistant reports the resolved location and why (`explicit`, `project-local` or `user`). The home holds private originals; back it up like any other personal data and keep it out of version control.
 
 If setup is blocked, ask the assistant to diagnose unavailable skill discovery, missing file/command access, or the missing local runtime. It should explain the specific blocker and help resolve it without teaching you compiler commands. File-access policies may require permission. A web-only chat cannot replace local execution in this MVP.
 
@@ -48,7 +52,7 @@ Or: “Is my installed Lectic current?”, “Check for an update now”, “Pau
 
 The updater follows **`tyreamer/lectic`, branch `main`**. This is the current development channel, not a separately certified stable release. It downloads a pinned commit over HTTPS, validates the payload, parses Python/JSON, stages replacement, and retains the old installation. These checks verify packaging, not effectiveness or freedom from all software bugs. No model calls, subscription, GitHub login, or always-running service is required.
 
-The installed copy is separate from a checkout. Updates never pull into a developer's working repository, extract a collection, regenerate a Capability Map, or mutate an older built artifact. Existing data stays under each project's `.expertise-compiler/`. The updater refuses a destination containing Git state or project data. Its scope is the compiler skill's instructions and supporting files.
+The installed copy is separate from a checkout. Updates never pull into a developer's working repository, extract a collection, regenerate a Capability Map, or mutate an older built artifact. Existing data stays in the Lectic home. The updater refuses a destination containing Git state or project data. Its scope is the compiler skill's instructions and supporting files.
 
 An existing copy without an update receipt needs one explicit enrollment. The `--adopt` operation retains **the entire existing installation**, including unrecognized files, in a backup before installing the published payload. It does not merge customizations. Thereafter, added, deleted, or modified installed files prevent replacement; `--adopt` cannot override this check. Python bytecode caches are ignored. Review local edits instead of removing the receipt to bypass protection.
 

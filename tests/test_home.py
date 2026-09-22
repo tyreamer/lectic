@@ -28,10 +28,18 @@ class HomeResolutionTests(unittest.TestCase):
 
     def test_existing_project_local_storage_is_detected(self):
         os.environ.pop('LECTIC_HOME', None)
-        legacy = self.project / LEGACY_DIRNAME; legacy.mkdir()
+        legacy = self.project / LEGACY_DIRNAME; (legacy / 'collections').mkdir(parents=True)
         self.assertEqual(storage_root(self.project), legacy.resolve())
         self.assertEqual(storage_mode(legacy, self.project), 'project-local')
         self.assertEqual(session_path(legacy, self.project), legacy / 'session.json')
+
+    def test_scratch_folder_with_legacy_name_does_not_capture_the_home(self):
+        os.environ.pop('LECTIC_HOME', None)
+        (self.project / LEGACY_DIRNAME / 'inbox').mkdir(parents=True)
+        with patch('home.Path.home', return_value=self.base / 'fake-user'):
+            self.assertEqual(storage_root(self.project), (self.base / 'fake-user' / DEFAULT_DIRNAME).resolve())
+        ec.write(self.project / LEGACY_DIRNAME / 'library.json', {})
+        self.assertEqual(storage_root(self.project), (self.project / LEGACY_DIRNAME).resolve())
 
     def test_default_is_user_home_not_project(self):
         os.environ.pop('LECTIC_HOME', None)
@@ -81,15 +89,18 @@ class SharedHomeTests(unittest.TestCase):
     def test_legacy_session_resumes_after_switching_to_a_shared_home(self):
         project = self.base / 'Old Project'; project.mkdir()
         os.environ.pop('LECTIC_HOME', None)
-        legacy = project / LEGACY_DIRNAME; legacy.mkdir()
-        run = Path(compile_workflow(str(ec.ROOT / 'fixtures/photography'), project=project)['run'])
+        legacy = project / LEGACY_DIRNAME; (legacy / 'runs').mkdir(parents=True)
+        with patch('home.Path.home', return_value=self.base / 'never-used'):
+            run = Path(compile_workflow(str(ec.ROOT / 'fixtures/photography'), project=project)['run'])
         self.assertTrue(run.is_relative_to(legacy))
         self.assertEqual(ec.read(legacy / 'session.json')['active_run'], 'runs/' + run.name)
         # An older install recorded the run relative to the project; that pointer still resolves.
         session = ec.read(legacy / 'session.json'); session['active_run'] = LEGACY_DIRNAME + '/runs/' + run.name
         ec.write(legacy / 'session.json', session)
         self.seed(run)
-        self.assertEqual(compile_workflow(project=project)['phase'], 'reconcile')
+        with patch('home.Path.home', return_value=self.base / 'never-used'):
+            self.assertEqual(compile_workflow(project=project)['phase'], 'reconcile')
+        self.assertFalse((self.base / 'never-used').exists())
 
 
 if __name__ == '__main__':

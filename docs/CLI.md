@@ -4,10 +4,18 @@ For a returning user's saved library, run `python scripts/ec.py library --projec
 
 These commands are for the assistant, contributors, and advanced debugging. Normal users install the skill and talk to it; see [README](../README.md). Run from a user's project and resolve the installed scripts by absolute path. Relative input/output/metadata paths resolve against `--project` for the coordinator.
 
+## Storage location
+
+```text
+python /path/to/lectic/scripts/ec.py home --project .
+```
+
+Reports the resolved Lectic home and mode (`explicit` for `LECTIC_HOME`, `project-local` for an existing populated `.expertise-compiler/`, `user` for `~/.lectic`). Write briefs and other scratch inputs under that home, never into a new `.expertise-compiler/` folder inside the project.
+
 ## Goal coordinator
 
 ```text
-python /path/to/lectic/scripts/ec.py work --project . --input ./input --name "Product Research" --brief ./.expertise-compiler/inbox/brief.json
+python /path/to/lectic/scripts/ec.py work --project . --input ./input --name "Product Research" --brief HOME/inbox/brief.json
 python /path/to/lectic/scripts/ec.py work --project . --collection "Product Research"
 python /path/to/lectic/scripts/ec.py work --project . --collection "Product Research" --reconciled
 python /path/to/lectic/scripts/ec.py work --project . --collection "Product Research" --reviewed
