@@ -1,170 +1,126 @@
-"""Identity and pack signing for Lectic.
+"""Ed25519 pack signatures. A signature proves key possession, not a person's identity.
 
-Manages a persistent identity at LECTIC_HOME/identity.json and provides
-HMAC-SHA256 signing for pack manifests. Stdlib only, no extra dependencies.
-
-Key design:
-- Identity = a name + contact + a randomly-generated secret key stored locally
-- Signing = HMAC-SHA256 over the canonical JSON of the pack manifest (before
-  pack_id and created_at are set, using the same content that pack_id is derived
-  from) — this means the signature is stable and verifiable without re-deriving
-- The public portion (name, contact, key_id = first 16 hex of the key's SHA-256)
-  is embedded in pack.json so anyone can see who signed it
-- The full secret key never leaves the home directory
-
-Usage:
-    from identity import load_identity, save_identity, sign_manifest, verify_manifest
+Legacy HMAC packs remain readable but are unverified for recipients.
 """
 from __future__ import annotations
-
 import hashlib
 import hmac
 import json
-import os
-import secrets
 from pathlib import Path
-
+from cryptography.exceptions import InvalidSignature
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey, Ed25519PublicKey
+from ec import require, write
 from home import storage_root
+from store import home_transaction
 
 IDENTITY_FILENAME = 'identity.json'
 
 
-# ---------------------------------------------------------------- key helpers
-
-def _key_id(key_hex: str) -> str:
-    """Short stable identifier for display — first 16 hex chars of key's SHA-256."""
+def _key_id(key_hex):
+    """Legacy HMAC identifier, for local legacy verification only."""
     return hashlib.sha256(bytes.fromhex(key_hex)).hexdigest()[:16]
 
 
-def _sign(data: bytes, key_hex: str) -> str:
-    """HMAC-SHA256 over data with key; returns hex string."""
+def _sign(data, key_hex):
     return hmac.new(bytes.fromhex(key_hex), data, hashlib.sha256).hexdigest()
 
 
-def _verify(data: bytes, sig_hex: str, key_hex: str) -> bool:
-    """Constant-time comparison of expected vs. supplied signature."""
-    expected = _sign(data, key_hex)
-    return hmac.compare_digest(expected, sig_hex)
+def _verify(data, sig_hex, key_hex):
+    return hmac.compare_digest(_sign(data, key_hex), sig_hex)
 
 
-# ---------------------------------------------------------------- identity file
-
-def identity_path(project='.') -> Path:
+def identity_path(project='.'):
     return Path(storage_root(project)) / IDENTITY_FILENAME
 
 
-def load_identity(project='.') -> dict | None:
-    """Return the stored identity, or None if none has been set."""
+def load_identity(project='.'):
     path = identity_path(project)
     if not path.is_file():
         return None
-    try:
-        record = json.loads(path.read_text(encoding='utf-8'))
-        if not isinstance(record, dict):
-            return None
-        required = {'name', 'contact', 'key_hex', 'key_id'}
-        if not required.issubset(record.keys()):
-            return None
-        return record
-    except (ValueError, OSError):
-        return None
-
-
-def save_identity(project: str, name: str, contact: str) -> dict:
-    """Create (or replace) the identity.  Returns the new identity record."""
-    key_hex = secrets.token_hex(32)   # 256-bit random secret key
-    record = {
-        'name': name.strip(),
-        'contact': contact.strip(),
-        'key_hex': key_hex,
-        'key_id': _key_id(key_hex),
-    }
-    path = identity_path(project)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    # Write atomically and restrict permissions
-    import tempfile
-    with tempfile.NamedTemporaryFile(mode='w', encoding='utf-8', dir=path.parent, delete=False, suffix='.tmp') as f:
-        json.dump(record, f, ensure_ascii=False, indent=2)
-        temp = Path(f.name)
-    temp.replace(path)
-    try:
-        path.chmod(0o600)
-    except OSError:
-        pass
+    record = json.loads(path.read_text(encoding='utf-8'))
+    require(isinstance(record, dict) and {'name', 'contact', 'key_hex', 'key_id'} <= record.keys(),
+            'The local identity is invalid; restore it from your private backup')
     return record
 
 
-def show_identity(project='.') -> str:
-    """Human-readable identity summary."""
+@home_transaction
+def save_identity(project, name, contact):
+    """Update details without rotating keys; retain a private legacy migration copy."""
+    require(name.strip(), 'Publisher name is required')
+    previous = load_identity(project)
+    private = (Ed25519PrivateKey.from_private_bytes(bytes.fromhex(previous['key_hex']))
+               if previous else Ed25519PrivateKey.generate())
+    public = private.public_key().public_bytes(serialization.Encoding.Raw, serialization.PublicFormat.Raw)
+    record = {'name': name.strip(), 'contact': contact.strip(), 'algorithm': 'ed25519',
+              'key_hex': private.private_bytes(serialization.Encoding.Raw, serialization.PrivateFormat.Raw,
+                                                serialization.NoEncryption()).hex(),
+              'public_key': public.hex(), 'key_id': hashlib.sha256(public).hexdigest()}
+    path = identity_path(project)
+    if previous and previous.get('algorithm') != 'ed25519':
+        backup = path.with_name('identity-legacy.json')
+        if not backup.exists():
+            write(backup, previous)
+            backup.chmod(0o600)
+    write(path, record)
+    path.chmod(0o600)
+    return record
+
+
+def show_identity(project='.'):
     identity = load_identity(project)
     if not identity:
         return 'No identity set. Run: lectic identity set "Your Name" --contact your@email.com'
-    return (f"Name:     {identity['name']}\n"
-            f"Contact:  {identity['contact']}\n"
-            f"Key ID:   {identity['key_id']}  (short fingerprint; the signing key stays on your machine)")
+    return (f"Name:     {identity['name']}\nContact:  {identity['contact']}\n"
+            f"Key ID:   {identity['key_id']}  (compare this fingerprint with recipients; the private key stays here)")
 
 
-# ---------------------------------------------------------------- pack signing
-
-def _signable(manifest: dict) -> bytes:
-    """The bytes signed/verified: canonical JSON of the stable manifest fields.
-
-    Excludes `created_at` (timestamp, varies) and `publisher.signed_at`
-    but includes everything else — the same content that pack_id is derived from.
-    Keeping this consistent with build_pack's pack_id derivation is critical.
-    """
-    stable = {k: v for k, v in manifest.items() if k not in {'pack_id', 'created_at', 'publisher'}}
-    return json.dumps(stable, ensure_ascii=False, sort_keys=True, separators=(',', ':')).encode('utf-8')
+def _signable(manifest):
+    payload = dict(manifest)
+    payload['publisher'] = {k: v for k, v in manifest.get('publisher', {}).items() if k != 'signature'}
+    return json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(',', ':')).encode('utf-8')
 
 
-def sign_manifest(manifest: dict, identity: dict) -> dict:
-    """Return a `publisher` block to embed in the manifest.
-
-    The signature covers all stable manifest fields so the recipient can verify
-    the pack contents match what the signer built, even without the secret key —
-    they verify using the key_id to confirm the key fingerprint matches.
-    """
-    sig = _sign(_signable(manifest), identity['key_hex'])
-    return {
-        'name': identity['name'],
-        'contact': identity['contact'],
-        'key_id': identity['key_id'],
-        'signature': sig,
-    }
+def sign_manifest(manifest, identity):
+    private = Ed25519PrivateKey.from_private_bytes(bytes.fromhex(identity['key_hex']))
+    public = private.public_key().public_bytes(serialization.Encoding.Raw, serialization.PublicFormat.Raw)
+    publisher = {'name': identity['name'], 'contact': identity['contact'], 'algorithm': 'ed25519',
+                 'public_key': public.hex(), 'key_id': hashlib.sha256(public).hexdigest()}
+    publisher['signature'] = private.sign(_signable({**manifest, 'publisher': publisher})).hex()
+    return publisher
 
 
-def verify_manifest(manifest: dict, identity: dict) -> tuple[bool, str]:
-    """Verify a pack's publisher signature using its embedded publisher block.
+def check_manifest_signature(manifest):
+    publisher = manifest.get('publisher')
+    if not publisher:
+        return 'unsigned', 'No publisher signature (set one with lectic identity)'
+    if publisher.get('algorithm') is None:
+        return 'unverified', 'Legacy HMAC signature: recipients cannot verify it. Publisher details are unverified claims.'
+    if publisher.get('algorithm') != 'ed25519':
+        return 'invalid', 'Unsupported publisher signature algorithm'
+    try:
+        public = bytes.fromhex(publisher['public_key'])
+        require(hashlib.sha256(public).hexdigest() == publisher['key_id'], 'Public key fingerprint differs')
+        Ed25519PublicKey.from_public_bytes(public).verify(bytes.fromhex(publisher['signature']), _signable(manifest))
+    except (InvalidSignature, ValueError, KeyError, TypeError):
+        return 'invalid', 'Publisher signature is invalid; the manifest or publisher details were altered'
+    return 'signed', (f"Valid Ed25519 signature for key {publisher['key_id']}. "
+                      f"Claimed publisher: {publisher['name']} <{publisher['contact']}>. "
+                      'Identity is not independently trusted; compare this fingerprint through a trusted channel.')
 
-    Returns (ok: bool, message: str).
-    Requires the identity's key_hex to verify (can only be done by the key holder).
-    For recipients without the key, use verify_manifest_by_keyid instead.
-    """
+
+def verify_manifest(manifest, identity):
     publisher = manifest.get('publisher')
     if not publisher:
         return False, 'No publisher block in manifest'
-    if publisher.get('key_id') != identity['key_id']:
-        return False, f"Key ID mismatch: pack signed with {publisher.get('key_id')!r}, local key is {identity['key_id']!r}"
-    ok = _verify(_signable(manifest), publisher.get('signature', ''), identity['key_hex'])
-    if ok:
-        return True, f"Verified — signed by \"{publisher['name']}\" (key: {publisher['key_id']})"
-    return False, f"Signature invalid — pack may have been altered after signing by \"{publisher['name']}\""
-
-
-def check_manifest_signature(manifest: dict) -> tuple[str, str]:
-    """Check a pack's publisher block without the secret key.
-
-    Returns (status, message) where status is one of:
-      'signed'   — has a publisher block; signature format is present
-      'unsigned' — no publisher block
-    We cannot verify the HMAC without the secret key, but we can display
-    the publisher name/contact/key_id so the recipient knows who claims to
-    have signed it and can decide how much to trust it.
-    """
-    publisher = manifest.get('publisher')
-    if not publisher:
-        return 'unsigned', 'No publisher -- pack was created without a lectic identity'
-    name = publisher.get('name', '?')
-    contact = publisher.get('contact', '?')
-    key_id = publisher.get('key_id', '?')
-    return 'signed', f"Publisher: \"{name}\" <{contact}>  key: {key_id}"
+    if publisher.get('algorithm') == 'ed25519':
+        local_public = Ed25519PrivateKey.from_private_bytes(bytes.fromhex(identity['key_hex'])).public_key().public_bytes(
+            serialization.Encoding.Raw, serialization.PublicFormat.Raw)
+        if publisher.get('public_key') != local_public.hex():
+            return False, 'Key ID mismatch: this pack uses another signing key'
+        status, message = check_manifest_signature(manifest)
+        return status == 'signed', message
+    stable = {k: v for k, v in manifest.items() if k not in {'pack_id', 'created_at', 'publisher'}}
+    raw = json.dumps(stable, ensure_ascii=False, sort_keys=True, separators=(',', ':')).encode('utf-8')
+    ok = publisher.get('key_id') == _key_id(identity['key_hex']) and _verify(raw, publisher.get('signature', ''), identity['key_hex'])
+    return ok, 'Legacy HMAC: content checked locally; publisher metadata was never authenticated' if ok else 'Legacy signature invalid'

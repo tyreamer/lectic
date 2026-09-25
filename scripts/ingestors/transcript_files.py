@@ -21,6 +21,9 @@ class TranscriptFiles:
         result = []
         for path in paths:
             require(path.resolve().is_relative_to(self.folder), 'Input symlink escapes folder')
+            from privacy import require_shareable
+            from home import storage_root
+            require_shareable(path, storage_root())
             name = path.relative_to(self.folder).as_posix()
             m = meta.get(name, {})
             require(type(m) is dict and not set(m)-{'title', 'creator', 'url', 'caption_type'}, f'Invalid metadata for {name}')

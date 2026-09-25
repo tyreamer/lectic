@@ -43,7 +43,7 @@ class SetupTests(unittest.TestCase):
         self.assertEqual([server['command']] + server['args'], cli.server_command())
         codex = (self.user / '.codex/config.toml').read_text(encoding='utf-8')
         self.assertTrue(codex.startswith('model = "gpt-5"\n'))
-        self.assertIn('[mcp_servers.lectic]', codex); self.assertIn("'serve'", codex)
+        self.assertIn('[mcp_servers.lectic]', codex); self.assertIn('"serve"', codex)
         # The recorded command really starts the server.
         probe = subprocess.run(cli.server_command(), input='{"jsonrpc":"2.0","id":1,"method":"ping"}\n',
                                capture_output=True, text=True, encoding='utf-8')
@@ -68,7 +68,7 @@ class SetupTests(unittest.TestCase):
 
     def test_setup_explains_when_no_assistant_is_present(self):
         code, out = self.run_cli('setup', '--yes')
-        self.assertEqual(code, 0)
+        self.assertEqual(code, 1)
         self.assertIn('Claude Code  not installed', out); self.assertIn('Codex        not installed', out)
         self.assertIn('No supported assistant was found', out); self.assertIn(' '.join(cli.server_command()), out)
 
@@ -133,15 +133,21 @@ class SetupTests(unittest.TestCase):
         (self.user / '.claude.json').write_text('{}', encoding='utf-8')
         (self.user / '.codex').mkdir()
         (self.user / '.codex/config.toml').write_text('model = "gpt-5"\n[mcp_servers.other]\ncommand = "x"\n', encoding='utf-8')
-        link = 'https://brave-fox-1234.trycloudflare.com/t/abc/mcp'
+        import threading
+        from lectic_mcp import serve_http, ensure_token
+        httpd = serve_http(self.base, port=0, announce=None)
+        threading.Thread(target=httpd.serve_forever, daemon=True).start()
+        self.addCleanup(httpd.server_close)
+        self.addCleanup(httpd.shutdown)
+        link = f'http://127.0.0.1:{httpd.server_address[1]}/t/{ensure_token(self.home)}/mcp'
         code, out = self.run_cli('connect', link)
         self.assertEqual(code, 0); self.assertIn('Claude Code  connected', out)
         self.assertEqual(json.loads((self.user / '.claude.json').read_text(encoding='utf-8'))['mcpServers']['lectic'], {'type': 'http', 'url': link})
         codex = (self.user / '.codex/config.toml').read_text(encoding='utf-8')
-        self.assertIn(f"url = '{link}'", codex); self.assertIn('[mcp_servers.other]', codex); self.assertNotIn("'serve'", codex)
+        self.assertIn('url = ' + json.dumps(link), codex); self.assertIn('[mcp_servers.other]', codex); self.assertNotIn('"serve"', codex)
         self.assertEqual(self.run_cli('setup', '--yes')[0], 0)
         codex = (self.user / '.codex/config.toml').read_text(encoding='utf-8')
-        self.assertNotIn(link, codex); self.assertIn("'serve'", codex)
+        self.assertNotIn(link, codex); self.assertIn('"serve"', codex)
         self.assertEqual(codex.count('[mcp_servers.lectic]'), 1); self.assertIn('[mcp_servers.other]', codex); self.assertIn('command = "x"', codex)
         self.assertEqual(json.loads((self.user / '.claude.json').read_text(encoding='utf-8'))['mcpServers']['lectic']['type'], 'stdio')
         self.assertEqual(self.run_cli('connect')[0], 2)

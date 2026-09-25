@@ -1,7 +1,7 @@
 """Intelligent candidate collection matching for incoming source material.
 
-When a user shares a link, video, pasted text, transcript, or file, Lectic
-must always ask which collection to add it to before assuming or creating a new one.
+Saving without a destination goes straight to Inbox. When the user asks to sort
+material, candidate matches can help them choose a collection.
 This module inspects existing collections in the library, extracts topic, creator,
 and keyword signatures, and scores candidate collections for relevance so the
 assistant can present intelligent suggestions alongside all existing collections.

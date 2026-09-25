@@ -36,7 +36,8 @@ class HttpTransportTests(unittest.TestCase):
             raw = exc.read(); return exc.code, (json.loads(raw) if raw else None), dict(exc.headers)
 
     def test_secret_link_is_the_only_way_in(self):
-        self.assertEqual(self.request(self.origin + '/health')[0:2], (200, {'ok': True, 'server': 'lectic', 'version': '0.1'}))
+        from release_version import VERSION
+        self.assertEqual(self.request(self.origin + '/health')[0:2], (200, {'ok': True, 'server': 'lectic', 'version': VERSION}))
         self.assertEqual(self.request(self.origin + '/mcp', {'jsonrpc': '2.0', 'id': 1, 'method': 'ping'})[0], 401)
         self.assertEqual(self.request(self.origin + '/t/wrong-token/mcp', {'jsonrpc': '2.0', 'id': 1, 'method': 'ping'})[0], 401)
         self.assertEqual(self.request(self.origin + '/t/' + self.httpd.token + '/nope', {})[0], 404)

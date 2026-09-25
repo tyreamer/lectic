@@ -13,8 +13,9 @@ import re
 import shutil
 from urllib.parse import urlparse
 
-from ec import Invalid, require, safe_child
+from ec import Invalid, require, safe_child, digest, read
 from home import storage_root
+from store import home_transaction
 
 
 README_CONTENT = """Lectic Drop Inbox
@@ -175,7 +176,7 @@ def scan_inbox(project=None):
             'files': parsed['files'],
             'suggested_collection': top_cand['name'] if top_cand else None,
             'confidence': top_cand['score'] if top_cand else 0,
-            'match_reason': top_cand['reason'] if top_cand else 'No strong candidate match',
+            'match_reason': '; '.join(top_cand.get('reasons', [])) if top_cand else 'No strong candidate match',
             'candidates': cand.get('candidates', []),
             'suggested_action': cand.get('suggested_action', 'ask_user')
         })
@@ -187,36 +188,32 @@ def scan_inbox(project=None):
     }
 
 
+@home_transaction
 def route_inbox_item(project, filename_or_path, collection_name=None):
     """Route a single inbox item into a collection and move it to .processed."""
     folder = ensure_inbox_folder(project)
     p = Path(filename_or_path)
-    if not p.is_file():
-        p = folder / filename_or_path
+    if not p.is_absolute():
+        p = folder / p
+    require(not p.is_symlink(), 'Inbox items cannot be symbolic links')
+    p = p.resolve()
+    require(p.parent == folder.resolve() and not p.name.startswith(('.', '_')), 'Select a file inside the drop inbox')
     require(p.is_file(), f"Inbox item not found: {filename_or_path}")
 
     parsed = parse_drop_file(p)
-    target_col = collection_name
-    if not target_col:
-        # Match candidate collection
-        from candidate_collections import find_candidate_collections
-        cand = find_candidate_collections(
-            project,
-            url=parsed['url'],
-            text=parsed['text'],
-            title=parsed['title'],
-            files=parsed['files']
-        )
-        if cand.get('candidates'):
-            target_col = cand['candidates'][0]['name']
-        else:
-            target_col = 'Inbox'
+    target_col = collection_name or 'Inbox'
 
     # Save capture directly into the target collection
     from capture_write import save_capture
     from capture_store import CaptureStore
     store = CaptureStore(project)
     staging = storage_root(project) / 'capture-drop'
+    original_bytes = p.read_bytes()
+    # A retry after import or archive failure uses the same immutable event.
+    token = digest((str(p) + str(p.stat().st_mtime_ns) + target_col).encode() + original_bytes)
+    capture_id = 'capture-' + token[:32]
+    existing = staging / (capture_id + '.json')
+    captured_at = read(existing)['captured_at'] if existing.is_file() else None
     record = save_capture(
         staging,
         url=parsed['url'],
@@ -225,22 +222,33 @@ def route_inbox_item(project, filename_or_path, collection_name=None):
         title=parsed['title'],
         collections=[target_col],
         note=f"Captured from Lectic Drop Inbox: {p.name}",
-        origin='drop-inbox'
+        origin='drop-inbox', capture_id=capture_id, captured_at=captured_at
     )
     import_report = store.import_folder(staging)
+    imported = next((item for item in import_report.get('items', []) if item.get('capture_id') == capture_id), None)
+    if not imported or not imported.get('saved') or imported.get('issues'):
+        return {'phase': 'needs_attention', 'file': p.name, 'collection': target_col,
+                'capture_id': capture_id, 'issues': (imported or {}).get('issues') or
+                ['Import did not confirm a complete save. The original remains in the inbox; retry after fixing the reported problem.'],
+                'import_report': import_report}
+    if p.read_bytes() != original_bytes:
+        return {'phase': 'needs_attention', 'file': p.name, 'capture_id': capture_id,
+                'issues': ['The file changed during capture. Its original remains in the inbox.']}
 
     # Move processed drop file to .processed/
     processed_dir = folder / '.processed'
     processed_dir.mkdir(parents=True, exist_ok=True)
     ts = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
-    dest = processed_dir / f"{ts}_{p.name}"
+    dest = processed_dir / f"{ts}_{capture_id}_{p.name}"
     try:
         shutil.move(str(p), str(dest))
-    except Exception:
-        pass
+    except OSError as exc:
+        return {'phase': 'captured_pending_archive', 'file': p.name, 'collection': target_col,
+                'capture_id': capture_id, 'issues': [f'Saved, but could not archive the original: {exc}. Retry safely.']}
 
     return {
         'phase': 'routed',
+        'capture_id': capture_id,
         'file': p.name,
         'collection': target_col,
         'url': parsed['url'],
@@ -249,22 +257,31 @@ def route_inbox_item(project, filename_or_path, collection_name=None):
     }
 
 
+@home_transaction
 def route_all_inbox(project=None, mapping=None):
     """Route all items in the inbox folder according to mapping or candidate matches."""
     folder = ensure_inbox_folder(project)
-    mapping = mapping or {}
     report = scan_inbox(project)
+    if mapping is not None:
+        require(isinstance(mapping, dict), 'Items must map inbox filenames to collection names')
+        require(set(mapping) <= {item['filename'] for item in report['items']}, 'One or more selected inbox items no longer exist')
     results = []
 
     for item in report['items']:
         fn = item['filename']
-        target = mapping.get(fn) or item.get('suggested_collection') or 'Inbox'
-        res = route_inbox_item(project, fn, collection_name=target)
+        if mapping is not None and fn not in mapping:
+            continue
+        target = (mapping or {}).get(fn) or 'Inbox'
+        try:
+            res = route_inbox_item(project, fn, collection_name=target)
+        except (OSError, ValueError) as exc:
+            res = {'phase': 'needs_attention', 'file': fn, 'issues': [str(exc)]}
         results.append(res)
 
     return {
         'phase': 'inbox_processed',
         'folder': str(folder),
-        'processed_count': len(results),
+        'processed_count': sum(item['phase'] == 'routed' for item in results),
+        'needs_attention_count': sum(item['phase'] != 'routed' for item in results),
         'items': results
     }

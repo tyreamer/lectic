@@ -12,6 +12,7 @@ from datetime import datetime, timezone
 import io
 import json
 from pathlib import Path
+from release_version import VERSION as RELEASE_VERSION
 import re
 import shutil
 import tempfile
@@ -23,7 +24,7 @@ from ec import (ROOT, VERSION, Invalid, assemble, digest, fingerprint, normalize
                 text_write, validate_ir, validate_schema, validate_sources, validate_units, write)
 from collection_store import Library
 from home import storage_root
-from store import LocalStore
+from store import LocalStore, home_transaction
 
 PACK_VERSION = '1.0'
 SUFFIX = '.lectic'
@@ -41,7 +42,7 @@ def render_install_md(manifest, name, version, install_name, unit_count):
     lines = [
         f'# Installing {name} (v{version})',
         '',
-        f'This is a Lectic knowledge pack compiled for team distribution. It carries {unit_count} verified knowledge units and complete sources.',
+        f'This team pack carries {unit_count} source-linked knowledge units. ' + ('Full sources are included.' if manifest['sources_included'] else 'Source links are included; recipients must retrieve and verify the originals.'),
         '',
         '## Quick Install (Lectic CLI)',
         '',
@@ -89,7 +90,8 @@ def render_install_md(manifest, name, version, install_name, unit_count):
 
 # ---------------------------------------------------------------- build
 
-def build_pack(project, collection, destination=None, include_sources=False, team=False, version=None):
+@home_transaction
+def build_pack(project, collection, destination=None, include_sources=None, team=False, version=None):
     library = Library(project)
     resolved = library.resolve(collection)
     require(resolved is not None, 'Name a saved collection to pack')
@@ -100,8 +102,7 @@ def build_pack(project, collection, destination=None, include_sources=False, tea
     ir = validate_ir(run)
     require(ir['units'], 'This collection has no reusable knowledge to share yet')
     receipt = read(run / 'reconciliation.json') if (run / 'reconciliation.json').is_file() else None
-    if team:
-        include_sources = True
+    include_sources = bool(team) if include_sources is None else bool(include_sources)
     version = str(version).strip() if version else datetime.now(timezone.utc).strftime('%Y-%m-%d')
     files = {}
     files['knowledge/ir.json'] = ir
@@ -147,7 +148,7 @@ def build_pack(project, collection, destination=None, include_sources=False, tea
     encoded = {path: (value if isinstance(value, bytes) else value.encode('utf-8') if isinstance(value, str)
                       else (json.dumps(value, ensure_ascii=False, indent=2) + '\n').encode('utf-8')) for path, value in files.items()}
     manifest = {'schema_version': PACK_VERSION, 'pack_id': 'pack-' + '0' * 24, 'name': data['name'],
-                'created_at': datetime.now(timezone.utc).isoformat(), 'lectic_version': VERSION,
+                'created_at': datetime.now(timezone.utc).isoformat(), 'lectic_version': RELEASE_VERSION,
                 'version': version,
                 'corpus_id': corpus['corpus_id'], 'ir_hash': fingerprint(ir), 'unit_count': len(ir['units']),
                 'sources_included': bool(include_sources), 'sources': sources, 'maps': maps, 'methods': methods,
@@ -168,14 +169,14 @@ def build_pack(project, collection, destination=None, include_sources=False, tea
     validate_schema(manifest, 'pack')
     # Sign with local identity if one exists — adds a publisher block after schema validation
     # so the schema passes on the base fields, then we attach the publisher (also schema-valid).
-    try:
-        from identity import load_identity, sign_manifest
-        identity = load_identity(project)
-        if identity:
-            manifest['publisher'] = sign_manifest(manifest, identity)
-            validate_schema(manifest, 'pack')  # re-validate with publisher block
-    except Exception:
-        pass  # signing is best-effort; never block pack creation
+    from identity import load_identity, sign_manifest
+    identity = load_identity(project)
+    if identity:
+        if identity.get('algorithm') != 'ed25519':
+            from identity import save_identity
+            identity = save_identity(project, identity['name'], identity['contact'])
+        manifest['publisher'] = sign_manifest(manifest, identity)
+        validate_schema(manifest, 'pack')
     destination = Path(destination) if destination else Path(project) / (slug(data['name']) + SUFFIX)
     destination = destination.resolve()
     if destination.is_dir(): destination = destination / (slug(data['name']) + SUFFIX)
@@ -188,18 +189,25 @@ def build_pack(project, collection, destination=None, include_sources=False, tea
         for path, raw in sorted(encoded.items()): archive.writestr(path, raw)
     temp.replace(destination)
     publisher_note = ''
+    from linked_sources import resolver_for
+    unavailable_routes = [] if include_sources else [source['title'] or source['filename'] for source in sources
+        if not source['url'] or resolver_for(source['url']) is None]
+    warnings = ([f"Recipients cannot retrieve {len(unavailable_routes)} source(s) with current adapters: " + ', '.join(unavailable_routes) +
+                 '. Include their full sources only if you may redistribute them; otherwise installation will be partial or unavailable.']
+                if unavailable_routes else [])
     if manifest.get('publisher'):
         p = manifest['publisher']
         publisher_note = f"Signed by \"{p['name']}\" (key: {p['key_id']})"
     share_instructions = (
         f"Give the '{destination.name}' pack file (or a link to it) to your recipient. "
-        "Tell them to simply paste it into their assistant (Claude, Codex, or ChatGPT) and say: 'Install this pack'."
+        "Once Lectic is connected to their assistant, they can say: 'Install this pack'. Hosted assistants need a running Lectic connector."
     )
     return {'phase': 'packed', 'pack': str(destination), 'pack_id': manifest['pack_id'], 'name': data['name'],
             'version': manifest.get('version'), 'distribution': manifest.get('distribution'), 'team': bool(team),
             'units': len(ir['units']), 'sources': len(sources), 'sources_included': bool(include_sources),
             'methods': len(methods), 'maps': len(maps), 'bytes': destination.stat().st_size,
             'publisher': publisher_note,
+            'warnings': warnings,
             'share_instructions': share_instructions,
             'share_note': SHARE_NOTE if not include_sources else 'Full source text is included; share only material you may redistribute.'}
 
@@ -267,6 +275,9 @@ def open_pack(raw):
         require(not name.startswith('/') and '\\' not in name and '..' not in name.split('/') and ':' not in name and not info.is_dir(),
                 'Pack contains an unsafe path: ' + name)
         require(info.file_size <= MAX_MEMBER_BYTES, 'Pack member exceeds the supported size: ' + name)
+        require(name not in members, 'Pack contains a duplicate member: ' + name)
+        require(sum(len(value) for value in members.values()) + info.file_size <= MAX_PACK_BYTES,
+                'Expanded pack exceeds the supported size')
         members[name] = archive.read(name)
     require('pack.json' in members, 'Not a Lectic pack (no pack.json)')
     manifest = json.loads(members['pack.json'].decode('utf-8'))
@@ -276,6 +287,9 @@ def open_pack(raw):
         require(digest(members[path]) == expected, 'Pack file was altered: ' + path)
     identity = 'pack-' + fingerprint({k: v for k, v in manifest.items() if k not in {'pack_id', 'created_at', 'publisher'}})[:24]
     require(manifest['pack_id'] == identity, 'Pack identity does not match its contents')
+    from identity import check_manifest_signature
+    signature_status, message = check_manifest_signature(manifest)
+    require(signature_status != 'invalid', message)
     return manifest, members
 
 
@@ -313,9 +327,10 @@ def retrieve_source(source, members, manifest, home, retriever=None):
     return raw
 
 
-def install_pack(project, location, name=None, retriever=None, pin=False, collection_id=None):
+@home_transaction
+def install_pack(project, location, name=None, retriever=None, pin=False, collection_id=None, _raw=None, origin_location=None):
     project = Path(project).resolve(); home = storage_root(project); library = Library(project)
-    manifest, members = open_pack(fetch(location))
+    manifest, members = open_pack(fetch(location) if _raw is None else _raw)
     target_cid = collection_id
     if target_cid:
         resolved = library.resolve(target_cid)
@@ -329,6 +344,8 @@ def install_pack(project, location, name=None, retriever=None, pin=False, collec
             base, n = name, 2
             while name.casefold() in taken: name = f'{base} ({n})'; n += 1
     ir = json.loads(members['knowledge/ir.json'].decode('utf-8'))
+    require(fingerprint(ir) == manifest['ir_hash'] and len(ir.get('units', [])) == manifest['unit_count'],
+            'Pack knowledge differs from its declared revision or unit count')
     parts = {}
     for path, raw in members.items():
         if path.startswith('knowledge/units/'): parts[path[len('knowledge/units/'):-5]] = json.loads(raw.decode('utf-8'))
@@ -384,10 +401,14 @@ def install_pack(project, location, name=None, retriever=None, pin=False, collec
             checkpoints = [read(run / f'units/{sid}.json') for sid in sorted(docs)]
             write(run / 'reconciliation.json', {'schema_version': VERSION, 'checkpoint_hash': fingerprint(checkpoints)})
         installed_ir = assemble(run)
+        if complete:
+            require(fingerprint(installed_ir) == manifest['ir_hash'], 'Pack checkpoints do not reconstruct its declared knowledge')
         if target_cid:
             folder, data = library.archive(adopt=run, collection=target_cid, name=name)
         else:
             folder, data = library.archive(adopt=run, name=name)
+        persisted_ir = validate_ir(library.run(folder, data))
+        require(fingerprint(persisted_ir) == fingerprint(installed_ir), 'Saved knowledge differs from the installed pack; installation is incomplete')
         for path, raw in members.items():
             if path.startswith(('maps/', 'methods/')) or path in {'README.md', 'INSTALL.md'}:
                 target = safe_child(folder / 'pack', path); target.parent.mkdir(parents=True, exist_ok=True); target.write_bytes(raw)
@@ -402,13 +423,14 @@ def install_pack(project, location, name=None, retriever=None, pin=False, collec
                   'sources_verified': len(available), 'sources_total': len(manifest['sources']),
                   'sources_unavailable': [{'source': labels[sid], 'reason': reason} for sid, reason in unavailable.items()],
                   'units_installed': len(installed_ir['units']), 'units_in_pack': manifest['unit_count'], 'units_dropped': dropped,
-                  'knowledge_matches_pack': fingerprint(installed_ir) == manifest['ir_hash'],
+                  'knowledge_matches_pack': fingerprint(persisted_ir) == manifest['ir_hash'],
                   'reconciliation': 'carried from the pack' if complete else 'needed before goal work: sources or units differ from the pack',
                   'publisher_status': sig_status, 'publisher_info': sig_msg,
                   'readable': str(folder / 'pack' / 'README.md'), 'methods': manifest['methods'], 'installed_at': datetime.now(timezone.utc).isoformat()}
+        origin_location = origin_location or location
         origin_record = {
-            'location': str(location),
-            'source_url': str(location) if re.match(r'https?://', str(location)) else None,
+            'location': str(origin_location),
+            'source_url': str(origin_location) if re.match(r'https?://', str(origin_location)) else None,
             'version': pack_version,
             'pinned': is_pinned,
             'pinned_version': pack_version if is_pinned else None,
@@ -424,6 +446,7 @@ def install_pack(project, location, name=None, retriever=None, pin=False, collec
 
 # ---------------------------------------------------------------- update
 
+@home_transaction
 def update_pack(project, collection_name_or_id, force=False, retriever=None):
     project = Path(project).resolve(); library = Library(project)
     resolved = library.resolve(collection_name_or_id)
@@ -447,6 +470,10 @@ def update_pack(project, collection_name_or_id, force=False, retriever=None):
 
     manifest, members = open_pack(raw)
     remote_version = manifest.get('version', '')
+    prior_publisher = origin.get('manifest', {}).get('publisher', {})
+    if prior_publisher.get('algorithm') == 'ed25519':
+        require(manifest.get('publisher', {}).get('public_key') == prior_publisher.get('public_key'),
+                'The update changed or removed the publisher signing key. The existing collection was preserved; verify the new publisher and install separately if intended.')
     current_version = origin.get('version', '')
     is_pinned = origin.get('pinned', False)
 
@@ -469,7 +496,7 @@ def update_pack(project, collection_name_or_id, force=False, retriever=None):
             'message': f"Collection '{data['name']}' is already up to date at version {current_version or 'unknown'}."
         }
 
-    report = install_pack(project, candidate_location, name=data['name'], retriever=retriever, pin=is_pinned, collection_id=data['collection_id'])
+    report = install_pack(project, candidate_location, name=data['name'], retriever=retriever, pin=is_pinned, collection_id=data['collection_id'], _raw=raw)
 
     parts = []
     if added_ids:

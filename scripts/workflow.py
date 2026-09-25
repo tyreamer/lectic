@@ -1,5 +1,6 @@
 """Agent-facing deterministic coordinator. Reasoning tasks are returned, not simulated."""
 from pathlib import Path
+from store import home_transaction
 import re
 
 from ec import (ROOT, VERSION, Invalid, assemble, digest, fingerprint, ingest_records, package, read,
@@ -57,6 +58,25 @@ def summary(docs, ir=None, caps=None):
 
 def compile_workflow(input=None, output=None, *, project='.', metadata=None, intent=None,
                      select=None, build_all=False, reconciled=False, tasks=None, rubric=None):
+    # Do not create a user home just to explain missing input or unavailable
+    # retrieval. The mutable coordinator runs under one shared-home lock.
+    home = storage_root(project)
+    if input is None and not output and not legacy_session_path(home, project).exists():
+        return {'phase': 'needs_input', 'message': 'Give me transcript files or point me at their folder.'}
+    records = None
+    if input is not None:
+        from ingestors import adapter_for
+        from ingestors.youtube import YouTubeIngestor
+        location = str(input) if YouTubeIngestor.accepts(input) else str((Path(project) / input).resolve())
+        records = adapter_for(location).collect(str((Path(project) / metadata).resolve()) if metadata else None)
+    return _compile_workflow(input, output, project=project, metadata=metadata, intent=intent,
+                             select=select, build_all=build_all, reconciled=reconciled,
+                             tasks=tasks, rubric=rubric, records=records)
+
+
+@home_transaction
+def _compile_workflow(input=None, output=None, *, project='.', metadata=None, intent=None,
+                      select=None, build_all=False, reconciled=False, tasks=None, rubric=None, records=None):
     project = Path(project).resolve()
     project.mkdir(parents=True, exist_ok=True)
     home = storage_root(project)
@@ -73,7 +93,7 @@ def compile_workflow(input=None, output=None, *, project='.', metadata=None, int
         from ingestors.youtube import YouTubeIngestor
         location = str(input) if YouTubeIngestor.accepts(input) else str((project / input).resolve())
         adapter = adapter_for(location)
-        records = adapter.collect(metadata)
+        require(records is not None, 'Input preflight did not supply source records')
         snapshot = fingerprint([{'filename': r.filename, 'hash': digest(r.raw), 'metadata': r.metadata} for r in records])
         name = re.sub('[^a-z0-9]+', '-', Path(location).name.lower()).strip('-')[:32] or 'transcripts'
         run = (project / output).resolve() if output else home / 'runs' / f'{name}-{snapshot[:16]}'

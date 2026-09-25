@@ -1,20 +1,20 @@
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "lectic"
-version = "0.3.0"
+version = "0.3.1"
 description = "Turn the talks, courses and transcripts you trust into expertise your AI assistants can apply, with evidence, across Claude Code, Codex, ChatGPT, Claude and Gemini."
 keywords = ["mcp", "knowledge", "transcripts", "youtube", "claude-code", "codex", "chatgpt", "agent-skills", "evidence"]
 readme = "README.md"
-license = {file = "LICENSE"}
+license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">=3.10"
-dependencies = []
+dependencies = ["cryptography>=38", "tomli>=2; python_version < '3.11'"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
 ]
 
 [project.optional-dependencies]

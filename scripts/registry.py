@@ -7,7 +7,7 @@ import re
 import urllib.request
 import urllib.error
 
-from ec import ROOT, VERSION, Invalid, require, validate_schema, write
+from ec import ROOT, VERSION, Invalid, digest, require, safe_child, validate_schema, write
 from home import storage_root
 from packs import inspect_pack, slug
 
@@ -21,15 +21,21 @@ def get_registry_url():
 
 def fetch_registry(project=None, refresh=False):
     """Fetch the registry index, using local cache when fresh, falling back to bundled index if offline."""
+    bundled = ROOT / 'registry/index.json'
+    if not os.environ.get('LECTIC_REGISTRY_URL') and not refresh:
+        data = json.loads(bundled.read_text(encoding='utf-8'))
+        validate_schema(data, 'registry')
+        return data
     home = storage_root(Path(project).resolve() if project else Path.cwd())
     cache_path = home / 'registry-cache.json'
 
     # Check cache if not forcing refresh
-    if not refresh and cache_path.is_file():
+    if not refresh and not os.environ.get('LECTIC_REGISTRY_URL') and cache_path.is_file():
         try:
             cached_data = json.loads(cache_path.read_text(encoding='utf-8'))
             cache_time = cache_path.stat().st_mtime
             if (datetime.now().timestamp() - cache_time) < CACHE_TTL_SECONDS:
+                validate_schema(cached_data, 'registry')
                 return cached_data
         except Exception:
             pass
@@ -41,12 +47,14 @@ def fetch_registry(project=None, refresh=False):
     try:
         req = urllib.request.Request(url, headers={'User-Agent': f'lectic/{VERSION}'})
         with urllib.request.urlopen(req, timeout=10) as resp:
-            registry_data = json.loads(resp.read().decode('utf-8'))
+            raw = resp.read(2 * 1024 * 1024 + 1)
+            require(len(raw) <= 2 * 1024 * 1024, 'Registry is too large')
+            registry_data = json.loads(raw.decode('utf-8'))
     except Exception as exc:
         fetch_error = exc
 
     # Fallback to local file in repo if fetch failed
-    if registry_data is None:
+    if registry_data is None and not os.environ.get('LECTIC_REGISTRY_URL'):
         local_bundled = ROOT / 'registry/index.json'
         if local_bundled.is_file():
             try:
@@ -55,7 +63,7 @@ def fetch_registry(project=None, refresh=False):
                 pass
 
     # Fallback to stale cache if available
-    if registry_data is None and cache_path.is_file():
+    if registry_data is None and not os.environ.get('LECTIC_REGISTRY_URL') and cache_path.is_file():
         try:
             registry_data = json.loads(cache_path.read_text(encoding='utf-8'))
         except Exception:
@@ -63,11 +71,7 @@ def fetch_registry(project=None, refresh=False):
 
     require(registry_data is not None, f"Could not load Lectic registry from {url}: {fetch_error}")
 
-    try:
-        validate_schema(registry_data, 'registry')
-    except Invalid:
-        # If schema validation fails, ignore validation in production to remain fault-tolerant
-        pass
+    validate_schema(registry_data, 'registry')
 
     # Update cache
     try:
@@ -130,22 +134,31 @@ def resolve_registry_pack(pack_spec, project=None):
 def inspect_registry_pack(pack_spec, project=None):
     """Inspect a pack directly from the registry without installing."""
     entry = resolve_registry_pack(pack_spec, project=project)
-    try:
-        raw_inspect = inspect_pack(entry['url'])
-    except Exception as exc:
-        raw_inspect = {
-            'name': entry.get('title') or entry.get('name'),
-            'version': entry.get('version'),
-            'publisher_info': f"Signed by {entry.get('publisher')}" if entry.get('publisher') else "Unsigned",
-            'units': entry.get('units', 0),
-            'sources': [],
-            'methods': entry.get('methods', []),
-            'readme': f"# {entry.get('title', entry.get('name'))}\n\n{entry.get('description', '')}\n\n(Note: Remote pack binary at {entry.get('url')} was not directly reachable. Showing registry index metadata.)",
-            'offline_preview': True
-        }
+    raw_inspect = inspect_pack(registry_pack_location(entry, project))
     raw_inspect['registry_entry'] = entry
     raw_inspect['install_command'] = f"lectic install registry:{entry['name']} --as {entry.get('install_name', entry['name'])} --pin"
     return raw_inspect
+
+
+def registry_pack_location(entry, project=None):
+    """Resolve and validate actual pack bytes; never substitute catalog metadata."""
+    from packs import fetch, open_pack
+    expected = entry.get('sha256')
+    if entry.get('bundled_path'):
+        candidate = safe_child(ROOT / 'fixtures/packs', entry['bundled_path'])
+        require(candidate.is_file(), 'Bundled catalog artifact is missing; reinstall Lectic')
+        raw = candidate.read_bytes()
+        require(expected and digest(raw) == expected, 'Bundled pack checksum differs from the catalog')
+        open_pack(raw)
+        return str(candidate)
+    raw = fetch(entry['url'])
+    require(not expected or digest(raw) == expected, 'Pack checksum differs from the registry')
+    open_pack(raw)
+    cache = storage_root(project or '.') / 'registry-packs' / (digest(raw) + '.lectic')
+    cache.parent.mkdir(parents=True, exist_ok=True)
+    if not cache.exists(): cache.write_bytes(raw)
+    require(digest(cache.read_bytes()) == digest(raw), 'Cached pack was altered')
+    return str(cache)
 
 
 def format_search_results(packs, query=None):
@@ -204,7 +217,8 @@ def prepare_registry_entry(project, pack_name_or_file, download_url, tags=None, 
     from packs import open_pack
     manifest, members = open_pack(pack_path.read_bytes())
 
-    require(manifest.get('publisher'), "Registry submission requires a signed pack. Run `lectic identity set 'Name' --contact email` and re-pack.")
+    from identity import check_manifest_signature
+    require(check_manifest_signature(manifest)[0] == 'signed', "Registry submission requires a signed pack. Run `lectic identity set 'Name' --contact email` and re-pack.")
 
     version = manifest.get('version') or datetime.now(timezone.utc).strftime('%Y-%m-%d')
     p_name = slug(manifest['name'])
@@ -219,6 +233,7 @@ def prepare_registry_entry(project, pack_name_or_file, download_url, tags=None, 
         'description': f"Evidence-backed {manifest['name']} knowledge compiled with Lectic.",
         'publisher': manifest['publisher']['name'],
         'url': download_url,
+        'sha256': digest(pack_path.read_bytes()),
         'install_name': p_install,
         'version': version,
         'units': manifest.get('unit_count', 0),

@@ -17,11 +17,11 @@ Or in conversation: “Pack my FC 27 collection so I can share it” / “Instal
 | Evidence excerpts | The exact passages the knowledge cites, readable without the sources |
 | The latest Capability Map and built methods | What the collection can do, as readable records |
 | A rendered `README.md` | The pack explains itself to a person with no Lectic |
-| A manifest with a hash of every file | Nothing can be altered on the way |
+| A manifest with a hash of every file | Checks byte integrity against the manifest; unsigned manifests do not authenticate an author |
 
 ## What does not travel: the sources
 
-By default a pack carries source **links and hashes, not source text**. Installing it retrieves each source again on the installer's own network (YouTube captions through their `yt-dlp`) and checks the bytes against the pack's hashes. The knowledge is then validated against *their* copy exactly as it was against yours. Nothing of the original material is redistributed, which is what makes a pack safe to post publicly.
+By default a pack carries source **links and hashes, not source text**. Installing it retrieves each source again on the installer's own network (YouTube captions through their `yt-dlp`) and checks the bytes against the pack's hashes. The knowledge is then validated against *their* copy exactly as it was against yours. Relevant quotations are still redistributed. Source links and citations do not grant permission to share those excerpts.
 
 `lectic pack NAME --include-sources` bundles full source text. Use it for material you own or may share, such as your own transcripts and notes; local files have no link to retrieve from, so a links-only pack of them cannot be installed.
 
@@ -44,7 +44,7 @@ A team pack carries complete standards, rules, and procedures bundled with sourc
 lectic pack "Engineering Standards" --team --version 2.1.0
 ```
 
-- **Sources bundled automatically**: No re-fetch required; your team owns and controls the material.
+- **Sources bundled by default**: No re-fetch required. Include only originals you may redistribute; `--exclude-sources` overrides `--team`.
 - **Distribution metadata**: Contains `scope: team`, `install_name: engineering-standards`, and `pinned_version`.
 - **`INSTALL.md` generated**: Clear, single-command setup instructions embedded right in the pack.
 
@@ -56,7 +56,7 @@ lectic install https://.../engineering-standards.lectic --as engineering --pin
 
 ## Version pinning & updates
 
-Team standards evolve. Pinning locks an installed collection to the pack's version:
+Team standards evolve. Pinning records the installed version. No pack updates run automatically; an explicit update request advances it while preserving prior revisions:
 
 - `lectic install FILE|URL --pin`: Records pinned status and origin in collection metadata.
 - `lectic status`: Shows which collections are pinned and their versions (`engineering v2.1.0 [pinned]`).
@@ -86,14 +86,14 @@ The Lectic registry allows discovering, inspecting, and installing community-con
 
 ```bash
 # Search for verified packs by keyword or category tag
-lectic search engineering
-lectic search --tag architecture
+lectic search debugging
+lectic search --tag testing
 
 # Preview pack evidence guarantee, methods, and README before installing
-lectic inspect registry:distributed-systems-adr
+lectic inspect registry:debugging-starter
 
 # Install directly from the registry with version pinning
-lectic install registry:distributed-systems-adr --as distributed-systems --pin
+lectic install registry:debugging-starter --as distributed-systems --pin
 ```
 
 Browse the web marketplace at [tyreamer.github.io/lectic/registry.html](https://tyreamer.github.io/lectic/registry.html).
@@ -103,7 +103,7 @@ Browse the web marketplace at [tyreamer.github.io/lectic/registry.html](https://
 To submit your pack to the community marketplace:
 1. Ensure your signing identity is set: `lectic identity set "Your Name" --contact you@domain.com`
 2. Pack your collection: `lectic pack NAME --team`
-3. Generate the schema-compliant registry entry: `lectic publish NAME --to <download-url> --registry [--tags tag1,tag2]`
+3. Generate the schema-compliant registry entry: `lectic publish NAME --download-url <recipient-get-url> --registry [--tags tag1,tag2]`
 4. Open a Pull Request adding the printed JSON block to `registry/index.json` in [tyreamer/lectic](https://github.com/tyreamer/lectic).
 
 ## Sharing
@@ -115,3 +115,12 @@ Packs are content-addressed: the same knowledge over the same sources produces t
 ## What a pack does not do
 
 It does not make knowledge true. The installer's Lectic verifies structure, identity and evidence location against their copy of the sources; whether the author's interpretation is right is the same question it always was. Maps and methods arrive as readable records, not as live builds, because builds bind to the collection that made them; the installer's assistant regenerates a map or builds a method from the installed knowledge when asked.
+
+
+## Signature and publishing behavior in 0.3.1
+
+New signatures use Ed25519 and cover the manifest plus publisher name, contact and public key. A valid signature proves possession of that key; confirm its full fingerprint separately to trust the claimed publisher. Legacy HMAC signatures remain readable and are labeled unverified. Editing local identity details preserves the key.
+
+Publishing a named collection rebuilds current knowledge. Full sources require `--include-sources`; existing GitHub assets are preserved. A presigned PUT needs a distinct `--download-url` for recipients. Lectic checks downloaded bytes before saying published or notifying a requested webhook. Uploads whose recipient link fails are reported as uploaded but unverified.
+
+The bundled catalog currently contains one unsigned, authored teaching example: Debugging Starter. Catalog validation and SHA-256 checks verify its artifact, not its semantic quality or a real-world publisher identity. Installed registry packs retain the original URL for later explicit update requests.

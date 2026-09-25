@@ -1,5 +1,6 @@
 """Read saved work and persist grounded, personal next-use suggestions outside IR."""
 from pathlib import Path
+from store import home_transaction
 import json
 
 from ec import (ROOT, fingerprint, read, require, safe_child, text_write,
@@ -224,6 +225,7 @@ def render_guide(record):
     return '\n'.join(lines)
 
 
+@home_transaction
 def use_guide(*, project='.', collection=None, action='prepare', draft=None, guide_id=None, select=None):
     from capability_maps import capability_map
     view = library_view(project, collection)

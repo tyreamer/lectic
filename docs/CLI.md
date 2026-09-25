@@ -19,12 +19,13 @@ Speaks MCP over stdio for Claude Code, Codex and other clients; the tools mirror
 lectic inbox [--process]
 lectic status
 lectic setup
+lectic try [--json]
 
 # Packs & Team Distribution
-lectic pack "Engineering" [--team] [--version 2.1.0] [--include-sources]
+lectic pack "Engineering" [--team] [--version 2.1.0] [--include-sources | --exclude-sources]
 lectic install REGISTRY:NAME | FILE | URL [--as NAME] [--pin] [--inspect]
 lectic update NAME [--force]
-lectic publish NAME --to URL [--registry] [--token TOKEN] [--webhook URL]
+lectic publish NAME --to URL [--download-url GET_URL] [--include-sources] [--registry] [--token TOKEN] [--webhook URL]
 
 # Discovery & Marketplace
 lectic search [QUERY] [--tag TAG] [--json]
@@ -35,7 +36,7 @@ lectic identity [set "Name" --contact EMAIL]
 lectic verify [NAME] [--json]
 ```
 
-See [packs](PACKS.md) and [marketplace](../registry.html).
+See [packs](PACKS.md) and [starter catalog](registry.html).
 
 ## Storage location
 

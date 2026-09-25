@@ -1,0 +1,151 @@
+{
+  "review_date": "2026-09-25",
+  "revision": "c2b1c690f5a01481f3d4418c7f1a5f8d1eb40a94",
+  "environment": {
+    "os": "Windows",
+    "python": "3.10.9"
+  },
+  "verification": {
+    "python_suite": {
+      "passed": 269,
+      "failed": 0,
+      "seconds": 168.973
+    },
+    "website_build": "passed",
+    "website_lint": "passed",
+    "published_wheel": {
+      "version": "0.3.0",
+      "isolated_launch": true,
+      "initialize": "passed",
+      "tools_list": "passed",
+      "tools_count": 23,
+      "tools_json_bytes": 19786,
+      "lectic_home": "passed"
+    },
+    "isolated_setup": {
+      "codex_config_written": true,
+      "restart_instruction_present": true,
+      "invalid_launch_command_still_reports_connected": true,
+      "in_process_verify_still_passes": true
+    },
+    "direct_youtube_work": {
+      "input": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "action": "save",
+      "observed": "URL is converted to a local path; returns Transcript folder does not exist. No network retrieval occurred."
+    },
+    "live_marketplace": {
+      "url": "https://tyreamer.github.io/lectic/registry.html",
+      "browser": "Chromium through Playwright CLI",
+      "renders": true,
+      "inspect_modal": "catalog metadata only",
+      "registry_request": "https://tyreamer.github.io/registry/index.json",
+      "registry_response": 404,
+      "mobile_viewport_width": 390,
+      "document_width": 606,
+      "horizontal_overflow": true
+    },
+    "schema_generator": {
+      "generated_schema_differences": [],
+      "separately_maintained_schemas": [
+        "capture-input",
+        "pack",
+        "registry",
+        "use-guide"
+      ]
+    }
+  },
+  "isolated_probes": {
+    "candidate_inbox": {
+      "scan": "KeyError: 'reason'",
+      "library_inbox_count": null,
+      "drop_still_exists": true
+    },
+    "selective_route": {
+      "requested": [
+        "one.txt"
+      ],
+      "processed": [
+        "one.txt",
+        "two.txt"
+      ],
+      "remaining": []
+    },
+    "import_failure": {
+      "fault_injection": "import returned needs_attention",
+      "phase": "routed",
+      "drop_remaining": false,
+      "archived_exists": true
+    },
+    "signatures": {
+      "changed_publisher_name_passes_author_verification": true,
+      "invalid_signature_recipient_status": "signed",
+      "mcp_can_read_temporary_signing_key": true
+    },
+    "lost_library_writer": {
+      "saved": [
+        "A",
+        "B"
+      ],
+      "listed_after_two_stale_writers": [
+        "B"
+      ],
+      "both_collection_folders_exist": true
+    },
+    "same_source_update": {
+      "reported_version": "2.0.0",
+      "reported_verification": "verified",
+      "reported_knowledge_matches": true,
+      "new_interpretation_actually_active": false,
+      "pinned_version_after_update": "2.0.0",
+      "mcp_include_sources_false_still_includes": true
+    },
+    "public_urls": [
+      {
+        "url": "https://tyreamer.github.io/lectic/",
+        "status": 200,
+        "bytes": 55397
+      },
+      {
+        "url": "https://tyreamer.github.io/registry/index.json",
+        "error": "HTTP Error 404: Not Found"
+      },
+      {
+        "url": "https://raw.githubusercontent.com/tyreamer/lectic/main/registry/index.json",
+        "status": 200,
+        "bytes": 2875
+      },
+      {
+        "url": "https://raw.githubusercontent.com/tyreamer/lectic/main/fixtures/packs/distributed-systems-adr.lectic",
+        "error": "HTTP Error 404: Not Found"
+      },
+      {
+        "url": "https://raw.githubusercontent.com/tyreamer/lectic/main/fixtures/packs/engineering-standards.lectic",
+        "error": "HTTP Error 404: Not Found"
+      },
+      {
+        "url": "https://raw.githubusercontent.com/tyreamer/lectic/main/fixtures/packs/growth-frameworks.lectic",
+        "error": "HTTP Error 404: Not Found"
+      },
+      {
+        "url": "https://raw.githubusercontent.com/tyreamer/lectic/main/fixtures/packs/fifa-market-tactics.lectic",
+        "error": "HTTP Error 404: Not Found"
+      }
+    ]
+  },
+  "limits": [
+    "No independent live assistant effectiveness comparison.",
+    "No user study performed.",
+    "No live YouTube caption retrieval performed.",
+    "No actual assistant restart or phone-device test performed.",
+    "Windows execution only; other platforms reviewed through configured tests and implementation.",
+    "Signing-key read probe used only a newly created temporary identity; no secret values emitted.",
+    "Import failure probe injected a structured failure return; other listed probes used actual local module behavior.",
+    "Stale library-writer test interleaved two Library instances; it demonstrates the lost-update condition without a timing-dependent process race."
+  ],
+  "artifacts": {
+    "report": "docs/reviews/2026-09-25-project-review.md",
+    "test_log": "C:\\Users\\TR\\AppData\\Local\\Temp\\lectic-project-review-b6ec1db95a55431fb11252f1394ef820\\python-tests.log",
+    "reproduction_script": "C:\\Users\\TR\\AppData\\Local\\Temp\\lectic-project-review-b6ec1db95a55431fb11252f1394ef820\\probes.py",
+    "browser_evidence": "C:\\Users\\TR\\AppData\\Local\\Temp\\lectic-project-review-b6ec1db95a55431fb11252f1394ef820\\browser"
+  }
+}

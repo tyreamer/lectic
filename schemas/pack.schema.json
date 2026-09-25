@@ -138,9 +138,11 @@
       "description": "Identity and signature of the person who built this pack. Optional: unsigned packs are valid.",
       "properties": {
         "name": {"type": "string", "minLength": 1},
-        "contact": {"type": "string", "minLength": 1},
+        "contact": {"type": "string"},
         "key_id": {"type": "string", "minLength": 1},
-        "signature": {"type": "string", "minLength": 1}
+        "signature": {"type": "string", "minLength": 1},
+        "algorithm": {"type": "string", "enum": ["ed25519"]},
+        "public_key": {"type": "string", "minLength": 64, "maxLength": 64}
       },
       "required": ["name", "contact", "key_id", "signature"],
       "additionalProperties": false

@@ -148,7 +148,8 @@ class CandidateCollectionTests(unittest.TestCase):
         self.assertIn('candidate_collections', data)
         self.assertEqual(len(data['candidate_collections']), 1)
         self.assertEqual(data['candidate_collections'][0]['name'], 'Database Indexing')
-        self.assertIn('warning', data)
+        self.assertEqual(data['collections'], ['Inbox'])
+        self.assertIn('Sorting is optional', data['guidance'])
 
 
 if __name__ == '__main__':

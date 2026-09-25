@@ -168,6 +168,10 @@ class TeamDistributionTests(unittest.TestCase):
         webhook_received = []
 
         class TestServer(http.server.BaseHTTPRequestHandler):
+            def do_GET(self):
+                self.send_response(200)
+                self.end_headers()
+                self.wfile.write(uploaded[-1][1])
             def do_PUT(self):
                 length = int(self.headers.get('Content-Length', 0))
                 body = self.rfile.read(length)
@@ -209,12 +213,16 @@ class TeamDistributionTests(unittest.TestCase):
         self.assertEqual(webhook_received[0][1]['pack']['version'], '3.0.0')
         self.assertIn('lectic install', webhook_received[0][1]['text'])
 
-    def test_publish_presigned_s3_url_strips_query_string(self):
+    def test_presigned_upload_requires_explicit_verified_download(self):
         self.prepared_collection('Storage Rules', {'debugging.srt': ec.ROOT / 'fixtures/debugging/debugging.srt'})
         pack_path = self.base / 'storage.lectic'
         build_pack(self.author, 'Storage Rules', pack_path, team=True, version='1.0.0')
 
         class PutHandler(http.server.BaseHTTPRequestHandler):
+            def do_GET(self):
+                self.send_response(200)
+                self.end_headers()
+                self.wfile.write(pack_path.read_bytes())
             def do_PUT(self):
                 length = int(self.headers.get('Content-Length', 0))
                 self.rfile.read(length)
@@ -230,7 +238,9 @@ class TeamDistributionTests(unittest.TestCase):
 
         port = httpd.server_address[1]
         presigned = f'http://127.0.0.1:{port}/storage.lectic?X-Amz-Algorithm=AWS4-HMAC-SHA256&Signature=abcdef'
-        res = publish_pack(self.author, str(pack_path), presigned)
+        with self.assertRaisesRegex(ec.Invalid, 'explicit recipient download URL'):
+            publish_pack(self.author, str(pack_path), presigned)
+        res = publish_pack(self.author, str(pack_path), presigned, download_url=f'http://127.0.0.1:{port}/storage.lectic')
 
         self.assertEqual(res['download_url'], f'http://127.0.0.1:{port}/storage.lectic')
         self.assertNotIn('Signature', res['download_url'])
@@ -270,7 +280,7 @@ class TeamDistributionTests(unittest.TestCase):
                     'id': 12345,
                     'tag_name': 'v1.0.0',
                     'upload_url': 'https://uploads.github.com/repos/myorg/myrepo/releases/12345/assets{?name,label}',
-                    'assets': [{'id': 99, 'name': 'gh2.lectic', 'url': 'https://api.github.com/repos/myorg/myrepo/releases/assets/99'}]
+                    'assets': []
                 }).encode('utf-8'))
             if 'releases/assets/99' in url and method == 'DELETE':
                 return FakeResp(b'', 204)
@@ -280,6 +290,8 @@ class TeamDistributionTests(unittest.TestCase):
                     'name': 'gh2.lectic',
                     'browser_download_url': 'https://github.com/myorg/myrepo/releases/download/v1.0.0/gh2.lectic'
                 }).encode('utf-8'))
+            if 'releases/download/' in url:
+                return FakeResp(pack_path.read_bytes())
             return FakeResp(b'{}')
 
         with patch('urllib.request.urlopen', side_effect=fake_urlopen):
@@ -288,7 +300,7 @@ class TeamDistributionTests(unittest.TestCase):
         self.assertEqual(res['phase'], 'published')
         self.assertEqual(res['download_url'], 'https://github.com/myorg/myrepo/releases/download/v1.0.0/gh2.lectic')
         self.assertIn('lectic install https://github.com/myorg/myrepo/releases/download/v1.0.0/gh2.lectic --as gh-rules-2', res['install_command'])
-        self.assertTrue(any(m == 'DELETE' and 'assets/99' in u for m, u in calls))
+        self.assertFalse(any(m == 'DELETE' for m, u in calls))
         self.assertTrue(any(m == 'POST' and 'uploads.github.com' in u for m, u in calls))
 
     # ---- CLI integration tests
