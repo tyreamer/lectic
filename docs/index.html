@@ -462,16 +462,19 @@
         <div class="pillar-grid">
           <div class="pillar-card highlight reveal">
             <span class="pillar-badge">The Primary Moat</span>
-            <h3>Portable <code>.lectic</code> Packs</h3>
+            <h3>Portable Packs &amp; Team Distribution</h3>
             <p>
-              A single shareable file carrying compiled heuristics, decision rules, evidence excerpts, capability maps, and execution methods. Push it to GitHub Releases, email it to a teammate, or keep it on disk.
+              A single signed file carrying compiled heuristics, decision rules, evidence excerpts, capability maps, and execution methods. Distribute to your engineering team with version pinning, one-command install, and auto-updates.
             </p>
             <div class="pillar-code">
-              <span class="cmd">$ lectic pack "FUT Accountant Early Trading"</span><br>
-              <span class="comment">Packed 43 units, 9 sources, 2 methods</span><br>
-              <span class="t-blue">Signed by "TR" (key: c6da57f62a8f239a)</span>
+              <span class="cmd">$ lectic pack "Engineering" --team --version 2.1.0</span><br>
+              <span class="comment">Packed 38 units, 4 sources · Bundled sources &amp; INSTALL.md</span><br>
+              <span class="cmd">$ lectic publish Engineering --to https://github.com/org/repo</span><br>
+              <span class="t-blue">Team: lectic install &lt;url&gt; --as engineering --pin</span><br>
+              <span class="cmd">$ lectic update engineering</span><br>
+              <span class="t-ok">Updated engineering from 2.0.0 to 2.1.0 — 3 new conventions added, 1 modified</span>
             </div>
-            <div class="pillar-foot">Recipients run <code>lectic install</code> and their AI gains the capability instantly.</div>
+            <div class="pillar-foot">Recipients run <code>lectic install ... --pin</code> and every connected AI works inside your team standards.</div>
           </div>
 
           <div class="pillar-card reveal">

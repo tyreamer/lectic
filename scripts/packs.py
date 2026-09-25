@@ -37,9 +37,59 @@ def slug(name):
     return re.sub(r'[^a-z0-9]+', '-', name.lower()).strip('-')[:48] or 'pack'
 
 
+def render_install_md(manifest, name, version, install_name, unit_count):
+    lines = [
+        f'# Installing {name} (v{version})',
+        '',
+        f'This is a Lectic knowledge pack compiled for team distribution. It carries {unit_count} verified knowledge units and complete sources.',
+        '',
+        '## Quick Install (Lectic CLI)',
+        '',
+        '```bash',
+        'pip install lectic',
+        f'lectic install <pack-file-or-url> --as {install_name} --pin',
+        '```',
+        '',
+        'Once installed, every connected assistant on your machine immediately has access to this team knowledge.',
+        '',
+        '---',
+        '',
+        '## Using with Assistants',
+        '',
+        '### 1. Claude Code',
+        'Run setup in your terminal:',
+        '```bash',
+        'lectic setup',
+        '```',
+        f'Then ask Claude in any project:',
+        f'> "Use our {name} standards to review this file."',
+        '',
+        '### 2. Codex',
+        'Add to `~/.codex/config.toml` (or run `lectic setup`):',
+        '```toml',
+        '[mcp_servers.lectic]',
+        'command = "python"',
+        'args = ["-m", "lectic.cli", "serve"]',
+        '```',
+        f'Then ask Codex:',
+        f'> "Check this PR against our {name} standards."',
+        '',
+        '### 3. ChatGPT',
+        '1. Run `lectic share` to get a connection link.',
+        '2. In ChatGPT, go to **Settings > Apps & Connectors > Create** and paste the link.',
+        '3. Ask ChatGPT:',
+        f'> "Review this implementation using our {name} knowledge pack."',
+        '',
+        '---',
+        f"*Compiled with Lectic {manifest.get('lectic_version', VERSION)}*",
+        ''
+    ]
+    return '\n'.join(lines)
+
+
 # ---------------------------------------------------------------- build
 
-def build_pack(project, collection, destination=None, include_sources=False):
+def build_pack(project, collection, destination=None, include_sources=False, team=False, version=None):
     library = Library(project)
     resolved = library.resolve(collection)
     require(resolved is not None, 'Name a saved collection to pack')
@@ -50,6 +100,9 @@ def build_pack(project, collection, destination=None, include_sources=False):
     ir = validate_ir(run)
     require(ir['units'], 'This collection has no reusable knowledge to share yet')
     receipt = read(run / 'reconciliation.json') if (run / 'reconciliation.json').is_file() else None
+    if team:
+        include_sources = True
+    version = str(version).strip() if version else datetime.now(timezone.utc).strftime('%Y-%m-%d')
     files = {}
     files['knowledge/ir.json'] = ir
     for part in sorted((run / 'units').glob('*.json')):
@@ -95,11 +148,21 @@ def build_pack(project, collection, destination=None, include_sources=False):
                       else (json.dumps(value, ensure_ascii=False, indent=2) + '\n').encode('utf-8')) for path, value in files.items()}
     manifest = {'schema_version': PACK_VERSION, 'pack_id': 'pack-' + '0' * 24, 'name': data['name'],
                 'created_at': datetime.now(timezone.utc).isoformat(), 'lectic_version': VERSION,
+                'version': version,
                 'corpus_id': corpus['corpus_id'], 'ir_hash': fingerprint(ir), 'unit_count': len(ir['units']),
                 'sources_included': bool(include_sources), 'sources': sources, 'maps': maps, 'methods': methods,
                 'share_note': SHARE_NOTE, 'files': {}}
+    if team:
+        manifest['distribution'] = {
+            'scope': 'team',
+            'install_name': slug(data['name']),
+            'pinned_version': version
+        }
     readme = render_readme(manifest, ir, files, maps, methods)
     encoded['README.md'] = readme.encode('utf-8')
+    if team:
+        install_md = render_install_md(manifest, data['name'], version, slug(data['name']), len(ir['units']))
+        encoded['INSTALL.md'] = install_md.encode('utf-8')
     manifest['files'] = {path: digest(raw) for path, raw in sorted(encoded.items())}
     manifest['pack_id'] = 'pack-' + fingerprint({k: v for k, v in manifest.items() if k not in {'pack_id', 'created_at'}})[:24]
     validate_schema(manifest, 'pack')
@@ -129,6 +192,7 @@ def build_pack(project, collection, destination=None, include_sources=False):
         p = manifest['publisher']
         publisher_note = f"Signed by \"{p['name']}\" (key: {p['key_id']})"
     return {'phase': 'packed', 'pack': str(destination), 'pack_id': manifest['pack_id'], 'name': data['name'],
+            'version': manifest.get('version'), 'distribution': manifest.get('distribution'), 'team': bool(team),
             'units': len(ir['units']), 'sources': len(sources), 'sources_included': bool(include_sources),
             'methods': len(methods), 'maps': len(maps), 'bytes': destination.stat().st_size,
             'publisher': publisher_note,
@@ -214,11 +278,15 @@ def inspect_pack(location):
     manifest, members = open_pack(fetch(location))
     from identity import check_manifest_signature
     sig_status, sig_msg = check_manifest_signature(manifest)
-    return {'phase': 'pack', 'name': manifest['name'], 'pack_id': manifest['pack_id'], 'created_at': manifest['created_at'],
-            'units': manifest['unit_count'], 'sources': [{k: s[k] for k in ('title', 'creator', 'url')} for s in manifest['sources']],
-            'sources_included': manifest['sources_included'], 'methods': manifest['methods'], 'maps': manifest['maps'],
-            'publisher_status': sig_status, 'publisher_info': sig_msg,
-            'readme': members['README.md'].decode('utf-8')}
+    res = {'phase': 'pack', 'name': manifest['name'], 'pack_id': manifest['pack_id'], 'created_at': manifest['created_at'],
+           'version': manifest.get('version'), 'distribution': manifest.get('distribution'),
+           'units': manifest['unit_count'], 'sources': [{k: s[k] for k in ('title', 'creator', 'url')} for s in manifest['sources']],
+           'sources_included': manifest['sources_included'], 'methods': manifest['methods'], 'maps': manifest['maps'],
+           'publisher_status': sig_status, 'publisher_info': sig_msg,
+           'readme': members['README.md'].decode('utf-8')}
+    if 'INSTALL.md' in members:
+        res['install_md'] = members['INSTALL.md'].decode('utf-8')
+    return res
 
 
 # ---------------------------------------------------------------- install
@@ -240,14 +308,21 @@ def retrieve_source(source, members, manifest, home, retriever=None):
     return raw
 
 
-def install_pack(project, location, name=None, retriever=None):
+def install_pack(project, location, name=None, retriever=None, pin=False, collection_id=None):
     project = Path(project).resolve(); home = storage_root(project); library = Library(project)
     manifest, members = open_pack(fetch(location))
-    name = name or manifest['name']
-    taken = {c['name'].casefold() for c in library.index['collections']}
-    if name.casefold() in taken:
-        base, n = name, 2
-        while name.casefold() in taken: name = f'{base} ({n})'; n += 1
+    target_cid = collection_id
+    if target_cid:
+        resolved = library.resolve(target_cid)
+        require(resolved is not None, f"Collection '{target_cid}' not found")
+        _, existing_data = resolved
+        name = existing_data['name']
+    else:
+        name = name or manifest.get('distribution', {}).get('install_name') or manifest['name']
+        taken = {c['name'].casefold() for c in library.index['collections']}
+        if name.casefold() in taken:
+            base, n = name, 2
+            while name.casefold() in taken: name = f'{base} ({n})'; n += 1
     ir = json.loads(members['knowledge/ir.json'].decode('utf-8'))
     parts = {}
     for path, raw in members.items():
@@ -304,13 +379,20 @@ def install_pack(project, location, name=None, retriever=None):
             checkpoints = [read(run / f'units/{sid}.json') for sid in sorted(docs)]
             write(run / 'reconciliation.json', {'schema_version': VERSION, 'checkpoint_hash': fingerprint(checkpoints)})
         installed_ir = assemble(run)
-        folder, data = library.archive(adopt=run, name=name)
+        if target_cid:
+            folder, data = library.archive(adopt=run, collection=target_cid, name=name)
+        else:
+            folder, data = library.archive(adopt=run, name=name)
         for path, raw in members.items():
-            if path.startswith(('maps/', 'methods/')) or path == 'README.md':
+            if path.startswith(('maps/', 'methods/')) or path in {'README.md', 'INSTALL.md'}:
                 target = safe_child(folder / 'pack', path); target.parent.mkdir(parents=True, exist_ok=True); target.write_bytes(raw)
         from identity import check_manifest_signature
         sig_status, sig_msg = check_manifest_signature(manifest)
+        is_pinned = bool(pin)
+        pack_version = manifest.get('version')
         report = {'phase': 'installed', 'collection': name, 'collection_id': data['collection_id'], 'pack_id': manifest['pack_id'],
+                  'version': pack_version, 'pinned': is_pinned, 'pinned_version': pack_version if is_pinned else None,
+                  'distribution': manifest.get('distribution'),
                   'verification': 'verified' if complete else 'partial',
                   'sources_verified': len(available), 'sources_total': len(manifest['sources']),
                   'sources_unavailable': [{'source': labels[sid], 'reason': reason} for sid, reason in unavailable.items()],
@@ -319,7 +401,91 @@ def install_pack(project, location, name=None, retriever=None):
                   'reconciliation': 'carried from the pack' if complete else 'needed before goal work: sources or units differ from the pack',
                   'publisher_status': sig_status, 'publisher_info': sig_msg,
                   'readable': str(folder / 'pack' / 'README.md'), 'methods': manifest['methods'], 'installed_at': datetime.now(timezone.utc).isoformat()}
-        write(folder / 'pack-origin.json', {'manifest': {k: v for k, v in manifest.items() if k != 'files'}, 'install': report})
+        origin_record = {
+            'location': str(location),
+            'source_url': str(location) if re.match(r'https?://', str(location)) else None,
+            'version': pack_version,
+            'pinned': is_pinned,
+            'pinned_version': pack_version if is_pinned else None,
+            'distribution': manifest.get('distribution'),
+            'manifest': {k: v for k, v in manifest.items() if k != 'files'},
+            'install': report
+        }
+        write(folder / 'pack-origin.json', origin_record)
         return report
     finally:
         shutil.rmtree(staging, ignore_errors=True)
+
+
+# ---------------------------------------------------------------- update
+
+def update_pack(project, collection_name_or_id, force=False, retriever=None):
+    project = Path(project).resolve(); library = Library(project)
+    resolved = library.resolve(collection_name_or_id)
+    require(resolved is not None, f"Collection '{collection_name_or_id}' not found")
+    folder, data = resolved
+    origin_path = folder / 'pack-origin.json'
+    require(origin_path.is_file(), f"Collection '{data['name']}' was not installed from a pack")
+    origin = read(origin_path)
+    source_location = origin.get('source_url') or origin.get('location')
+    require(source_location, f"Collection '{data['name']}' has no recorded origin location")
+
+    candidate_location = source_location
+    if re.search(r'github\.com/[^/]+/[^/]+/releases/download/', str(source_location)):
+        candidate_location = re.sub(r'releases/download/[^/]+/', 'releases/latest/download/', str(source_location))
+
+    try:
+        raw = fetch(candidate_location)
+    except Exception:
+        raw = fetch(source_location)
+        candidate_location = source_location
+
+    manifest, members = open_pack(raw)
+    remote_version = manifest.get('version', '')
+    current_version = origin.get('version', '')
+    is_pinned = origin.get('pinned', False)
+
+    run = library.run(folder, data)
+    current_ir = read(run / 'ir.json') if (run / 'ir.json').is_file() else {'units': []}
+    new_ir = json.loads(members['knowledge/ir.json'].decode('utf-8'))
+
+    current_units = {u['unit_id']: u for u in current_ir.get('units', [])}
+    new_units = {u['unit_id']: u for u in new_ir.get('units', [])}
+    added_ids = set(new_units) - set(current_units)
+    removed_ids = set(current_units) - set(new_units)
+    common_ids = set(current_units) & set(new_units)
+    modified_ids = {uid for uid in common_ids if fingerprint(new_units[uid]) != fingerprint(current_units[uid])}
+
+    if not force and not added_ids and not removed_ids and not modified_ids and (current_version == remote_version):
+        return {
+            'phase': 'up_to_date',
+            'collection': data['name'],
+            'version': current_version,
+            'message': f"Collection '{data['name']}' is already up to date at version {current_version or 'unknown'}."
+        }
+
+    report = install_pack(project, candidate_location, name=data['name'], retriever=retriever, pin=is_pinned, collection_id=data['collection_id'])
+
+    parts = []
+    if added_ids:
+        unit_types = {new_units[uid].get('type', 'convention') for uid in added_ids}
+        noun = unit_types.pop() if len(unit_types) == 1 else 'unit'
+        parts.append(f"{len(added_ids)} new {noun}{'s' if len(added_ids) != 1 else ''} added")
+    if modified_ids:
+        parts.append(f"{len(modified_ids)} modified")
+    if removed_ids:
+        parts.append(f"{len(removed_ids)} removed")
+    diff_str = ', '.join(parts) if parts else 'knowledge refreshed'
+    summary_msg = f"Updated {data['name']} from {current_version or 'initial'} to {remote_version or 'latest'} — {diff_str}"
+
+    report['update'] = {
+        'phase': 'updated',
+        'from_version': current_version,
+        'to_version': remote_version,
+        'added': len(added_ids),
+        'modified': len(modified_ids),
+        'removed': len(removed_ids),
+        'message': summary_msg
+    }
+    report['summary_message'] = summary_msg
+    return report

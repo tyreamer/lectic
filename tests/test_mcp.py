@@ -155,6 +155,29 @@ class McpWorkflowTests(unittest.TestCase):
         self.assertEqual(rows[saved['capture_id']]['user_context'][0]['note'], 'Good framing; not policy')
         self.assertEqual(rows[again['capture_id']]['processing_status'], 'pending')
 
+    def test_mcp_team_pack_install_and_update(self):
+        c = self.client
+        res = c.call('lectic_work', input=str(ec.ROOT / 'fixtures/debugging'), name='Team Standards', action='save')
+        run = Path(res['run'])
+        for sid, part in self.oracle_checkpoints(run):
+            c.call('lectic_write_json', path=str(run / f'units/{sid}.json'), value=part)
+        c.call('lectic_work', collection='Team Standards', action='prepare', reconciled=True)
+
+        packed = c.call('lectic_pack', collection='Team Standards', team=True, version='1.0.0')
+        self.assertEqual(packed['phase'], 'packed')
+        self.assertEqual(packed['version'], '1.0.0')
+        self.assertTrue(packed['team'])
+
+        pack_file = packed['pack']
+        installed = c.call('lectic_install', location=pack_file, as_name='team-rules', pin=True)
+        self.assertEqual(installed['phase'], 'installed')
+        self.assertEqual(installed['collection'], 'team-rules')
+        self.assertTrue(installed['pinned'])
+        self.assertEqual(installed['pinned_version'], '1.0.0')
+
+        up = c.call('lectic_update', collection='team-rules')
+        self.assertEqual(up['phase'], 'up_to_date')
+
 
 class McpStdioTests(unittest.TestCase):
     def test_server_speaks_newline_delimited_json_rpc_over_stdio(self):

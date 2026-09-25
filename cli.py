@@ -4,8 +4,10 @@
     lectic identity         set or show the identity that signs your packs (lectic identity set "Name" --contact x)
     lectic share            give ChatGPT, Claude, Gemini or any hosted assistant one link to your knowledge
     lectic connect URL      point Claude Code and Codex at a Lectic running elsewhere
-    lectic pack NAME        one shareable file carrying a collection's knowledge (add --include-sources for your own material)
-    lectic install FILE|URL add someone's pack to your knowledge (--inspect to look first)
+    lectic pack NAME        one shareable file carrying a collection's knowledge (--team, --version, --include-sources)
+    lectic install FILE|URL add someone's pack to your knowledge (--as NAME, --pin, --inspect)
+    lectic update NAME      check pack origin for newer version and update
+    lectic publish NAME     upload pack to team host (--to URL, --webhook URL)
     lectic verify [NAME]    check that a collection's evidence is fully anchored (exit 0 = verified, 1 = issues)
     lectic backup [--out F] every collection, source and build in one archive file
     lectic push LINK        move this knowledge onto a Lectic running elsewhere
@@ -229,6 +231,21 @@ def status(argv):
         library = Library(Path.cwd())
         names = [c['name'] for c in library.index['collections']]
         print(f'Collections {len(names)}' + (': ' + ', '.join(names[:6]) + (' …' if len(names) > 6 else '') if names else ''))
+        # Installed packs: version and pinned status
+        if names:
+            for entry in library.index['collections']:
+                resolved = library.resolve(entry['collection_id'])
+                if resolved:
+                    origin_file = resolved[0] / 'pack-origin.json'
+                    if origin_file.is_file():
+                        try:
+                            ometa = json.loads(origin_file.read_text(encoding='utf-8'))
+                            v = ometa.get('version') or ometa.get('pinned_version') or 'unversioned'
+                            pinned = ometa.get('pinned', False)
+                            p_str = 'pinned' if pinned else 'unpinned'
+                            print(f"  {entry['name']}  v{v} [{p_str}]")
+                        except Exception:
+                            pass
         # Evidence health summary for compiled collections
         if names and '--evidence' in argv:
             from verify import verify_collection
@@ -410,35 +427,106 @@ def live_link(home):
 
 def pack(argv):
     from packs import build_pack
-    name = next((a for a in argv if not a.startswith('--') and a != option(argv, '--out')), None)
-    if not name: print('Usage: lectic pack "Collection Name" [--out FILE] [--include-sources]'); return 2
-    result = build_pack(os.getcwd(), name, option(argv, '--out'), '--include-sources' in argv)
-    print(f"Packed {result['name']}: {result['units']} knowledge units, {result['sources']} sources, {result['methods']} methods -> {result['pack']} ({result['bytes'] // 1024} KB)")
+    flags_with_val = {'--out', '--version'}
+    def is_flag_val(a):
+        return any(option(argv, f) == a for f in flags_with_val)
+    name = next((a for a in argv if not a.startswith('--') and not is_flag_val(a)), None)
+    if not name:
+        print('Usage: lectic pack "Collection Name" [--out FILE] [--include-sources] [--team] [--version VER]')
+        return 2
+    out = option(argv, '--out')
+    version = option(argv, '--version')
+    team = '--team' in argv
+    inc_sources = '--include-sources' in argv or team
+    result = build_pack(os.getcwd(), name, out, include_sources=inc_sources, team=team, version=version)
+    team_note = " (team pack)" if team else ""
+    ver_note = f" v{result['version']}" if result.get('version') else ""
+    print(f"Packed {result['name']}{ver_note}{team_note}: {result['units']} knowledge units, {result['sources']} sources, {result['methods']} methods -> {result['pack']} ({result['bytes'] // 1024} KB)")
     if result.get('publisher'):
         print(f"  {result['publisher']}")
     else:
         print('  Unsigned — run `lectic identity set "Name" --contact email` to sign packs')
     print(result['share_note'])
-    print('\nShare the file or a link to it. Anyone with Lectic installs it with:  lectic install <file or link>')
+    if team:
+        dist = result.get('distribution', {})
+        install_as = dist.get('install_name', 'standards')
+        print(f"\nTeam pack ready. Recipients install with:\n  lectic install <file or link> --as {install_as} --pin")
+    else:
+        print('\nShare the file or a link to it. Anyone with Lectic installs it with:  lectic install <file or link>')
     return 0
 
 
 def install(argv):
     from packs import inspect_pack, install_pack
-    location = next((a for a in argv if not a.startswith('--') and a != option(argv, '--name')), None)
-    if not location: print('Usage: lectic install FILE|URL [--name NAME] [--inspect]'); return 2
+    flags_with_val = {'--name', '--as'}
+    def is_flag_val(a):
+        return any(option(argv, f) == a for f in flags_with_val)
+    location = next((a for a in argv if not a.startswith('--') and not is_flag_val(a)), None)
+    if not location:
+        print('Usage: lectic install FILE|URL [--as NAME | --name NAME] [--pin] [--inspect]')
+        return 2
     if '--inspect' in argv:
         info = inspect_pack(location)
         print(info['readme'])
+        if info.get('install_md'):
+            print("\n---\n" + info['install_md'])
         print(f"\n{info['publisher_info']}")
         return 0
-    report = install_pack(os.getcwd(), location, option(argv, '--name'))
+    as_name = option(argv, '--as') or option(argv, '--name')
+    pin = '--pin' in argv
+    report = install_pack(os.getcwd(), location, name=as_name, pin=pin)
     state = 'verified' if report['verification'] == 'verified' else f"partial: {report['sources_verified']} of {report['sources_total']} sources, {report['units_installed']} of {report['units_in_pack']} units"
-    print(f"Installed {report['collection']} ({state}).")
+    pin_note = f" [pinned: v{report['pinned_version']}]" if report.get('pinned') else ""
+    print(f"Installed {report['collection']}{pin_note} ({state}).")
     print(f"  {report['publisher_info']}")
     for item in report['sources_unavailable']: print(f"  could not verify {item['source']}: {item['reason']}")
     if report['methods']: print('Ready methods: ' + ', '.join(m['title'] for m in report['methods']))
     print(f"\nOpen any connected assistant and say: Use my {report['collection']} to ...")
+    return 0
+
+
+def update(argv):
+    """Check a collection's pack origin for a newer version and update."""
+    from packs import update_pack
+    name = next((a for a in argv if not a.startswith('--')), None)
+    if not name:
+        print('Usage: lectic update <collection-name> [--force]')
+        return 2
+    try:
+        report = update_pack(os.getcwd(), name, force='--force' in argv)
+    except Exception as exc:
+        print(f'Update failed: {exc}')
+        return 1
+    if report.get('phase') == 'up_to_date':
+        print(report['message'])
+        return 0
+    print(report['summary_message'])
+    return 0
+
+
+def publish(argv):
+    """Publish a compiled pack to a team host (GitHub Releases, S3/R2 presigned PUT, HTTP PUT)."""
+    from publish import publish_pack
+    flags_with_val = {'--to', '--token', '--webhook'}
+    def is_flag_val(a):
+        return any(option(argv, f) == a for f in flags_with_val)
+    name = next((a for a in argv if not a.startswith('--') and not is_flag_val(a)), None)
+    to_url = option(argv, '--to')
+    if not name or not to_url:
+        print('Usage: lectic publish <collection-or-file> --to <URL> [--token <TOKEN>] [--webhook <URL>]')
+        return 2
+    token = option(argv, '--token')
+    webhook = option(argv, '--webhook')
+    try:
+        res = publish_pack(os.getcwd(), name, to_url, token=token, webhook_url=webhook)
+    except Exception as exc:
+        print(f'Publish failed: {exc}')
+        return 1
+    print(res['message'])
+    if res.get('webhook_sent'):
+        print(f"  Notified webhook: {webhook}")
+    elif res.get('webhook_error'):
+        print(f"  Webhook notification error: {res['webhook_error']}")
     return 0
 
 
@@ -526,7 +614,7 @@ def main(argv=None):
     argv = list(sys.argv[1:] if argv is None else argv)
     command = argv[0] if argv else 'status'
     handlers = {'setup': setup, 'identity': identity, 'share': share, 'connect': connect,
-                'pack': pack, 'install': install, 'verify': verify,
+                'pack': pack, 'install': install, 'update': update, 'publish': publish, 'verify': verify,
                 'backup': backup, 'push': push, 'pull': pull, 'restore': restore,
                 'status': status, 'serve': serve, 'ec': ec}
     if command in {'-h', '--help', 'help'} or command not in handlers:

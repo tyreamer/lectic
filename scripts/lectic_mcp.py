@@ -120,12 +120,25 @@ TOOLS = [
           'metadata': S('Metadata JSON path.'), 'intent': S('compile | discover | build | use | compare', enum=['compile', 'discover', 'build', 'use', 'compare']),
           'select': S('Capability number, ID or title.'), 'build_all': B('Build every discovered capability.'),
           'reconciled': B('Acknowledge reconciliation.'), 'tasks': S('Evaluation tasks JSON path.'), 'rubric': S('Evaluation rubric JSON path.')}),
-    tool('lectic_pack', 'Write one shareable .lectic file carrying a collection\'s compiled knowledge, evidence excerpts, map and methods. Sources travel as links unless include_sources is set.',
+    tool('lectic_pack', 'Write one shareable .lectic file carrying a collection\'s compiled knowledge, evidence excerpts, map and methods. Sources travel as links unless include_sources is set. Use team=True for team distribution with sources and install instructions.',
          {'project': PROJECT, 'collection': S('Collection name or ID.'), 'out': S('Destination file or folder (default: <name>.lectic in the project).'),
-          'include_sources': B('Bundle full source text (only for material the user may redistribute).')}, ['collection']),
+          'include_sources': B('Bundle full source text (only for material the user may redistribute).'),
+          'team': B('Optimize pack for team distribution: bundles sources, embeds INSTALL.md, and adds distribution metadata.'),
+          'version': S('Pack version string (defaults to date YYYY-MM-DD).')}, ['collection']),
     tool('lectic_install', 'Install a knowledge pack from a file or https link into this home, or inspect it first. Sources are retrieved on this network and verified against the pack; the report says what was verified.',
-         {'project': PROJECT, 'location': S('Path or https link to a .lectic file.'), 'name': S('Collection name to use instead of the pack\'s.'),
+         {'project': PROJECT, 'location': S('Path or https link to a .lectic file.'),
+          'name': S('Collection name to use instead of the pack\'s.'),
+          'as_name': S('Alias for name: install under a predictable collection name.'),
+          'pin': B('Pin the installed collection to this pack version.'),
           'inspect': B('Only describe the pack; install nothing.')}, ['location']),
+    tool('lectic_update', 'Check an installed pack\'s origin URL for a newer release and update the collection in-place.',
+         {'project': PROJECT, 'collection': S('Collection name or ID to update.'),
+          'force': B('Force update even if version is unchanged.')}, ['collection']),
+    tool('lectic_publish', 'Upload a compiled pack to a team host (GitHub Releases, S3/R2 presigned PUT, or generic HTTP PUT) and get the team install command.',
+         {'project': PROJECT, 'collection': S('Collection name or pack file to publish.'),
+          'to': S('Destination URL (GitHub Release URL/repo, S3/R2 presigned PUT URL, or HTTP PUT URL).'),
+          'token': S('Optional auth token (defaults to GITHUB_TOKEN environment variable).'),
+          'webhook': S('Optional Slack/Discord webhook URL to notify.')}, ['collection', 'to']),
     tool('lectic_backup', 'Write this home\'s whole knowledge to one archive file: every collection, source, capture and build. The file restores onto any machine.',
          {'project': PROJECT, 'out': S('Destination file or folder (default: a timestamped file in the project).')}),
     tool('lectic_transfer', 'Move knowledge between this home and a Lectic running elsewhere: push sends this home there, pull brings that one here, restore merges a local archive file. Nothing is overwritten; a collection that differs on both sides is reported as diverged.',
@@ -276,13 +289,22 @@ class Server:
         require(not run or not input, 'Give either input or run, not both')
         return compile_workflow(input, run, project=self.resolve_project(project), **kwargs)
 
-    def tool_pack(self, project=None, collection=None, out=None, include_sources=False):
+    def tool_pack(self, project=None, collection=None, out=None, include_sources=False, team=False, version=None):
         from packs import build_pack
-        return build_pack(self.resolve_project(project), collection, out, bool(include_sources))
+        return build_pack(self.resolve_project(project), collection, out, bool(include_sources), team=bool(team), version=version)
 
-    def tool_install(self, project=None, location=None, name=None, inspect=False):
+    def tool_install(self, project=None, location=None, name=None, as_name=None, pin=False, inspect=False):
         from packs import inspect_pack, install_pack
-        return inspect_pack(location) if inspect else install_pack(self.resolve_project(project), location, name)
+        target_name = as_name or name
+        return inspect_pack(location) if inspect else install_pack(self.resolve_project(project), location, name=target_name, pin=bool(pin))
+
+    def tool_update(self, project=None, collection=None, force=False):
+        from packs import update_pack
+        return update_pack(self.resolve_project(project), collection, force=bool(force))
+
+    def tool_publish(self, project=None, collection=None, to=None, token=None, webhook=None):
+        from publish import publish_pack
+        return publish_pack(self.resolve_project(project), collection, to, token=token, webhook_url=webhook)
 
     def tool_backup(self, project=None, out=None):
         from home_archive import backup

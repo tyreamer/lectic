@@ -145,6 +145,20 @@
       "required": ["name", "contact", "key_id", "signature"],
       "additionalProperties": false
     },
+    "version": {
+      "type": "string",
+      "description": "Semantic version or datestamp of this pack release."
+    },
+    "distribution": {
+      "type": "object",
+      "description": "Distribution metadata for team or organization sharing.",
+      "properties": {
+        "scope": {"type": "string"},
+        "install_name": {"type": "string"},
+        "pinned_version": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
     "files": {
       "type": "object"
     }

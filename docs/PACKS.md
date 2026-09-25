@@ -34,11 +34,55 @@ Install reports one of two things:
 
 If no source can be obtained, nothing is installed and the reason is spelled out. A pack that was altered, or that contains unsafe paths, is refused before anything is read from it.
 
-Installing the same pack twice keeps both copies apart (`FC 27`, `FC 27 (2)`); `--name` picks a name. The library shows an installed collection's pack origin and its readable methods; `lectic status` counts it like any other collection.
+Installing the same pack twice keeps both copies apart (`FC 27`, `FC 27 (2)`); `--name` (or `--as`) picks a name. The library shows an installed collection's pack origin and its readable methods; `lectic status` counts it like any other collection.
+
+## Team distribution
+
+A team pack carries complete standards, rules, and procedures bundled with sources and explicit install instructions for Claude Code, Codex, and ChatGPT:
+
+```bash
+lectic pack "Engineering Standards" --team --version 2.1.0
+```
+
+- **Sources bundled automatically**: No re-fetch required; your team owns and controls the material.
+- **Distribution metadata**: Contains `scope: team`, `install_name: engineering-standards`, and `pinned_version`.
+- **`INSTALL.md` generated**: Clear, single-command setup instructions embedded right in the pack.
+
+New team members install with predictable naming and version pinning:
+
+```bash
+lectic install https://.../engineering-standards.lectic --as engineering --pin
+```
+
+## Version pinning & updates
+
+Team standards evolve. Pinning locks an installed collection to the pack's version:
+
+- `lectic install FILE|URL --pin`: Records pinned status and origin in collection metadata.
+- `lectic status`: Shows which collections are pinned and their versions (`engineering v2.1.0 [pinned]`).
+- `lectic update NAME`: Checks the pack's origin URL for a newer release and upgrades in-place:
+  ```text
+  Updated engineering from 2.0.0 to 2.1.0 — 3 new conventions added, 1 modified
+  ```
+
+## Publishing to team hosts
+
+Publish a compiled pack directly to GitHub Releases, an S3 / R2 presigned URL, or generic HTTP PUT host:
+
+```bash
+lectic publish "Engineering Standards" --to https://github.com/myorg/standards/releases/tag/v2.1.0
+# Or with a Slack webhook notification:
+lectic publish "Engineering Standards" --to https://github.com/myorg/standards --webhook https://hooks.slack.com/services/...
+```
+
+Output:
+```text
+Published Engineering Standards v2.1.0. Team install: lectic install https://github.com/myorg/standards/releases/download/v2.1.0/engineering-standards.lectic --as engineering-standards
+```
 
 ## Sharing
 
-The file goes wherever files go: a GitHub release, a gist, a bucket, a message. The tweet is a link and a sentence. Recipients need Lectic (`pip install lectic`); the pack's own README tells them so.
+The file goes wherever files go: a GitHub release, a gist, a bucket, a message. Recipients need Lectic (`pip install lectic`); the pack's own README and INSTALL.md tell them so.
 
 Packs are content-addressed: the same knowledge over the same sources produces the same `pack_id`, so two people can tell they hold the same thing.
 
