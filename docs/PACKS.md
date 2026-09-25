@@ -80,6 +80,32 @@ Output:
 Published Engineering Standards v2.1.0. Team install: lectic install https://github.com/myorg/standards/releases/download/v2.1.0/engineering-standards.lectic --as engineering-standards
 ```
 
+## Expertise Marketplace & Registry
+
+The Lectic registry allows discovering, inspecting, and installing community-contributed and team knowledge packs without needing to manage URLs manually.
+
+```bash
+# Search for verified packs by keyword or category tag
+lectic search engineering
+lectic search --tag architecture
+
+# Preview pack evidence guarantee, methods, and README before installing
+lectic inspect registry:distributed-systems-adr
+
+# Install directly from the registry with version pinning
+lectic install registry:distributed-systems-adr --as distributed-systems --pin
+```
+
+Browse the web marketplace at [tyreamer.github.io/lectic/registry.html](https://tyreamer.github.io/lectic/registry.html).
+
+### Publishing to the community registry
+
+To submit your pack to the community marketplace:
+1. Ensure your signing identity is set: `lectic identity set "Your Name" --contact you@domain.com`
+2. Pack your collection: `lectic pack NAME --team`
+3. Generate the schema-compliant registry entry: `lectic publish NAME --to <download-url> --registry [--tags tag1,tag2]`
+4. Open a Pull Request adding the printed JSON block to `registry/index.json` in [tyreamer/lectic](https://github.com/tyreamer/lectic).
+
 ## Sharing
 
 The file goes wherever files go: a GitHub release, a gist, a bucket, a message. Recipients need Lectic (`pip install lectic`); the pack's own README and INSTALL.md tell them so.
