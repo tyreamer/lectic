@@ -45,6 +45,7 @@ Be effortless to use:
 - A real task ("use my X to review this", "teach me", "help me decide"): write a brief, run lectic_work to completion, and lead with the result. Only then mention the saved method and one concrete next use.
 - Speak in outcomes and plain names. Never show IDs, hashes, paths, phases or JSON to the user, and never ask them to run commands or edit files.
 - "Share my X" / "pack this": lectic_pack, then tell the user the file path and that recipients run `lectic install`. "Install this pack": lectic_install; report verified or partial exactly as returned.
+- "Search packs" / "find expertise" / "marketplace": call lectic_search with query or tag; preview with lectic_inspect before installing if the user wants to see what's inside; install with lectic_install(location="registry:NAME").
 - Ask questions when they matter for organization and user intent (such as always asking which collection source data belongs to).
 
 How the tools work:
@@ -125,12 +126,17 @@ TOOLS = [
           'include_sources': B('Bundle full source text (only for material the user may redistribute).'),
           'team': B('Optimize pack for team distribution: bundles sources, embeds INSTALL.md, and adds distribution metadata.'),
           'version': S('Pack version string (defaults to date YYYY-MM-DD).')}, ['collection']),
-    tool('lectic_install', 'Install a knowledge pack from a file or https link into this home, or inspect it first. Sources are retrieved on this network and verified against the pack; the report says what was verified.',
-         {'project': PROJECT, 'location': S('Path or https link to a .lectic file.'),
+    tool('lectic_install', 'Install a knowledge pack from a registry name, file or https link into this home, or inspect it first. Sources are retrieved on this network and verified against the pack; the report says what was verified.',
+         {'project': PROJECT, 'location': S('Path, https link to a .lectic file, or registry:NAME.'),
           'name': S('Collection name to use instead of the pack\'s.'),
           'as_name': S('Alias for name: install under a predictable collection name.'),
           'pin': B('Pin the installed collection to this pack version.'),
           'inspect': B('Only describe the pack; install nothing.')}, ['location']),
+    tool('lectic_search', 'Search the Lectic Expertise Marketplace registry for verified, evidence-backed knowledge packs by query or tag.',
+         {'project': PROJECT, 'query': S('Lexical filter across pack name, title, description, publisher, and tags.'),
+          'tag': S('Category or topic tag filter (e.g. engineering, trading, business).')}),
+    tool('lectic_inspect', 'Preview a pack\'s manifest, evidence guarantee, methods, and README before committing to install (accepts registry:NAME, a local file path, or an https URL).',
+         {'project': PROJECT, 'target': S('Pack identifier: registry:NAME, local file path, or https URL.')}, ['target']),
     tool('lectic_update', 'Check an installed pack\'s origin URL for a newer release and update the collection in-place.',
          {'project': PROJECT, 'collection': S('Collection name or ID to update.'),
           'force': B('Force update even if version is unchanged.')}, ['collection']),
@@ -293,9 +299,30 @@ class Server:
         from packs import build_pack
         return build_pack(self.resolve_project(project), collection, out, bool(include_sources), team=bool(team), version=version)
 
+    def tool_search(self, project=None, query=None, tag=None):
+        from registry import search_registry
+        return search_registry(query=query, project=self.resolve_project(project), tag=tag)
+
+    def tool_inspect(self, project=None, target=None):
+        require(target, 'target is required for inspect')
+        if str(target).startswith('registry:'):
+            from registry import inspect_registry_pack
+            return inspect_registry_pack(target, project=self.resolve_project(project))
+        from packs import inspect_pack
+        return inspect_pack(target)
+
     def tool_install(self, project=None, location=None, name=None, as_name=None, pin=False, inspect=False):
-        from packs import inspect_pack, install_pack
+        require(location, 'location is required for install')
         target_name = as_name or name
+        if str(location).startswith('registry:'):
+            if inspect:
+                from registry import inspect_registry_pack
+                return inspect_registry_pack(location, project=self.resolve_project(project))
+            from registry import resolve_registry_pack
+            entry = resolve_registry_pack(location, project=self.resolve_project(project))
+            location = entry['url']
+            target_name = target_name or entry.get('install_name') or entry['name']
+        from packs import inspect_pack, install_pack
         return inspect_pack(location) if inspect else install_pack(self.resolve_project(project), location, name=target_name, pin=bool(pin))
 
     def tool_update(self, project=None, collection=None, force=False):

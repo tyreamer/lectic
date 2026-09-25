@@ -62,7 +62,7 @@ def write(path, value):
 def text_write(path, value):
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(value, encoding='utf-8', newline='\n')
+    path.write_bytes(value.encode('utf-8'))
 
 
 def schema_check(value, schema, where='$'):

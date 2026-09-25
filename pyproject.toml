@@ -37,6 +37,6 @@ include-package-data = true
 [tool.setuptools.package-data]
 lectic = [
     "SKILL.md", "README.md", "LICENSE", "NORTH_STAR.md", "DESIGN.md", "AGENTS.md",
-    "agents/*.yaml", "prompts/*.md", "schemas/*.json", "docs/*.md",
+    "agents/*.yaml", "prompts/*.md", "schemas/*.json", "docs/*.md", "registry/*.json",
     "fixtures/*", "fixtures/**/*",
 ]

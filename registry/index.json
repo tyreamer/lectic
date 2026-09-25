@@ -1,0 +1,85 @@
+{
+  "schema_version": "1.0",
+  "updated_at": "2026-09-25T15:00:00Z",
+  "packs": [
+    {
+      "name": "distributed-systems-adr",
+      "title": "Distributed Systems Architecture Decision Records",
+      "description": "Architecture decision records, consensus tradeoffs, and partition handling compiled from 20 years of platform engineering.",
+      "publisher": "Alex R.",
+      "url": "https://raw.githubusercontent.com/tyreamer/lectic/main/fixtures/packs/distributed-systems-adr.lectic",
+      "install_name": "distributed-systems",
+      "version": "1.0.0",
+      "units": 24,
+      "methods": [
+        "Fault Tolerance Audit",
+        "Consensus Tradeoff Review"
+      ],
+      "tags": [
+        "engineering",
+        "architecture",
+        "distributed-systems"
+      ]
+    },
+    {
+      "name": "engineering-standards",
+      "title": "Modern Engineering Standards & Code Review",
+      "description": "Team conventions for code review rigor, schema validation first, deterministic testing, and zero-leak abstractions.",
+      "publisher": "Lectic Core Team",
+      "url": "https://raw.githubusercontent.com/tyreamer/lectic/main/fixtures/packs/engineering-standards.lectic",
+      "install_name": "engineering-standards",
+      "version": "2.1.0",
+      "units": 38,
+      "methods": [
+        "PR Standards Check",
+        "Deterministic Test Verifier"
+      ],
+      "tags": [
+        "engineering",
+        "code-review",
+        "best-practices",
+        "testing"
+      ]
+    },
+    {
+      "name": "growth-frameworks",
+      "title": "Unit Economics & Growth Heuristics",
+      "description": "Grounded frameworks for pricing leverage, customer acquisition cost benchmarks, retention bottlenecks, and onboarding velocity.",
+      "publisher": "TR",
+      "url": "https://raw.githubusercontent.com/tyreamer/lectic/main/fixtures/packs/growth-frameworks.lectic",
+      "install_name": "growth-frameworks",
+      "version": "1.2.0",
+      "units": 18,
+      "methods": [
+        "Pricing Leverage Evaluator",
+        "Onboarding Velocity Audit"
+      ],
+      "tags": [
+        "business",
+        "growth",
+        "pricing",
+        "retention"
+      ]
+    },
+    {
+      "name": "fifa-market-tactics",
+      "title": "FUT Accountant Market Trading Heuristics",
+      "description": "Early-cycle market efficiency, panic buying dips, out-of-pack supply inflation, and 100k coin flipping mechanics.",
+      "publisher": "TheFutAccountant",
+      "url": "https://raw.githubusercontent.com/tyreamer/lectic/main/fixtures/packs/fifa-market-tactics.lectic",
+      "install_name": "fifa-market-tactics",
+      "version": "1.0.0",
+      "units": 43,
+      "methods": [
+        "Market Dip Opportunity Scanner",
+        "Supply Squeeze Forecaster"
+      ],
+      "tags": [
+        "trading",
+        "markets",
+        "gaming",
+        "economics"
+      ]
+    }
+  ]
+}

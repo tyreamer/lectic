@@ -5,9 +5,11 @@
     lectic share            give ChatGPT, Claude, Gemini or any hosted assistant one link to your knowledge
     lectic connect URL      point Claude Code and Codex at a Lectic running elsewhere
     lectic pack NAME        one shareable file carrying a collection's knowledge (--team, --version, --include-sources)
-    lectic install FILE|URL add someone's pack to your knowledge (--as NAME, --pin, --inspect)
+    lectic search [QUERY]   search the pack registry for verified expertise (--tag T, --json)
+    lectic inspect TARGET   preview a pack's evidence and methods before installing (registry:NAME, FILE, URL)
+    lectic install TARGET   add a pack to your knowledge (registry:NAME, FILE, URL; --as NAME, --pin)
     lectic update NAME      check pack origin for newer version and update
-    lectic publish NAME     upload pack to team host (--to URL, --webhook URL)
+    lectic publish NAME     upload pack to team host or registry (--to URL, --registry, --webhook URL)
     lectic verify [NAME]    check that a collection's evidence is fully anchored (exit 0 = verified, 1 = issues)
     lectic backup [--out F] every collection, source and build in one archive file
     lectic push LINK        move this knowledge onto a Lectic running elsewhere
@@ -456,6 +458,54 @@ def pack(argv):
     return 0
 
 
+def search(argv):
+    """Search the Lectic Expertise Marketplace registry."""
+    from registry import search_registry, format_search_results
+    flags_with_val = {'--tag'}
+    def is_flag_val(a):
+        return any(option(argv, f) == a for f in flags_with_val)
+    tag = option(argv, '--tag')
+    query = next((a for a in argv if not a.startswith('--') and not is_flag_val(a)), None)
+    as_json = '--json' in argv
+    try:
+        results = search_registry(query=query, project=os.getcwd(), tag=tag)
+    except Exception as exc:
+        if as_json:
+            print(json.dumps({'error': str(exc)}))
+        else:
+            print(f"Registry search failed: {exc}")
+        return 1
+    if as_json:
+        print(json.dumps(results, indent=2))
+    else:
+        print(format_search_results(results, query=query))
+    return 0
+
+
+def inspect_cmd(argv):
+    """Inspect a pack from the registry, local file, or URL without installing."""
+    from packs import inspect_pack
+    from registry import inspect_registry_pack, format_inspect_report
+    location = next((a for a in argv if not a.startswith('--')), None)
+    if not location:
+        print('Usage: lectic inspect REGISTRY:NAME | FILE | URL')
+        return 2
+    try:
+        if location.startswith('registry:'):
+            info = inspect_registry_pack(location, project=os.getcwd())
+            print(format_inspect_report(info))
+        else:
+            info = inspect_pack(location)
+            print(info['readme'])
+            if info.get('install_md'):
+                print('\n---\n' + info['install_md'])
+            print(f"\n{info['publisher_info']}")
+    except Exception as exc:
+        print(f"Inspect failed: {exc}")
+        return 1
+    return 0
+
+
 def install(argv):
     from packs import inspect_pack, install_pack
     flags_with_val = {'--name', '--as'}
@@ -463,17 +513,21 @@ def install(argv):
         return any(option(argv, f) == a for f in flags_with_val)
     location = next((a for a in argv if not a.startswith('--') and not is_flag_val(a)), None)
     if not location:
-        print('Usage: lectic install FILE|URL [--as NAME | --name NAME] [--pin] [--inspect]')
+        print('Usage: lectic install REGISTRY:NAME | FILE | URL [--as NAME | --name NAME] [--pin] [--inspect]')
         return 2
     if '--inspect' in argv:
-        info = inspect_pack(location)
-        print(info['readme'])
-        if info.get('install_md'):
-            print("\n---\n" + info['install_md'])
-        print(f"\n{info['publisher_info']}")
-        return 0
+        return inspect_cmd([location])
     as_name = option(argv, '--as') or option(argv, '--name')
     pin = '--pin' in argv
+    if location.startswith('registry:'):
+        from registry import resolve_registry_pack
+        try:
+            entry = resolve_registry_pack(location, project=os.getcwd())
+            location = entry['url']
+            as_name = as_name or entry.get('install_name') or entry['name']
+        except Exception as exc:
+            print(f"Registry error: {exc}")
+            return 1
     report = install_pack(os.getcwd(), location, name=as_name, pin=pin)
     state = 'verified' if report['verification'] == 'verified' else f"partial: {report['sources_verified']} of {report['sources_total']} sources, {report['units_installed']} of {report['units_in_pack']} units"
     pin_note = f" [pinned: v{report['pinned_version']}]" if report.get('pinned') else ""
@@ -505,28 +559,48 @@ def update(argv):
 
 
 def publish(argv):
-    """Publish a compiled pack to a team host (GitHub Releases, S3/R2 presigned PUT, HTTP PUT)."""
+    """Publish a compiled pack to a team host or registry."""
     from publish import publish_pack
-    flags_with_val = {'--to', '--token', '--webhook'}
+    flags_with_val = {'--to', '--token', '--webhook', '--tags'}
     def is_flag_val(a):
         return any(option(argv, f) == a for f in flags_with_val)
     name = next((a for a in argv if not a.startswith('--') and not is_flag_val(a)), None)
     to_url = option(argv, '--to')
-    if not name or not to_url:
-        print('Usage: lectic publish <collection-or-file> --to <URL> [--token <TOKEN>] [--webhook <URL>]')
+    to_registry = '--registry' in argv
+    if not name or (not to_url and not to_registry):
+        print('Usage: lectic publish <collection-or-file> --to <URL> [--registry] [--token <TOKEN>] [--webhook <URL>]')
         return 2
     token = option(argv, '--token')
     webhook = option(argv, '--webhook')
-    try:
-        res = publish_pack(os.getcwd(), name, to_url, token=token, webhook_url=webhook)
-    except Exception as exc:
-        print(f'Publish failed: {exc}')
-        return 1
-    print(res['message'])
-    if res.get('webhook_sent'):
-        print(f"  Notified webhook: {webhook}")
-    elif res.get('webhook_error'):
-        print(f"  Webhook notification error: {res['webhook_error']}")
+    raw_tags = option(argv, '--tags')
+    tags = [t.strip() for t in raw_tags.split(',')] if raw_tags else None
+
+    download_url = to_url
+    if to_url:
+        try:
+            res = publish_pack(os.getcwd(), name, to_url, token=token, webhook_url=webhook)
+            download_url = res['download_url']
+            print(res['message'])
+            if res.get('webhook_sent'):
+                print(f"  Notified webhook: {webhook}")
+            elif res.get('webhook_error'):
+                print(f"  Webhook notification error: {res['webhook_error']}")
+        except Exception as exc:
+            print(f'Publish failed: {exc}')
+            return 1
+
+    if to_registry:
+        from registry import prepare_registry_entry
+        try:
+            reg_entry = prepare_registry_entry(os.getcwd(), name, download_url or f"https://.../{name}.lectic", tags=tags)
+            print("\nRegistry Entry (for registry/index.json):")
+            print(json.dumps(reg_entry, indent=2))
+            print("\nTo submit this pack to the community marketplace:")
+            print("  1. Submit a PR to https://github.com/tyreamer/lectic")
+            print("  2. Add the JSON entry above to `registry/index.json` under `packs`")
+        except Exception as exc:
+            print(f"Registry entry generation failed: {exc}")
+            return 1
     return 0
 
 
@@ -615,6 +689,7 @@ def main(argv=None):
     command = argv[0] if argv else 'status'
     handlers = {'setup': setup, 'identity': identity, 'share': share, 'connect': connect,
                 'pack': pack, 'install': install, 'update': update, 'publish': publish, 'verify': verify,
+                'search': search, 'inspect': inspect_cmd,
                 'backup': backup, 'push': push, 'pull': pull, 'restore': restore,
                 'status': status, 'serve': serve, 'ec': ec}
     if command in {'-h', '--help', 'help'} or command not in handlers:
