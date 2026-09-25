@@ -1,10 +1,12 @@
 """`lectic`: the one command a person needs.
 
     lectic setup            connect the assistants on this machine, verify the connection, offer YouTube support
+    lectic identity         set or show the identity that signs your packs (lectic identity set "Name" --contact x)
     lectic share            give ChatGPT, Claude, Gemini or any hosted assistant one link to your knowledge
     lectic connect URL      point Claude Code and Codex at a Lectic running elsewhere
     lectic pack NAME        one shareable file carrying a collection's knowledge (add --include-sources for your own material)
     lectic install FILE|URL add someone's pack to your knowledge (--inspect to look first)
+    lectic verify [NAME]    check that a collection's evidence is fully anchored (exit 0 = verified, 1 = issues)
     lectic backup [--out F] every collection, source and build in one archive file
     lectic push LINK        move this knowledge onto a Lectic running elsewhere
     lectic pull LINK        bring that Lectic's knowledge here
@@ -157,6 +159,39 @@ def offer_youtube(interactive):
     return 'ready' if result.returncode == 0 else 'install failed: ' + ' '.join((result.stderr or result.stdout).split())[:200]
 
 
+def git_config_value(key):
+    try:
+        res = subprocess.run(['git', 'config', key], capture_output=True, text=True, timeout=2)
+        if res.returncode == 0 and res.stdout.strip():
+            return res.stdout.strip()
+    except Exception:
+        pass
+    return ''
+
+
+def offer_identity(interactive):
+    sys.path.insert(0, str(SCRIPTS))
+    from identity import load_identity, save_identity
+    existing = load_identity('.')
+    if existing:
+        return f"{existing['name']} <{existing['contact']}> (key: {existing['key_id']})"
+    default_name = git_config_value('user.name') or os.environ.get('USERNAME') or os.environ.get('USER') or ''
+    default_email = git_config_value('user.email') or ''
+    if not interactive:
+        if default_name:
+            rec = save_identity('.', default_name, default_email)
+            return f"{default_name} <{default_email}> (auto-configured, key: {rec['key_id']})"
+        return 'not set (run: lectic identity set "Name" --contact email)'
+    prompt = f'  Name for signing your packs [{default_name}]: ' if default_name else '  Name for signing your packs (or Enter to skip): '
+    name = input(prompt).strip() or default_name
+    if not name:
+        return 'skipped (run: lectic identity set any time)'
+    email_prompt = f'  Contact / email? [{default_email}]: ' if default_email else '  Contact / email (optional): '
+    email = input(email_prompt).strip() or default_email
+    record = save_identity('.', name, email)
+    return f"{record['name']} <{record['contact']}> (key: {record['key_id']})"
+
+
 # ----------------------------------------------------------------- commands
 
 def setup(argv):
@@ -168,6 +203,7 @@ def setup(argv):
     results = {'Claude Code': connect_claude(), 'Codex': connect_codex()}
     for name, state in results.items():
         print(f'  {name:<12} {state}')
+    print(f'  {"Identity":<12} {offer_identity(interactive)}')
     print(f'  {"YouTube":<12} {offer_youtube(interactive)}')
     print(f'\nKnowledge lives in {home["home"]} and is shared by every project and assistant here.')
     if any(s == 'connected' for s in results.values()):
@@ -190,10 +226,33 @@ def status(argv):
     print(f'Python      {sys.version.split()[0]}  ({sys.executable})')
     print(f'Knowledge   {info["home"]}  [{info["mode"]}]')
     try:
-        names = [c['name'] for c in Library(Path.cwd()).index['collections']]
+        library = Library(Path.cwd())
+        names = [c['name'] for c in library.index['collections']]
         print(f'Collections {len(names)}' + (': ' + ', '.join(names[:6]) + (' …' if len(names) > 6 else '') if names else ''))
+        # Evidence health summary for compiled collections
+        if names and '--evidence' in argv:
+            from verify import verify_collection
+            print()
+            for entry in library.index['collections']:
+                try:
+                    report = verify_collection(Path.cwd(), entry['collection_id'])
+                    u = report['units']
+                    symbol = {'verified': 'OK', 'partial': '~', 'issues_found': '!'}.get(report['overall'], '?')
+                    print(f'  [{symbol}] {entry["name"]}: {u["verified"]}/{u["total"]} units evidence-backed  [{report["overall"]}]')
+                except Exception:
+                    pass  # collection may not be compiled yet
     except Exception as exc:  # a damaged index is reported, never hidden
         print(f'Collections unreadable: {exc}')
+    # Identity
+    try:
+        from identity import load_identity
+        ident = load_identity(Path.cwd())
+        if ident:
+            print(f'Identity    {ident["name"]} <{ident["contact"]}>  key: {ident["key_id"]}')
+        else:
+            print(f'Identity    not set (run: lectic identity set "Name" --contact email)')
+    except Exception:
+        pass
     print(f'Claude Code {"connected" if claude_connected() else "not connected"}')
     print(f'Codex       {"connected" if codex_connected() else "not connected"}')
     print(f'YouTube     {"ready, " + youtube_route() if youtube_available() else "not installed"}')
@@ -207,6 +266,31 @@ def status(argv):
 
 def option(argv, name, default=None):
     return argv[argv.index(name) + 1] if name in argv and argv.index(name) + 1 < len(argv) else default
+
+
+def identity(argv):
+    """Manage the local signing identity used when building packs."""
+    from identity import save_identity, show_identity
+    sub = argv[0] if argv else 'show'
+    if sub in ('show', ) or not argv:
+        print(show_identity(os.getcwd()))
+        return 0
+    if sub == 'set':
+        rest = argv[1:]
+        name = next((a for a in rest if not a.startswith('--') and a != option(rest, '--contact')), None)
+        contact = option(rest, '--contact')
+        if not name or not contact:
+            print('Usage: lectic identity set "Your Name" --contact your@email.com')
+            return 2
+        record = save_identity(os.getcwd(), name, contact)
+        print('Identity saved.')
+        print(f'  Name:    {record["name"]}')
+        print(f'  Contact: {record["contact"]}')
+        print(f'  Key ID:  {record["key_id"]}')
+        print('\nYour packs will be signed with this identity. The signing key stays on your machine.')
+        return 0
+    print('Usage: lectic identity [show | set "Name" --contact email]')
+    return 2
 
 
 def serve(argv):
@@ -330,6 +414,10 @@ def pack(argv):
     if not name: print('Usage: lectic pack "Collection Name" [--out FILE] [--include-sources]'); return 2
     result = build_pack(os.getcwd(), name, option(argv, '--out'), '--include-sources' in argv)
     print(f"Packed {result['name']}: {result['units']} knowledge units, {result['sources']} sources, {result['methods']} methods -> {result['pack']} ({result['bytes'] // 1024} KB)")
+    if result.get('publisher'):
+        print(f"  {result['publisher']}")
+    else:
+        print('  Unsigned — run `lectic identity set "Name" --contact email` to sign packs')
     print(result['share_note'])
     print('\nShare the file or a link to it. Anyone with Lectic installs it with:  lectic install <file or link>')
     return 0
@@ -340,10 +428,14 @@ def install(argv):
     location = next((a for a in argv if not a.startswith('--') and a != option(argv, '--name')), None)
     if not location: print('Usage: lectic install FILE|URL [--name NAME] [--inspect]'); return 2
     if '--inspect' in argv:
-        print(inspect_pack(location)['readme']); return 0
+        info = inspect_pack(location)
+        print(info['readme'])
+        print(f"\n{info['publisher_info']}")
+        return 0
     report = install_pack(os.getcwd(), location, option(argv, '--name'))
     state = 'verified' if report['verification'] == 'verified' else f"partial: {report['sources_verified']} of {report['sources_total']} sources, {report['units_installed']} of {report['units_in_pack']} units"
     print(f"Installed {report['collection']} ({state}).")
+    print(f"  {report['publisher_info']}")
     for item in report['sources_unavailable']: print(f"  could not verify {item['source']}: {item['reason']}")
     if report['methods']: print('Ready methods: ' + ', '.join(m['title'] for m in report['methods']))
     print(f"\nOpen any connected assistant and say: Use my {report['collection']} to ...")
@@ -400,6 +492,30 @@ def restore(argv):
     return 0
 
 
+def verify(argv):
+    """Check that a collection's evidence is fully anchored in its sources.
+
+    Exit 0 if all units are verified; exit 1 if any have broken or missing evidence.
+    Use --json for machine-readable output (CI-friendly).
+    """
+    from verify import verify_collection, format_report
+    name = next((a for a in argv if not a.startswith('--')), None)
+    as_json = '--json' in argv
+    try:
+        report = verify_collection(os.getcwd(), name)
+    except Exception as exc:
+        if as_json:
+            print(json.dumps({'error': str(exc)}))
+        else:
+            print(f'Error: {exc}')
+        return 1
+    if as_json:
+        print(json.dumps(report, indent=2))
+    else:
+        print(format_report(report))
+    return 0 if report['overall'] == 'verified' else 1
+
+
 def ec(argv):
     sys.argv = ['ec.py'] + argv
     import ec as core
@@ -409,7 +525,8 @@ def ec(argv):
 def main(argv=None):
     argv = list(sys.argv[1:] if argv is None else argv)
     command = argv[0] if argv else 'status'
-    handlers = {'setup': setup, 'share': share, 'connect': connect, 'pack': pack, 'install': install,
+    handlers = {'setup': setup, 'identity': identity, 'share': share, 'connect': connect,
+                'pack': pack, 'install': install, 'verify': verify,
                 'backup': backup, 'push': push, 'pull': pull, 'restore': restore,
                 'status': status, 'serve': serve, 'ec': ec}
     if command in {'-h', '--help', 'help'} or command not in handlers:

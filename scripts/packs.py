@@ -103,6 +103,16 @@ def build_pack(project, collection, destination=None, include_sources=False):
     manifest['files'] = {path: digest(raw) for path, raw in sorted(encoded.items())}
     manifest['pack_id'] = 'pack-' + fingerprint({k: v for k, v in manifest.items() if k not in {'pack_id', 'created_at'}})[:24]
     validate_schema(manifest, 'pack')
+    # Sign with local identity if one exists — adds a publisher block after schema validation
+    # so the schema passes on the base fields, then we attach the publisher (also schema-valid).
+    try:
+        from identity import load_identity, sign_manifest
+        identity = load_identity(project)
+        if identity:
+            manifest['publisher'] = sign_manifest(manifest, identity)
+            validate_schema(manifest, 'pack')  # re-validate with publisher block
+    except Exception:
+        pass  # signing is best-effort; never block pack creation
     destination = Path(destination) if destination else Path(project) / (slug(data['name']) + SUFFIX)
     destination = destination.resolve()
     if destination.is_dir(): destination = destination / (slug(data['name']) + SUFFIX)
@@ -114,10 +124,16 @@ def build_pack(project, collection, destination=None, include_sources=False):
         archive.writestr('pack.json', json.dumps(manifest, ensure_ascii=False, indent=2) + '\n')
         for path, raw in sorted(encoded.items()): archive.writestr(path, raw)
     temp.replace(destination)
+    publisher_note = ''
+    if manifest.get('publisher'):
+        p = manifest['publisher']
+        publisher_note = f"Signed by \"{p['name']}\" (key: {p['key_id']})"
     return {'phase': 'packed', 'pack': str(destination), 'pack_id': manifest['pack_id'], 'name': data['name'],
             'units': len(ir['units']), 'sources': len(sources), 'sources_included': bool(include_sources),
             'methods': len(methods), 'maps': len(maps), 'bytes': destination.stat().st_size,
+            'publisher': publisher_note,
             'share_note': SHARE_NOTE if not include_sources else 'Full source text is included; share only material you may redistribute.'}
+
 
 
 def render_readme(manifest, ir, files, maps, methods):
@@ -189,16 +205,19 @@ def open_pack(raw):
     require(set(manifest['files']) == set(members) - {'pack.json'}, 'Pack file inventory differs from its manifest')
     for path, expected in manifest['files'].items():
         require(digest(members[path]) == expected, 'Pack file was altered: ' + path)
-    identity = 'pack-' + fingerprint({k: v for k, v in manifest.items() if k not in {'pack_id', 'created_at'}})[:24]
+    identity = 'pack-' + fingerprint({k: v for k, v in manifest.items() if k not in {'pack_id', 'created_at', 'publisher'}})[:24]
     require(manifest['pack_id'] == identity, 'Pack identity does not match its contents')
     return manifest, members
 
 
 def inspect_pack(location):
     manifest, members = open_pack(fetch(location))
+    from identity import check_manifest_signature
+    sig_status, sig_msg = check_manifest_signature(manifest)
     return {'phase': 'pack', 'name': manifest['name'], 'pack_id': manifest['pack_id'], 'created_at': manifest['created_at'],
             'units': manifest['unit_count'], 'sources': [{k: s[k] for k in ('title', 'creator', 'url')} for s in manifest['sources']],
             'sources_included': manifest['sources_included'], 'methods': manifest['methods'], 'maps': manifest['maps'],
+            'publisher_status': sig_status, 'publisher_info': sig_msg,
             'readme': members['README.md'].decode('utf-8')}
 
 
@@ -289,6 +308,8 @@ def install_pack(project, location, name=None, retriever=None):
         for path, raw in members.items():
             if path.startswith(('maps/', 'methods/')) or path == 'README.md':
                 target = safe_child(folder / 'pack', path); target.parent.mkdir(parents=True, exist_ok=True); target.write_bytes(raw)
+        from identity import check_manifest_signature
+        sig_status, sig_msg = check_manifest_signature(manifest)
         report = {'phase': 'installed', 'collection': name, 'collection_id': data['collection_id'], 'pack_id': manifest['pack_id'],
                   'verification': 'verified' if complete else 'partial',
                   'sources_verified': len(available), 'sources_total': len(manifest['sources']),
@@ -296,6 +317,7 @@ def install_pack(project, location, name=None, retriever=None):
                   'units_installed': len(installed_ir['units']), 'units_in_pack': manifest['unit_count'], 'units_dropped': dropped,
                   'knowledge_matches_pack': fingerprint(installed_ir) == manifest['ir_hash'],
                   'reconciliation': 'carried from the pack' if complete else 'needed before goal work: sources or units differ from the pack',
+                  'publisher_status': sig_status, 'publisher_info': sig_msg,
                   'readable': str(folder / 'pack' / 'README.md'), 'methods': manifest['methods'], 'installed_at': datetime.now(timezone.utc).isoformat()}
         write(folder / 'pack-origin.json', {'manifest': {k: v for k, v in manifest.items() if k != 'files'}, 'install': report})
         return report

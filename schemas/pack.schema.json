@@ -133,6 +133,18 @@
       "type": "string",
       "minLength": 1
     },
+    "publisher": {
+      "type": "object",
+      "description": "Identity and signature of the person who built this pack. Optional: unsigned packs are valid.",
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "contact": {"type": "string", "minLength": 1},
+        "key_id": {"type": "string", "minLength": 1},
+        "signature": {"type": "string", "minLength": 1}
+      },
+      "required": ["name", "contact", "key_id", "signature"],
+      "additionalProperties": false
+    },
     "files": {
       "type": "object"
     }

@@ -64,9 +64,12 @@ The same `Server` answers over two transports. **stdio** (`lectic serve`): one J
 | `lectic_guide` | Grounded next-use suggestions: prepare, save, show, select |
 | `lectic_capture` | Inbox: import a synced folder, list, show, memberships, notes, process, trace |
 | `lectic_capture_save` | Save a link, pasted text or files shared right now; storage only |
+| `lectic_collection_candidates` | Intelligent candidate collection suggestions for incoming source material |
 | `lectic_compile` | Legacy numbered-capability coordinator |
 | `lectic_pack` | One shareable `.lectic` file carrying a collection's knowledge |
 | `lectic_install` | Install or inspect a pack from a file or https link |
+| `lectic_verify` | Evidence linkage health and source verification for a collection |
+| `lectic_identity` | Local pack-signing identity management (show or set) |
 | `lectic_backup` | Write the whole home to one archive file |
 | `lectic_transfer` | push, pull or restore a home |
 | `lectic_validate_build` | Deterministic build verification |
