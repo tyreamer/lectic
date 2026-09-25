@@ -20,7 +20,7 @@ Goal: make the current Lectic release ready today, preserving its complete save 
 - [x] Built wheel/sdist operate from outside the checkout with bundled resources and the starter workflow.
 - [x] End-to-end local and HTTP journeys cover first use, reuse, update, backup/restore, and signed pack transfer.
 - [x] Release automation validates package and registry artifacts; release notes and final readiness evidence are written.
-- [ ] Final requirement-by-requirement audit passes; publishing/deployment state is described accurately.
+- [x] Final requirement-by-requirement audit passes; publishing/deployment state is described accurately.
 
 Not a release certification claim: a same-day engineering pass cannot establish population-wide superiority, retention, or willingness to pay. Those require the existing prospective user-study protocol. The release must state those limits and ship a concrete useful workflow that can be tested now.
 
@@ -41,4 +41,13 @@ Local validation completed on 2026-09-25:
 
 [Artifact checksums and reports](2026-09-25-artifact-checks.json) record the tested wheel and source distribution. The starter is a real 8,477-byte artifact with three cited procedures and one method, duplicated exactly into the public site's pack directory. Browser evidence is retained locally under `output/playwright/release-candidate/`.
 
-Platform CI and the final requirement audit are pending. No version tag, PyPI publication, merge to main or live site deployment has been performed by this task. The release remains an alpha: the useful starter is demonstrable, while comparative quality and retention still require user-study evidence.
+All six platform CI jobs passed on runtime commit `d4422fdca550045be8962b42cf168cbd9ab34847`: Linux, macOS and Windows, each on Python 3.10 and 3.12. [CI run](https://github.com/tyreamer/lectic/actions/runs/36186223755). The final requirement audit passes for an alpha release candidate. No version tag, PyPI publication, merge to main or live site deployment has been performed by this task. The release remains an alpha: the useful starter is demonstrable, while comparative quality and retention still require user-study evidence.
+
+
+Final audit decision: **ready to review and release as 0.3.1 alpha**. [Pull request #1](https://github.com/tyreamer/lectic/pull/1) contains the complete change. Subsequent evidence-only commits do not change the tested runtime. The wheel and source archive recorded above were rebuilt after the final method-readiness fix and each passed the installed-package gate.
+
+The final method audit also confirms that packs exclude methods reviewed against earlier knowledge. Partial installs retain readable source material but do not present imported methods as ready until their evidence is reconciled and reviewed.
+
+Release operations still to perform intentionally: review/merge the PR, publish the 0.3.1 tag through the existing protected PyPI workflow, and verify the live package/site after deployment. The task prepared and verified the release; it did not publish it. No original user knowledge, assistant configuration or signing credential was used for these tests.
+
+The next product evidence should come from real users completing a first task, a fresh-session second task and an update task with their own material. Compare outcome quality and total effort with the same assistant and sources without Lectic. Keep the alpha label until those results justify stronger claims.

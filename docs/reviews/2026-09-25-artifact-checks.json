@@ -1,11 +1,12 @@
 [
   {
     "artifact": "lectic-0.3.1-py3-none-any.whl",
-    "sha256": "7d04ee68c2716e7917eeaccf8c5dcf96139163969cffd86746ef09fb04c07f4b",
-    "bytes": 338426,
+    "sha256": "ed0a56022ccd587cac86a1f2322bf5c297a48da37e1093efbda9c279f1b18dde",
+    "bytes": 338552,
+    "code_revision": "d4422fdca550045be8962b42cf168cbd9ab34847",
     "report": {
       "version": "0.3.1",
-      "package_root": "C:\\Users\\TR\\AppData\\Local\\Temp\\lectic-final-artifacts-mc2400jv\\wheel\\lectic",
+      "package_root": "C:\\Users\\TR\\AppData\\Local\\Temp\\lectic-final-artifacts-gh_bh638\\wheel\\lectic",
       "checks": [
         "packaged resources present",
         "catalog schema, actual pack bytes, checksum and declared contents",
@@ -20,11 +21,12 @@
   },
   {
     "artifact": "lectic-0.3.1.tar.gz",
-    "sha256": "41dd6b07f1b8ed320d92e4976141decab2d79cec0603b765a1281e499ba94820",
-    "bytes": 338884,
+    "sha256": "5f1f7714083b55b41f31548250ab17530f0b6f7dc54cf3882681eb58a4f12566",
+    "bytes": 339086,
+    "code_revision": "d4422fdca550045be8962b42cf168cbd9ab34847",
     "report": {
       "version": "0.3.1",
-      "package_root": "C:\\Users\\TR\\AppData\\Local\\Temp\\lectic-final-artifacts-mc2400jv\\sdist\\lectic",
+      "package_root": "C:\\Users\\TR\\AppData\\Local\\Temp\\lectic-final-artifacts-gh_bh638\\sdist\\lectic",
       "checks": [
         "packaged resources present",
         "catalog schema, actual pack bytes, checksum and declared contents",
