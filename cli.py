@@ -11,6 +11,7 @@
     lectic update NAME      check pack origin for newer version and update
     lectic publish NAME     upload pack to team host or registry (--to URL, --registry, --webhook URL)
     lectic verify [NAME]    check that a collection's evidence is fully anchored (exit 0 = verified, 1 = issues)
+    lectic inbox [--process] view or sort dropped links and files from your Lectic Inbox
     lectic backup [--out F] every collection, source and build in one archive file
     lectic push LINK        move this knowledge onto a Lectic running elsewhere
     lectic pull LINK        bring that Lectic's knowledge here
@@ -209,12 +210,15 @@ def setup(argv):
         print(f'  {name:<12} {state}')
     print(f'  {"Identity":<12} {offer_identity(interactive)}')
     print(f'  {"YouTube":<12} {offer_youtube(interactive)}')
+    from inbox import ensure_inbox_folder
+    inbox_dir = ensure_inbox_folder(Path.cwd())
+    print(f'  {"Drop Inbox":<12} {inbox_dir}')
     print(f'\nKnowledge lives in {home["home"]} and is shared by every project and assistant here.')
     if any(s == 'connected' for s in results.values()):
         print('\nOne step left: restart the assistant so it picks up the connection.')
         print('Then open it in any folder and just talk:\n')
         for line in ('Save this for later: https://www.youtube.com/watch?v=...',
-                     'What could my saved material become?',
+                     'Drop any video, note, or link into your Lectic Inbox folder',
                      'Use my Sales Training to review this call transcript.'):
             print('  ' + line)
     else:
@@ -229,6 +233,13 @@ def status(argv):
     info = describe(Path.cwd())
     print(f'Python      {sys.version.split()[0]}  ({sys.executable})')
     print(f'Knowledge   {info["home"]}  [{info["mode"]}]')
+    try:
+        from inbox import ensure_inbox_folder, scan_inbox
+        inbox_info = scan_inbox(Path.cwd())
+        count_str = f"{inbox_info['count']} item{'s' if inbox_info['count'] != 1 else ''} waiting" if inbox_info['count'] else "empty"
+        print(f'Drop Inbox  {inbox_info["inbox_folder"]} ({count_str})')
+    except Exception:
+        pass
     try:
         library = Library(Path.cwd())
         names = [c['name'] for c in library.index['collections']]
@@ -678,6 +689,38 @@ def verify(argv):
     return 0 if report['overall'] == 'verified' else 1
 
 
+def inbox_cmd(argv):
+    """View or sort dropped links and files from your Lectic Inbox folder."""
+    from inbox import ensure_inbox_folder, scan_inbox, route_all_inbox
+    folder = ensure_inbox_folder(os.getcwd())
+    if '--process' in argv or '--route' in argv:
+        res = route_all_inbox(os.getcwd())
+        if not res['items']:
+            print(f"Lectic Inbox is empty ({folder}).")
+            return 0
+        print(f"Sorted {len(res['items'])} drop item{'s' if len(res['items']) != 1 else ''} into your collections:")
+        for it in res['items']:
+            print(f"  {it['file']} -> {it['collection']}")
+        return 0
+
+    scan = scan_inbox(os.getcwd())
+    print(f"Lectic Drop Inbox: {scan['inbox_folder']}\n")
+    if not scan['items']:
+        print("Inbox is empty. Drop web shortcuts, YouTube links, notes, or files here anytime.")
+        print("Your connected assistants will notice them and ask where to add them!")
+        return 0
+
+    print(f"{scan['count']} item{'s' if scan['count'] != 1 else ''} waiting to be sorted into collections:\n")
+    for it in scan['items']:
+        target = it['suggested_collection'] or 'Inbox'
+        print(f"  {it['filename']}")
+        if it['url']:
+            print(f"    Link:       {it['url']}")
+        print(f"    Suggested:  {target} ({it['match_reason']})")
+    print("\nRun `lectic inbox --process` or ask your assistant: 'Sort my inbox drops'.")
+    return 0
+
+
 def ec(argv):
     sys.argv = ['ec.py'] + argv
     import ec as core
@@ -689,7 +732,7 @@ def main(argv=None):
     command = argv[0] if argv else 'status'
     handlers = {'setup': setup, 'identity': identity, 'share': share, 'connect': connect,
                 'pack': pack, 'install': install, 'update': update, 'publish': publish, 'verify': verify,
-                'search': search, 'inspect': inspect_cmd,
+                'search': search, 'inspect': inspect_cmd, 'inbox': inbox_cmd,
                 'backup': backup, 'push': push, 'pull': pull, 'restore': restore,
                 'status': status, 'serve': serve, 'ec': ec}
     if command in {'-h', '--help', 'help'} or command not in handlers:

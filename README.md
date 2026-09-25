@@ -44,15 +44,19 @@ lectic setup
 
 Open any connected assistant and speak in plain English:
 
-> Save this YouTube talk: https://www.youtube.com/watch?v=…
+> Save this YouTube talk to my engineering collection: https://www.youtube.com/watch?v=…
 
-> Search the pack registry for distributed systems engineering.
+> Search the pack registry for distributed systems.
 
-> Install registry:distributed-systems-adr --as distributed-systems --pin
+> Install the distributed-systems pack from the registry.
 
-> Use my distributed-systems to review this pull request architecture.
+> Use my engineering standards to review this pull request architecture.
 
-No custom wrappers or manual prompt tuning required. Run `lectic status` anytime to see what's saved and connected.
+> I want to share my engineering standards with my team.
+
+You can also drag browser tabs, drop `.url` shortcuts, or save text notes directly into your `Documents/Lectic Inbox` folder—no background servers or daemons required. When you next chat with your AI, it will notice your dropped items and ask where you'd like them filed.
+
+Run `lectic status` anytime to see what's saved, connected, and waiting in your inbox.
 
 **Want to use it in ChatGPT on the web, Claude, or your phone?** Run:
 ```bash
@@ -64,9 +68,9 @@ This generates a private, secure link you can plug into ChatGPT Actions or an iP
 
 ## What it does
 
-- **Effortless & Intelligent Intake.** When you share a video link or text snippet, Lectic never blindly dumps it into an inbox or creates duplicate collections. It analyzes the creator, keywords, and topics, identifies intelligent candidates, and asks where it belongs.
+- **Zero-Daemon Drop Folder & Intelligent Intake.** Drag browser tabs, `.url` shortcuts, or notes directly into your `Documents/Lectic Inbox` folder without keeping background processes or servers alive. When you chat with your AI, Lectic analyzes creators and keywords, identifies intelligent candidate collections, and routes them with your confirmation.
+- **Pure Conversational Sharing & 1-Command Onboarding.** Tell your AI "Share my engineering standards." It packages everything—heuristics, rules, and source evidence—into a signed pack and gives you a 1-sentence prompt for your teammate: *"Install this Lectic pack: [link]"*. When your teammate pastes that into Claude Code, Codex, or ChatGPT, their AI immediately adopts your standards.
 - **Portable Knowledge Packs (`.lectic`).** Export your collection into a single, signed file (`lectic pack "Engineering Standards" --team`). Knowledge units, decision rules, capability maps, and evidence excerpts travel together in one verifiable package.
-- **Team Distribution with 1-Command Onboarding.** A lead engineer compiles team standards once. Team members run `lectic install <url> --as engineering --pin` and immediately work inside the team's conventions across Claude Code, Codex, and ChatGPT.
 - **The Expertise Marketplace.** Discover, inspect, and install community and team packs by name (`lectic search`, `lectic inspect registry:NAME`, `lectic install registry:NAME`). Browse the web marketplace at [tyreamer.github.io/lectic/registry.html](https://tyreamer.github.io/lectic/registry.html).
 - **The Evidence Guarantee (`lectic verify`).** AI should show its work. Every unit of knowledge in Lectic is anchored to an exact substring in the source transcript. `lectic verify` checks evidence integrity with a deterministic exit code (0 = verified, 1 = broken), ready for CI pipelines.
 - **Cryptographic Author Identity.** Packs are signed with author credentials (`lectic identity set "Name" --contact email`). Recipients verify who compiled the pack and know that its contents haven't been tampered with.

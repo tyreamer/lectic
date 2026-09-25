@@ -480,17 +480,17 @@
           </div>
 
           <div class="pillar-card reveal" id="intake">
-            <span class="pillar-badge">Never Assumes</span>
-            <h3>Intelligent Intake</h3>
+            <span class="pillar-badge">Zero-Daemon Intake</span>
+            <h3>Drop Folder &amp; Intelligent Intake</h3>
             <p>
-              When you share a video link or transcript, Lectic never silently dumps it into an "Inbox" or creates duplicate collections. It analyzes creator, topics, and keywords, ranks candidates, and asks where it belongs.
+              Drag browser tabs, bookmarks, or notes straight into <code>Documents/Lectic Inbox</code>—no background server or clipper process required. When you next chat, your AI automatically surfaces your drops, matches creators, and asks where they belong.
             </p>
             <div class="pillar-code">
-              <span class="cmd">&gt; Save this YouTube market guide</span><br>
-              <span class="comment">Matched creator 'TheFutAccountant'</span><br>
+              <span class="cmd">&gt; Check what's waiting in my Lectic folder</span><br>
+              <span class="comment">Found dropped tab · Matched creator 'TheFutAccountant'</span><br>
               <span class="t-ok">Add to "FUT Accountant Early Trading"?</span>
             </div>
-            <div class="pillar-foot">Matches creator names, source keywords, and existing heuristics.</div>
+            <div class="pillar-foot">Zero background server needed. Works with browser drag-and-drop, iCloud, and OneDrive.</div>
           </div>
 
           <div class="pillar-card reveal">
@@ -717,7 +717,7 @@
           <div class="install-card highlight reveal">
             <span class="pillar-badge">Recommended</span>
             <h3>One-Time Installation &amp; Setup</h3>
-            <p>Connects Claude Code, OpenAI Codex, enables YouTube caption retrieval, and configures your pack signing identity from your git config.</p>
+            <p>Connects Claude Code and OpenAI Codex, enables the zero-daemon Drop Inbox in your Documents folder, and configures your pack signing identity.</p>
             <div class="copy-box">
               <code id="setupCmd">pip install lectic &amp;&amp; lectic setup</code>
               <button id="copySetupBtn">Copy</button>
@@ -729,6 +729,10 @@
             <span class="pillar-badge">CLI Commands</span>
             <h3>Daily Operations</h3>
             <div class="cmd-list">
+              <div class="cmd-item">
+                <code>lectic inbox</code>
+                <span>Review dropped links &amp; browser tabs</span>
+              </div>
               <div class="cmd-item">
                 <code>lectic search [query]</code>
                 <span>Search verified pack registry</span>
@@ -755,7 +759,7 @@
               </div>
               <div class="cmd-item">
                 <code>lectic status</code>
-                <span>Knowledge, assistants &amp; evidence health</span>
+                <span>Knowledge, inbox &amp; evidence health</span>
               </div>
             </div>
           </div>

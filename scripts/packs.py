@@ -191,11 +191,16 @@ def build_pack(project, collection, destination=None, include_sources=False, tea
     if manifest.get('publisher'):
         p = manifest['publisher']
         publisher_note = f"Signed by \"{p['name']}\" (key: {p['key_id']})"
+    share_instructions = (
+        f"Give the '{destination.name}' pack file (or a link to it) to your recipient. "
+        "Tell them to simply paste it into their assistant (Claude, Codex, or ChatGPT) and say: 'Install this pack'."
+    )
     return {'phase': 'packed', 'pack': str(destination), 'pack_id': manifest['pack_id'], 'name': data['name'],
             'version': manifest.get('version'), 'distribution': manifest.get('distribution'), 'team': bool(team),
             'units': len(ir['units']), 'sources': len(sources), 'sources_included': bool(include_sources),
             'methods': len(methods), 'maps': len(maps), 'bytes': destination.stat().st_size,
             'publisher': publisher_note,
+            'share_instructions': share_instructions,
             'share_note': SHARE_NOTE if not include_sources else 'Full source text is included; share only material you may redistribute.'}
 
 

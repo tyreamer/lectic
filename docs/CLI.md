@@ -15,6 +15,11 @@ Speaks MCP over stdio for Claude Code, Codex and other clients; the tools mirror
 ## Knowledge packs, Marketplace & Team Distribution
 
 ```text
+# Drop Inbox & Daily Flow
+lectic inbox [--process]
+lectic status
+lectic setup
+
 # Packs & Team Distribution
 lectic pack "Engineering" [--team] [--version 2.1.0] [--include-sources]
 lectic install REGISTRY:NAME | FILE | URL [--as NAME] [--pin] [--inspect]

@@ -44,8 +44,10 @@ Be effortless to use:
 - "What have I saved?" / "What could this become?" / "What should I build first?": lectic_library, then lectic_map. Show concrete jobs with what to give and what comes back; the user should not have to invent a goal.
 - A real task ("use my X to review this", "teach me", "help me decide"): write a brief, run lectic_work to completion, and lead with the result. Only then mention the saved method and one concrete next use.
 - Speak in outcomes and plain names. Never show IDs, hashes, paths, phases or JSON to the user, and never ask them to run commands or edit files.
-- "Share my X" / "pack this": lectic_pack, then tell the user the file path and that recipients run `lectic install`. "Install this pack": lectic_install; report verified or partial exactly as returned.
-- "Search packs" / "find expertise" / "marketplace": call lectic_search with query or tag; preview with lectic_inspect before installing if the user wants to see what's inside; install with lectic_install(location="registry:NAME").
+- Lectic Drop Inbox: Users can drop links, web shortcuts, notes, or files into their Lectic Inbox folder without running any server. When `inbox_pending` appears in `lectic_library`, mention what was dropped and ask if they'd like them added to the suggested collections. When confirmed, call `lectic_inbox(action='route')`.
+- "Share my X" / "pack this": call `lectic_pack(collection=X, team=True)`. Tell the user their pack is ready, give the pack file path (or link), and provide the exact 1-sentence prompt for their recipient: "To use this in ChatGPT, Claude, or Codex, just paste this file/link and tell your assistant: 'Install this pack'". Never tell users or recipients to run terminal commands.
+- "Install this pack" / "Install X" / user shares a .lectic file or link: call `lectic_install(location=..., pin=True)`. Announce the installation in warm, human terms: name the collection, how many expert rules and ready methods it includes, and give them one concrete prompt to try right now (e.g. "You can now say: 'Use my [Collection] to [method title]'"). Never mention terminal commands, CLI flags, hashes, or technical schemas.
+- "Search packs" / "find expertise" / "marketplace": call lectic_search with query or tag; preview with lectic_inspect before installing if the user wants to see what's inside; install with lectic_install(location="registry:NAME", pin=True).
 - Ask questions when they matter for organization and user intent (such as always asking which collection source data belongs to).
 
 How the tools work:
@@ -137,6 +139,9 @@ TOOLS = [
           'tag': S('Category or topic tag filter (e.g. engineering, trading, business).')}),
     tool('lectic_inspect', 'Preview a pack\'s manifest, evidence guarantee, methods, and README before committing to install (accepts registry:NAME, a local file path, or an https URL).',
          {'project': PROJECT, 'target': S('Pack identifier: registry:NAME, local file path, or https URL.')}, ['target']),
+    tool('lectic_inbox', 'Inspect or route items in the zero-daemon Lectic Inbox drop folder. The user can drop links, notes or files into this folder without running any server.',
+         {'project': PROJECT, 'action': S('list | route', enum=['list', 'route']),
+          'items': {'type': 'object', 'description': 'Optional mapping of filename to collection name for routing.'}}),
     tool('lectic_update', 'Check an installed pack\'s origin URL for a newer release and update the collection in-place.',
          {'project': PROJECT, 'collection': S('Collection name or ID to update.'),
           'force': B('Force update even if version is unchanged.')}, ['collection']),
@@ -245,7 +250,25 @@ class Server:
             view['candidate_collections'] = cand['candidates']
             view['candidate_action'] = cand['suggested_action']
             view['prompt_guidance'] = cand['prompt_guidance']
+        try:
+            from inbox import scan_inbox
+            inbox_info = scan_inbox(self.resolve_project(project))
+            if inbox_info.get('count', 0) > 0:
+                view['inbox_pending'] = inbox_info['items']
+                view['inbox_count'] = inbox_info['count']
+                view['inbox_folder'] = inbox_info['inbox_folder']
+                view['inbox_guidance'] = f"The user has {inbox_info['count']} item(s) waiting in their Lectic Drop Inbox ({inbox_info['inbox_folder']}). Let them know what was dropped and ask if they'd like them added to the suggested collections."
+        except Exception:
+            pass
         return view
+
+    def tool_inbox(self, project=None, action='list', items=None):
+        from inbox import scan_inbox, route_all_inbox
+        project = self.resolve_project(project)
+        if action == 'route':
+            mapping = items if isinstance(items, dict) else {}
+            return route_all_inbox(project, mapping=mapping)
+        return scan_inbox(project)
 
     def tool_collection_candidates(self, project=None, url='', text='', title='', files=(), note=''):
         from candidate_collections import find_candidate_collections
@@ -295,7 +318,7 @@ class Server:
         require(not run or not input, 'Give either input or run, not both')
         return compile_workflow(input, run, project=self.resolve_project(project), **kwargs)
 
-    def tool_pack(self, project=None, collection=None, out=None, include_sources=False, team=False, version=None):
+    def tool_pack(self, project=None, collection=None, out=None, include_sources=True, team=True, version=None):
         from packs import build_pack
         return build_pack(self.resolve_project(project), collection, out, bool(include_sources), team=bool(team), version=version)
 
