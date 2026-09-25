@@ -99,6 +99,7 @@ def check_release():
             part = read(checkpoint); part['units'][0]['statement'] += ' Respect the cited conditions.'; write(checkpoint, part)
             work(project=author, collection=NAME, action='prepare', reconciled=True)
             build_pack(author, NAME, pack, include_sources=True, version='1.0.1')
+            require(not open_pack(pack.read_bytes())[0]['methods'], 'Update carried methods reviewed against earlier knowledge')
             os.environ['LECTIC_HOME'] = str(base / 'recipient-home')
             updated = update_pack(recipient, NAME)
             require(updated['knowledge_matches_pack'], 'Update did not persist the declared knowledge')

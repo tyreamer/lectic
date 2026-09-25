@@ -136,6 +136,8 @@ def build_pack(project, collection, destination=None, include_sources=None, team
         build = safe_child(folder / 'builds', build_id)
         try: validate_build(build)
         except Invalid: continue
+        if read(build / 'manifest.json')['ir_hash'] != fingerprint(ir):
+            continue  # Keep old results in history; only ship methods reviewed against current knowledge.
         cap = read(build / 'method.json')['capability']
         if cap['capability_id'] in seen: continue
         seen.add(cap['capability_id'])
@@ -426,7 +428,9 @@ def install_pack(project, location, name=None, retriever=None, pin=False, collec
                   'knowledge_matches_pack': fingerprint(persisted_ir) == manifest['ir_hash'],
                   'reconciliation': 'carried from the pack' if complete else 'needed before goal work: sources or units differ from the pack',
                   'publisher_status': sig_status, 'publisher_info': sig_msg,
-                  'readable': str(folder / 'pack' / 'README.md'), 'methods': manifest['methods'], 'installed_at': datetime.now(timezone.utc).isoformat()}
+                  'readable': str(folder / 'pack' / 'README.md'), 'methods': manifest['methods'] if complete else [],
+                  'methods_need_review': [] if complete else manifest['methods'],
+                  'installed_at': datetime.now(timezone.utc).isoformat()}
         origin_location = origin_location or location
         origin_record = {
             'location': str(origin_location),

@@ -38,7 +38,7 @@ def library_view(project='.', collection=None):
                 row['pack'] = {'pack_id': origin['manifest']['pack_id'], 'verification': origin['install']['verification'],
                                'installed_at': origin['install']['installed_at'], 'readable': origin['install']['readable'],
                                'methods': [{'title': m['title'], 'description': m['description'],
-                                            'method': str(folder / 'pack' / 'methods' / m['build_id'] / 'method.md')} for m in origin['manifest']['methods']]}
+                                            'method': str(folder / 'pack' / 'methods' / m['build_id'] / 'method.md')} for m in origin['install'].get('methods', [])]}
         except (OSError, ValueError, KeyError) as exc:
             row['issues'].append(str(exc))
             continue
