@@ -1,67 +1,47 @@
 # Your first useful result with Lectic
 
-**Your sources → a context pack → something useful, in the AI chat you already use.**
+**Connect once → give your AI your sources → build your pack → put it to work.**
 
-A context pack brings the useful knowledge from your links, notes and files together, with references to where it came from. You can use that same knowledge for different tasks without gathering and explaining all the sources again.
+A context pack brings useful knowledge from your sources together with references to where it came from. You build it through Lectic in your AI chat, then reuse it for different tasks without gathering and explaining everything again.
 
-## 1. Start with something that matters to you
+**Pilot prerequisite:** you need a working connection to your own Lectic library. The new hosted pilot does not yet provide that connection. See [connection setup and current status](PILOT_CONNECTION.md).
 
-Choose something you are working on and two or three sources you want to use: notes, an article, a video, a document, or a mix.
+## 1. Connect Lectic to your AI
 
-For this pilot, send those sources to the person who invited you. They will prepare your pack and send you a readable **`.txt` file**. Only send material you are comfortable sharing with them and your chosen AI service.
+Use the [connection instructions for your assistant](PILOT_CONNECTION.md#connect-your-assistant), then ask in that chat:
 
-Already received a pack you chose? Go straight to step 2. Already connected Lectic to your assistant? Use the connected route below.
+> Use Lectic to check my connection and show my library. Don't add any examples.
 
-## 2. Let your AI help you find a starting point
+Your new library starts empty. If the assistant cannot reach Lectic, report a setup problem before continuing. A prompt alone cannot connect it.
 
-Open **ChatGPT, Claude, Gemini, or your usual AI chat** and attach the pack's `.txt` file. Paste this:
+## 2. Give your AI something you want to use
 
-> Read this context pack. Based on what you know about me, suggest three useful things I could do with it. Make the ideas specific to what's in the pack. If you need to understand what I'm working on, ask me one short question. Once I choose, help me make it.
+Start with two or three sources about something that matters to you. Paste your links or notes, or attach files your assistant can read, and say:
 
-You can add a sentence about your goal. For example: “I'm preparing for my first customer interviews.” The assistant can only use the personal context available in that conversation.
+> Use Lectic to turn these sources into a context pack called [name]. Distill the useful ideas and keep their source references. Tell me which sources you couldn't read fully. Confirm when the pack is saved in my Lectic.
 
-## 3. Make something you can actually use
+The assistant should do the saving and pack creation. If it cannot read a source, it should explain what's missing and ask for accessible content. Saving a link alone does not mean its contents were read.
 
-Pick an idea, change it, or ask for something else. You might say:
+## 3. Find a useful next step
 
-> Let's do the second idea. Make a first version I can use today. Show which parts come from the pack, with source references, and label any new suggestions you add.
+> Based on this pack and what you know about me, suggest three useful things I could do with it. If you need to understand my goal, ask one short question. Once I choose, help me make it.
 
-Follow one reference back to the supplied evidence. If something is missing or doesn't fit, ask the assistant to revise it. A useful result is something that helps with your actual task.
+Pick an idea, change it, or describe your own. For example: “I'm preparing for customer interviews. Help me decide what to ask.”
 
-## 4. Give the same pack another job
+Ask for a result you can use today, with source references and new advice clearly distinguished. Check one reference and ask for changes if needed.
 
-Try a different task with the same pack:
+## 4. Use it again
 
-> Now use the same pack to help me with [another task].
+In a new conversation with Lectic enabled, say:
 
-Or attach that file in a different AI chat. You can also send the pack and this guide to someone you want to share it with; they can use it for their own goal. They receive the contents of that file.
+> Use my [name] pack to help me with [another task].
+
+You can use another assistant connected to the same Lectic library too. To share the knowledge with someone else, ask your assistant to export that pack. They can bring it into their own Lectic and use it for their own goals.
 
 ## Tell us how it went
-
-Reply to the person who invited you:
 
 - What did you make, and was it useful enough to keep or use?
 - Where did you get stuck or feel confused? Roughly how long did it take?
 - Would you reach for this pack again? What would you use it for?
 
-An unhelpful result or a confusing step is useful feedback too.
-
-<details>
-<summary>My assistant already has Lectic connected</summary>
-
-Send your own sources in that chat and say:
-
-> Save these sources in Lectic and turn them into a reusable context pack. Tell me if any source couldn't be read fully. Based on what you know about me, suggest three useful ways to use the pack. Ask one short question about my goal if needed, then help me make the idea I choose.
-
-Continue with steps 3 and 4. Your library should contain only material you chose to add. Teaching examples are optional.
-
-If your assistant cannot access Lectic, tell the person who invited you or use the readable-file route above. Pasting a prompt does not connect Lectic. Connecting hosted AI accounts to the new pilot is still being built.
-
-</details>
-
-<details>
-<summary>I can't open the pack</summary>
-
-Ask the person who invited you for the readable `.txt` export. A `.lectic` file is for importing into Lectic. For this guide, use the text version in your AI chat. If your chat cannot accept the file, tell the person who invited you which app you use.
-
-</details>
+Send your feedback to the person who invited you. You create your own pack in your own chat.

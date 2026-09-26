@@ -9,7 +9,7 @@ Save videos and notes on your computer so your AI assistant can search them and 
 
 Works with Claude Code, OpenAI Codex, ChatGPT, Claude Desktop, and Cursor.
 
-**Invited to the pilot?** Start with the [first-time guide](docs/PILOT_FIRST_TIME.md) to use your own sources in your usual AI chat. The current pilot uses a readable pack supplied by your inviter or an assistant already connected to Lectic.
+**Invited to the pilot?** The [first-time guide](docs/PILOT_FIRST_TIME.md) walks you through building your own pack from your sources in your AI chat. It requires a working personal Lectic connection; see [connection setup and current status](docs/PILOT_CONNECTION.md).
 
 ---
 
