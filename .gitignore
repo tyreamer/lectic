@@ -11,3 +11,4 @@ build/
 dist/
 node_modules/
 output/playwright/
+.playwright-cli/
