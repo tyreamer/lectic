@@ -1,0 +1,19 @@
+FROM node:24-bookworm-slim AS web
+WORKDIR /web
+COPY apps/web/package*.json ./
+RUN npm ci
+COPY apps/web/ ./
+RUN npm run build
+
+FROM python:3.12-slim-bookworm AS runtime
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 LECTIC_CLOUD_DATA=/var/lectic PORT=10000
+RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg libglib2.0-0 gosu \
+    && rm -rf /var/lib/apt/lists/* && useradd --uid 10001 --create-home lectic
+WORKDIR /app
+COPY cloud/requirements.lock /app/cloud/requirements.lock
+RUN pip install --no-cache-dir -r cloud/requirements.lock
+COPY . /app
+COPY --from=web /web/dist /app/apps/web/dist
+RUN pip install --no-cache-dir --no-deps . && chmod +x /app/cloud/entrypoint.sh
+EXPOSE 10000
+ENTRYPOINT ["/app/cloud/entrypoint.sh"]

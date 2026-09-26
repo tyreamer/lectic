@@ -1,0 +1,33 @@
+# Provision only after confirming current charges in the dedicated Lectic accounts.
+# Proposed infrastructure: Supabase Pro $25 + Render Standard $25 + 20 GB disk $5.
+services:
+  - type: web
+    name: lectic-pilot
+    runtime: docker
+    plan: standard
+    region: virginia
+    dockerfilePath: ./Dockerfile.pilot
+    dockerContext: .
+    healthCheckPath: /healthz
+    autoDeployTrigger: "off"
+    disk:
+      name: lectic-homes
+      mountPath: /var/lectic
+      sizeGB: 20
+    envVars:
+      - key: LECTIC_ORIGIN
+        sync: false
+      - key: LECTIC_DATABASE_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_PUBLISHABLE_KEY
+        sync: false
+      - key: SUPABASE_SECRET_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: LECTIC_MODEL
+        value: gpt-5-mini
+      - key: LECTIC_AI_BUDGET_MICRODOLLARS
+        value: "30000000"

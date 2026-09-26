@@ -1,0 +1,8 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema", "type":"object", "additionalProperties":false,
+  "properties":{"schema_version":{"const":"1.0"},"records":{"type":"array","maxItems":2000,"items":{
+    "type":"object","additionalProperties":false,
+    "properties":{"filename":{"type":"string","pattern":"^[^/\\\\:]+$"},"kind":{"enum":["supplied_text","pdf_text","transcript","ocr","visual_interpretation"]},"original_sha256":{"type":"string","pattern":"^[a-f0-9]{64}$"},"model":{"type":["string","null"]},"processing_version":{"type":"string"},"label":{"type":"string"},"reference":{"type":["object","null"],"additionalProperties":false,"properties":{"page":{"type":"integer","minimum":1},"image":{"type":"integer","minimum":1},"start":{"type":"number","minimum":0},"end":{"type":"number","minimum":0},"timestamp":{"type":"number","minimum":0},"sampled":{"type":"boolean"},"duration":{"type":"number","minimum":0}}}},
+    "required":["filename","kind","original_sha256","model","processing_version","reference"]}}},
+  "required":["schema_version","records"]
+}

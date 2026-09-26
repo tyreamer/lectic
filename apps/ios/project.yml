@@ -1,0 +1,71 @@
+name: Lectic
+options:
+  bundleIdPrefix: ai.lectic
+  deploymentTarget:
+    iOS: "16.0"
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    CURRENT_PROJECT_VERSION: 1
+    MARKETING_VERSION: 0.1.0
+    CODE_SIGN_STYLE: Automatic
+    LECTIC_ORIGIN: https://app.lectic.ai
+    LECTIC_APP_GROUP: group.ai.lectic.pilot
+    LECTIC_KEYCHAIN_GROUP: $(AppIdentifierPrefix)ai.lectic.pilot
+targets:
+  Lectic:
+    type: application
+    platform: iOS
+    sources: [App, Shared]
+    info:
+      path: App/Info.plist
+      properties:
+        CFBundleDisplayName: Lectic
+        UILaunchScreen: {}
+        LECTIC_ORIGIN: $(LECTIC_ORIGIN)
+        LECTIC_APP_GROUP: $(LECTIC_APP_GROUP)
+        LECTIC_KEYCHAIN_GROUP: $(LECTIC_KEYCHAIN_GROUP)
+        CFBundleURLTypes:
+          - CFBundleURLSchemes: [lectic]
+        UIBackgroundModes: [processing]
+    entitlements:
+      path: App/Lectic.entitlements
+      properties:
+        com.apple.security.application-groups: [$(LECTIC_APP_GROUP)]
+        keychain-access-groups: [$(LECTIC_KEYCHAIN_GROUP)]
+        com.apple.developer.applesignin: [Default]
+    dependencies:
+      - target: LecticShare
+  LecticShare:
+    type: app-extension
+    platform: iOS
+    sources: [Share, Shared]
+    settings:
+      APPLICATION_EXTENSION_API_ONLY: YES
+    info:
+      path: Share/Info.plist
+      properties:
+        CFBundleDisplayName: Save to Lectic
+        LECTIC_ORIGIN: $(LECTIC_ORIGIN)
+        LECTIC_APP_GROUP: $(LECTIC_APP_GROUP)
+        LECTIC_KEYCHAIN_GROUP: $(LECTIC_KEYCHAIN_GROUP)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.share-services
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).ShareController
+          NSExtensionAttributes:
+            NSExtensionActivationRule:
+              NSExtensionActivationSupportsText: true
+              NSExtensionActivationSupportsWebURLWithMaxCount: 20
+              NSExtensionActivationSupportsImageWithMaxCount: 20
+              NSExtensionActivationSupportsMovieWithMaxCount: 20
+              NSExtensionActivationSupportsFileWithMaxCount: 20
+    entitlements:
+      path: Share/LecticShare.entitlements
+      properties:
+        com.apple.security.application-groups: [$(LECTIC_APP_GROUP)]
+        keychain-access-groups: [$(LECTIC_KEYCHAIN_GROUP)]
+schemes:
+  Lectic:
+    build:
+      targets:
+        Lectic: all

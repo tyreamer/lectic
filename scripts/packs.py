@@ -111,6 +111,9 @@ def build_pack(project, collection, destination=None, include_sources=None, team
     if receipt: files['knowledge/reconciliation.json'] = receipt
     from scoped_export import selected_excerpts
     files['sources/excerpts.json'] = selected_excerpts(ir['units'], docs, segments)
+    if (run / 'derivations.json').is_file():
+        from derivations import validate_derivations
+        files['sources/derivations.json'] = validate_derivations(read(run / 'derivations.json'), docs)
     sources = []
     for entry in corpus['sources']:
         doc = docs[entry['source_id']]
@@ -405,6 +408,11 @@ def install_pack(project, location, name=None, retriever=None, pin=False, collec
         installed_ir = assemble(run)
         if complete:
             require(fingerprint(installed_ir) == manifest['ir_hash'], 'Pack checkpoints do not reconstruct its declared knowledge')
+            if 'sources/derivations.json' in members:
+                from derivations import validate_derivations
+                _, installed_docs, _ = validate_sources(run)
+                derivations = json.loads(members['sources/derivations.json'].decode('utf-8'))
+                write(run / 'derivations.json', validate_derivations(derivations, installed_docs))
         if target_cid:
             folder, data = library.archive(adopt=run, collection=target_cid, name=name)
         else:

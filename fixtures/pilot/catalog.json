@@ -1,0 +1,5 @@
+[
+  {"slug":"customer-discovery","title":"Customer Discovery Guide","file":"customer-discovery.lectic","icon":"chat","color":"peach","description":"Better questions. Stronger evidence.","example":"Plan five interviews to understand why freelance designers struggle with project handoffs.","label":"Lectic-authored teaching material · MIT"},
+  {"slug":"debugging-starter","title":"Code Debugging Playbook","file":"debugging-starter.lectic","icon":"code","color":"lavender","description":"Find the cause. Test the fix.","example":"Create a checklist for diagnosing an intermittent checkout failure after a release.","label":"Lectic-authored teaching material · MIT"},
+  {"slug":"startup-principles","title":"Startup Principles","file":"startup-principles.lectic","icon":"seed","color":"mint","description":"A clear problem. A smaller experiment.","example":"Plan a one-week experiment for a service that helps local shops reduce food waste.","label":"Lectic-authored teaching material · MIT"}
+]

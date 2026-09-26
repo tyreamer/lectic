@@ -19,6 +19,7 @@ classifiers = [
 
 [project.optional-dependencies]
 youtube = ["yt-dlp"]
+cloud = ["fastapi>=0.115,<1", "uvicorn>=0.30,<1", "sqlalchemy>=2,<3", "psycopg[binary]>=3,<4", "httpx>=0.27,<1", "openai>=3,<4", "pydantic>=2,<3", "pypdf>=6,<7", "pypdfium2>=4,<6", "Pillow>=11,<13", "beautifulsoup4>=4.12,<5", "yt-dlp", "jsonschema>=4,<5"]
 
 [project.urls]
 Homepage = "https://github.com/tyreamer/lectic"
@@ -30,7 +31,7 @@ lectic = "lectic.cli:main"
 # The repository root is the package: scripts, prompts, schemas and fixtures travel together,
 # so ec.ROOT (the parent of scripts/) resolves the same way from a checkout or an install.
 [tool.setuptools]
-packages = ["lectic", "lectic.scripts", "lectic.scripts.ingestors"]
+packages = ["lectic", "lectic.scripts", "lectic.scripts.ingestors", "lectic.cloud"]
 package-dir = {"lectic" = "."}
 include-package-data = true
 
@@ -39,4 +40,5 @@ lectic = [
     "SKILL.md", "README.md", "LICENSE", "NORTH_STAR.md", "DESIGN.md", "AGENTS.md",
     "agents/*.yaml", "prompts/*.md", "schemas/*.json", "docs/*.md", "registry/*.json",
     "fixtures/*", "fixtures/**/*",
+    "apps/web/dist/*.html", "apps/web/dist/assets/*",
 ]

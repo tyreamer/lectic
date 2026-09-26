@@ -1,13 +1,25 @@
 # Lectic
 
-Save videos and notes on your computer so your AI assistant can search them and quote them.
+Turn sources into a reusable knowledge pack. Make something useful, share the pack, and let someone else make something different.
 
 [![Tests](https://github.com/tyreamer/lectic/actions/workflows/tests.yml/badge.svg)](https://github.com/tyreamer/lectic/actions/workflows/tests.yml)
 [![PyPI](https://img.shields.io/pypi/v/lectic?color=38bdf8)](https://pypi.org/project/lectic/)
 [![Python: 3.10+](https://img.shields.io/badge/python-3.10%2B-3776ab)](https://github.com/tyreamer/lectic/blob/main/docs/DEVELOPING.md)
 [![License: MIT](https://img.shields.io/badge/license-MIT-34d399)](https://github.com/tyreamer/lectic/blob/main/LICENSE)
 
-Works with Claude Code, OpenAI Codex, ChatGPT, Claude Desktop, and Cursor.
+The released local edition works with connected AI assistants. The new web pilot creates work inside Lectic.
+
+## Web pilot — available for local review
+
+Choose **Customer Discovery Guide**, **Code Debugging Playbook**, or **Startup Principles**, then make a plan, checklist, lesson, review, proposal, or your own idea. Creations use real model calls, include expandable source references, and can be copied or downloaded as Markdown. All three starters are original Lectic-authored teaching material under MIT.
+
+The implementation includes a React app, FastAPI service, durable worker, account-scoped storage, cost reservations, media processing, multi-source packs, fixed-version share links, and Swift/Kotlin capture companions. The existing local compiler and `.lectic` format remain supported.
+
+**Release status:** this is a local pilot implementation, not a publicly available hosted service. Dedicated cloud accounts, configured Google/Apple sign-in, iOS signing and device checks, real hosting retrieval measurements, and the ten-person usability study remain launch gates. No cloud resources have been provisioned. See [pilot setup, evidence and limitations](docs/PILOT.md).
+
+Public Instagram/X retrieval is best effort. An incomplete post stays **Needs content** with **Add screenshots or video**; a caption or thumbnail never stands in for the complete post. Uploaded media uses automatic transcripts/OCR and sampled video frames, with those derivations labeled separately.
+
+Download a starter: [Customer Discovery](docs/packs/customer-discovery.lectic) · [Code Debugging](docs/packs/debugging-starter.lectic) · [Startup Principles](docs/packs/startup-principles.lectic).
 
 ---
 

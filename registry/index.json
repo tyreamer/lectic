@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "updated_at": "2026-09-25T00:00:00Z",
+  "updated_at": "2026-09-26T00:00:00Z",
   "packs": [
     {
       "name": "debugging-starter",
@@ -21,6 +21,44 @@
       ],
       "sha256": "cde86e2df2540512fba27c5dec2b0ed12cee9c8049a4572ef35b075db2b4631f",
       "bundled_path": "debugging-starter.lectic"
+    },
+    {
+      "name": "customer-discovery",
+      "title": "Customer Discovery Guide",
+      "description": "Six original teaching sources for interviews, evidence review and a next experiment.",
+      "publisher": "Lectic-authored teaching material (MIT; unsigned)",
+      "url": "https://tyreamer.github.io/lectic/packs/customer-discovery.lectic",
+      "install_name": "Customer Discovery Guide",
+      "version": "1.0.0",
+      "units": 12,
+      "methods": [
+        "Customer discovery playbook"
+      ],
+      "tags": [
+        "customer-discovery",
+        "research",
+        "starter"
+      ],
+      "sha256": "7654667fac2799c8dad628868c1a5b7ee45fe150bf2d2973217c6470c877fdeb",
+      "bundled_path": "customer-discovery.lectic"
+    },
+    {
+      "name": "startup-principles",
+      "title": "Startup Principles",
+      "description": "Original teaching material on problems, experiments and voluntary reuse.",
+      "publisher": "Lectic-authored teaching material (MIT; unsigned)",
+      "url": "https://tyreamer.github.io/lectic/packs/startup-principles.lectic",
+      "install_name": "Startup Principles",
+      "version": "1.0.0",
+      "units": 9,
+      "methods": [],
+      "tags": [
+        "startup",
+        "experiments",
+        "starter"
+      ],
+      "sha256": "4923238997f04aa67ed7f3e69624ed7d993a600fd7875b8e71d5851e3ff174f5",
+      "bundled_path": "startup-principles.lectic"
     }
   ]
 }
