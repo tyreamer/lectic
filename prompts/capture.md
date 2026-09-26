@@ -16,6 +16,8 @@ When content arrives without a collection, save it to Inbox immediately. If a co
 
 “Save these for later” stops after import. “Process this collection” or “Use these links to help me become an entrepreneur” authorizes deferred retrieval and preparation now, followed by the requested work. “I am going to use these later” alone is context, not authorization to process. A bare content-analysis request can follow discovery once processing is appropriate. No domain-specific routing is needed.
 
+Follow [proactive-guidance.md](proactive-guidance.md): for an ordinary quick save, at most one short connection to known work may follow the receipt when the supplied content already supports it. Do not retrieve a URL, scan the library or compile a pack solely to add that sentence. “Just save,” “later” and declined suggestions need no follow-up pitch.
+
 Natural interactions map to the following operations, inferred from meaning rather than domain keywords:
 
 | User intent | Internal action |

@@ -2,6 +2,8 @@
 
 Use this guidance after discovery/builds and for “What did we save?”, “What can I do with it?”, “What else could this produce?”, or returning to old work. The user should not need to remember filenames, stages or capability terminology. The assistant is the interface; do not ask the user to operate these commands.
 
+Apply [proactive-guidance.md](proactive-guidance.md). Also notice when a new task could benefit from a saved pack without requiring the user to name it. Read likely matches before recommending them; keep lookup proportionate to the task. Suggest a combination only after inspecting both packs and explaining the distinct contribution of each. A suggestion to combine is not a merged pack or a completed result.
+
 ## Read before claiming readiness
 
 Run `ec.py library --project PROJECT`, optionally with `--collection NAME`. This reads existing state without processing or modifying it. Explain the collection's real contents and distinguish:
@@ -11,13 +13,13 @@ Run `ec.py library --project PROJECT`, optionally with `--collection NAME`. This
 - **Can build next:** an evidence-supported opportunity, not a completed capability.
 - **Saved earlier version:** usable historical material whose current applicability needs checking; never silently present it as updated.
 
-Give readable names and clickable method/result links. Keep IDs internal. Report damaged or missing artifacts instead of labeling them ready. Archived collections and legacy packages remain visible. This command sees the current project, not all folders or host memory. If a known collection is absent, use a project location already supplied or ask where it was saved; do not immediately request the transcripts again or search unrelated private folders.
+Give readable names and clickable method/result links. Keep IDs internal. Report damaged or missing artifacts instead of labeling them ready. Archived collections and legacy packages remain visible. This command sees the resolved Lectic home, shared across projects unless a legacy project home applies; it does not read host memory or unrelated homes. If a known collection is absent, check the reported home and locations already supplied; do not immediately request the transcripts again or search unrelated private folders.
 
 ## Show concrete uses proactively
 
 After completing the user's actual work, lead with the result. Then briefly show **what was saved**, **what they can do next**, and **how to use it again**. Do not stop at counts or a package path. Do not turn every intermediate extraction response into a discovery detour.
 
-For “just save,” “don't process,” or capture-only instructions, give a short save receipt and availability state. Do not trigger extraction, a map or a new build. For explicitly completed knowledge preparation, explain that knowledge is saved and offer discovery as the next step. For source-only input with no storage restriction, continue the ordinary discovery flow without requiring a goal.
+For “just save,” “don't process,” or “later,” give only a short receipt and availability state. Other quick saves may get one relevant observation grounded in already available content, without new lookup or processing. Do not trigger extraction, a map or a build merely to suggest something. After explicitly requested knowledge preparation, explain what the saved knowledge enables and offer supported uses. If no saved references yet support formal guide cards, use the actual prepared knowledge for a brief conversational suggestion; do not manufacture reference IDs. Source-only input is saved first; discovery starts when the user requests exploration or a task needs it.
 
 For discovery, completed builds and requests for more uses, run `ec.py guide --project PROJECT --collection NAME` (omit collection for the project library). It returns the verified library, a draft path and `use-guide.schema.json`. Write a private guide and save it using `guide --action save --draft PATH` with the same collection filter. Persist the suggestions so a fresh session can show them again using `guide --action show`. They live outside IR and exports.
 
@@ -28,6 +30,12 @@ Offer distinct applications rather than renaming the same output format. A revie
 If a proposed use goes beyond a saved method, consult the collection's current map or explicitly discover further uses. Mark it **Can build next** and bind it to a supported opportunity. Do not silently broaden an existing method. Original evidence, exceptions and disagreements constrain every suggestion.
 
 Recommend a starting use and explain why. Show the options before asking for a goal. Ask at most one useful question, such as “Would reviewing your current script or developing a new idea help more?” When intent/work is already supplied, proceed and leave `question` empty. Do not end every completed task with the same compulsory menu.
+
+## Suggest sharing for a reason
+
+Optionally include one `sharing_suggestions` entry in a saved guide. Bind it to a returned method/opportunity `reference`, cite its `unit_ids`, and use `context_ids` for any personal basis. Name the pack with `pack_name`, describe a recipient or conditional role in `recipient`, and explain the recipient's concrete use in `why_useful`. Give a short `try_prompt` for the user to request an export and list meaningful `limits`. The recipient's use may differ from the owner's. Never invent a coworker, recipient preference or relationship.
+
+Sharing guidance stays private with the guide. It does not export a pack, create a public link, send a message or grant access. Exclude private goals, drafts and recipient details from exports. Offer a selected pack rather than a full-library connection; disclose relevant source rights and missing content when the user proceeds. Omit this entry when there is no clear sharing benefit. It is separate from numbered use cards so “the second one” keeps its meaning.
 
 ## Personalize from actual context
 
@@ -41,7 +49,7 @@ Use only the minimum relevant context. Personal context and the guide remain pri
 
 “Let's do the second one” refers to the last guide actually shown. Call `guide --action select --select 2`, including `--guide-id` when referring to an earlier display. Use the saved card and reference, not a new ranking. Never apply guide numbers to a Capability Map or vice versa. If the guide is stale, explain what changed and show refreshed choices before interpreting a number.
 
-Selection of a build opportunity enters the normal map/build pipeline. For a ready method, the result includes its actual method/result locations and the selected use. Read it, use work already supplied, or ask only for the input required by that use. In a named collection, create the ordinary private brief and proceed through `work`; reuse/adapt the saved method only within its evidence and applicability, preserving old outputs. A legacy package can be applied from its saved location; adopt its saved run into a named collection only when needed. Do not ask for source re-upload.
+Selection of a build opportunity enters the normal map/build pipeline. For a ready method, the result includes its actual method/result locations, the selected use and the private `user_context` relevant to that choice. Carry that context into the new brief, checking possibly outdated facts against the current conversation. Use work already supplied, or ask only for the input required by that use. In a named collection, create the ordinary private brief and proceed through `work`; reuse/adapt the saved method only within its evidence and applicability, preserving old outputs. A legacy package can be applied from its saved location; adopt its saved run into a named collection only when needed. Do not ask for source re-upload.
 
 The selected application and its relevant personal context are stored in the build brief for a new opportunity. On resuming, read that context. After building the reusable method, continue the selected application if the user's actual input is available; otherwise ask for just that input. Do not restart discovery or declare the application completed merely because its supporting method now exists.
 

@@ -201,6 +201,14 @@ def validate_guide(draft, view):
         require(card['availability'] == ('build_first' if ref['kind'] == 'opportunity' else 'ready' if ref['status'] == 'ready' else 'saved_version'), 'A proposed or historical capability cannot be labeled ready')
         require(set(card['unit_ids']) <= set(ref['unit_ids']), 'Use example cites knowledge outside its saved basis')
         require(set(card['context_ids']) <= contexts, 'Personalized suggestion has no recorded context basis')
+    for suggestion in draft.get('sharing_suggestions', []):
+        ref = view['references'].get(suggestion['reference'])
+        require(ref is not None, 'Sharing suggestion refers to an unsaved method or opportunity')
+        require(ref['kind'] != 'legacy' and ref['status'] in {'ready', 'can_build'},
+                'Sharing suggestions need current knowledge from a named pack')
+        require(suggestion['pack_name'] == ref['collection'], 'Sharing suggestion names a different pack')
+        require(set(suggestion['unit_ids']) <= set(ref['unit_ids']), 'Sharing suggestion cites knowledge outside its saved basis')
+        require(set(suggestion['context_ids']) <= contexts, 'Sharing suggestion has no recorded personal context basis')
     require(draft['recommended_card'] in ids if ids else draft['recommended_card'] == '', 'Recommend a shown use card or explain why none are supported')
     require(ids or draft['no_suggestions_reason'].strip(), 'Explain the gap instead of inventing uses')
     return draft
@@ -219,6 +227,12 @@ def render_guide(record):
         lines += ['**Suggested first use:** ' + chosen['title'] + '. ' + draft['recommendation_reason'], '']
     else:
         lines += [draft['no_suggestions_reason'], '']
+    for suggestion in draft.get('sharing_suggestions', []):
+        lines += ['## A possible use for someone else',
+                  '**Pack:** ' + suggestion['pack_name'], '**Who could benefit:** ' + suggestion['recipient'],
+                  suggestion['why_useful'], '**Try saying:** ' + suggestion['try_prompt'],
+                  '**Limits:** ' + '; '.join(suggestion['limits']),
+                  'This is a suggestion. Nothing has been exported or shared.', '']
     if draft['question']:
         lines += [draft['question'], '']
     lines += ['Suggestions are source-linked and assistant-reviewed; usefulness and personal fit still need a real task.', '']
@@ -238,6 +252,7 @@ def use_guide(*, project='.', collection=None, action='prepare', draft=None, gui
     if action == 'prepare':
         return {'phase': 'prepare_use_guide', 'library': view, 'agent_task': {
             'prompt': str(ROOT / 'prompts/guide-use.md'), 'schema': str(ROOT / 'schemas/use-guide.schema.json'),
+            'guidance': str(ROOT / 'prompts/proactive-guidance.md'),
             'draft': str(root / 'drafts' / (view['binding_hash'] + '.json')), 'binding_hash': view['binding_hash']}}
     if action == 'save':
         require(draft is not None, 'Write the use-guide draft before saving')
@@ -281,6 +296,7 @@ def use_guide(*, project='.', collection=None, action='prepare', draft=None, gui
                                         'context': [c for c in record['draft']['context'] if c['context_id'] in card['context_ids']]})
             return {**result, 'selected_use': card, 'guidance': str(ROOT / 'prompts/guide-use.md')}
         return {'phase': 'use_saved_method', 'selected_use': card, 'saved_method': ref,
+                'user_context': [c for c in record['draft']['context'] if c['context_id'] in card['context_ids']],
                 'guidance': str(ROOT / 'prompts/guide-use.md'),
                 'instruction': 'Use actual work already supplied; otherwise ask only for the input on this card. Preserve the saved method and create a new result. Historical versions need an explicit version choice before representing them as current.'}
     require(action in {'save', 'show'}, 'Unknown use-guide action')

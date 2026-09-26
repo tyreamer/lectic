@@ -9,6 +9,8 @@ Turn sources into a reusable knowledge pack. Make something useful, share the pa
 
 Start in the AI chat you already use. Lectic distills your sources into context you can reuse across tasks, conversations and people. The library helps you inspect and share that knowledge.
 
+The connected agent helps you spot useful next steps: how a pack fits your current goal, which saved knowledge could help with new work, and who might benefit from a particular pack. It recommends one starting use with up to two alternatives, carries your chosen direction forward, and keeps quick saves brief. Personal context stays separate from source evidence; sharing suggestions never send anything automatically. See the [agent guidance](prompts/proactive-guidance.md).
+
 With Lectic connected, send your sources and ask:
 
 > Save these sources in Lectic and distill them into a reusable context pack. Based on what you know about me and what I'm working on, suggest three useful ways to use it. Help me choose one and make something useful.
@@ -21,7 +23,7 @@ Saving and compiling through chat requires a connection; a prompt alone does not
 
 ## Web pilot — available for local review
 
-Bring links, files and notes together, then distill them into a **context pack**: reusable knowledge with its source evidence. Open the pack for three concrete starting ideas. Add what you are working on to get suggestions for your situation, or describe your own idea. Creations use real model calls and include expandable source references.
+Bring links, files and notes together, then distill them into a **context pack**: reusable knowledge with its source evidence. Open the pack for a recommended starting use and up to two alternatives, with a short reason to start there. Add what you are working on to get suggestions for your situation, or describe your own idea. Creations use real model calls and include expandable source references.
 
 You can also download the pack as a readable context file, attach it in ChatGPT or Claude, and ask: **“Based on what you know about me, how could I use this?”** Share the pack so someone else can use the same knowledge differently. `.lectic` downloads remain available; advanced options include reusable prompts, agent skills and a local read-only MCP server bundle.
 

@@ -57,6 +57,10 @@ class McpWorkflowTests(unittest.TestCase):
         init = self.client.server.handle({'jsonrpc': '2.0', 'id': 99, 'method': 'initialize', 'params': {'protocolVersion': '2025-06-18'}})['result']
         self.assertEqual(init['protocolVersion'], '2025-06-18')
         self.assertIn('lectic_write_json', init['instructions'])
+        policy = (ec.ROOT / 'prompts/proactive-guidance.md').read_text(encoding='utf-8')
+        self.assertIn(policy, init['instructions'])
+        resource = self.client.request('resources/read', uri='lectic://prompts/proactive-guidance.md')
+        self.assertEqual(resource['contents'][0]['text'], policy)
         self.assertIsNone(self.client.server.handle({'jsonrpc': '2.0', 'method': 'notifications/initialized'}))
         names = {t['name'] for t in self.client.request('tools/list')['tools']}
         self.assertEqual(names, {t['name'] for t in TOOLS})

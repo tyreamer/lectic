@@ -8,7 +8,7 @@ The owner explicitly chose to keep it local on September 26, 2026 and will provi
 
 | Area | Behavior |
 |---|---|
-| Web app | Chat-first starting prompts; library as a supporting tool. New libraries start empty. Browsing examples adds nothing; copying one requires an explicit action. Three suggestions grounded in each chosen pack, optionally tailored to the user's situation. |
+| Web app | Chat-first starting prompts; library as a supporting tool. New libraries start empty. Browsing examples adds nothing; copying one requires an explicit action. A recommended starting use with a reason and up to two alternatives, grounded in the chosen pack and optionally tailored to the user's situation. |
 | Portable context | Readable `.txt` download with distilled knowledge and quotations, plus a question to ask an assistant that knows the user. `.lectic` remains available. Advanced options can produce a reusable prompt, agent skill or local read-only MCP server bundle. |
 | Sources | URL/text capture and bounded uploads, Inbox by default, Saved / Processing / Ready / Needs content states, screenshot/video fallback. |
 | Compiler | Exact-quote extraction, cross-source reconciliation, coverage assessment, reusable methods, validated outcomes, separate assistant semantic review. |

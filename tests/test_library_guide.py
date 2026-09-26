@@ -68,6 +68,60 @@ class LibraryGuideTests(unittest.TestCase):
         ec.write(path, draft)
         return use_guide(project=self.project, action='save', draft=str(path))
 
+    def with_sharing(self, draft):
+        card = draft['cards'][0]
+        ref = library_view(self.project)['references'][card['reference']]
+        draft['sharing_suggestions'] = [{
+            'reference': card['reference'], 'pack_name': ref['collection'],
+            'recipient': 'A teammate, if you want another review',
+            'why_useful': 'They could apply the same criteria to a different draft.',
+            'try_prompt': 'Export this pack so I can share its criteria.',
+            'limits': ['Review included source content before sharing.'],
+            'unit_ids': card['unit_ids'], 'context_ids': card['context_ids']}]
+        return draft
+
+    def test_sharing_suggestion_survives_reload_without_export_or_selection_changes(self):
+        self.build()
+        folder, _ = Library(self.project).resolve()
+        before = {p.relative_to(folder): p.read_bytes() for p in folder.rglob('*') if p.is_file()}
+        saved = self.save(self.with_sharing(self.draft(context=True)))
+        shown = use_guide(project=self.project, action='show', guide_id=saved['guide_id'])
+        self.assertEqual(shown['guide']['sharing_suggestions'], saved['guide']['sharing_suggestions'])
+        self.assertIn('A teammate, if you want another review', shown['markdown'])
+        self.assertIn('Nothing has been exported or shared', shown['markdown'])
+        self.assertEqual(before, {p.relative_to(folder): p.read_bytes() for p in folder.rglob('*') if p.is_file()})
+        self.assertFalse(list(self.base.rglob('*.lectic')))
+        selected = use_guide(project=self.project, action='select', select='1')
+        self.assertEqual(selected['selected_use'], saved['guide']['cards'][0])
+        self.assertEqual(selected['user_context'], saved['guide']['context'])
+
+    def test_resuming_ready_use_only_returns_context_for_that_choice(self):
+        self.build()
+        draft = self.draft(context=True)
+        draft['context'].append({'context_id': 'unrelated', 'text': 'Unrelated private preference.',
+                                 'origin': 'user_message', 'source': 'Another user message.', 'status': 'provided'})
+        saved = self.save(draft)
+        selected = use_guide(project=self.project, action='select', guide_id=saved['guide_id'], select='1')
+        self.assertEqual([c['context_id'] for c in selected['user_context']], ['role'])
+        self.assertNotIn('Unrelated private preference.', json.dumps(selected))
+
+    def test_sharing_suggestion_rejects_unknown_pack_evidence_and_personal_context(self):
+        self.build()
+        view = library_view(self.project)
+        draft = self.with_sharing(self.draft(view))
+        for mutation in [{'reference': 'invented'}, {'pack_name': 'Some other pack'},
+                         {'unit_ids': ['unknown-unit']}, {'context_ids': ['assumed-coworker']},
+                         {'unit_ids': []}]:
+            bad = copy.deepcopy(draft)
+            bad['sharing_suggestions'][0].update(mutation)
+            with self.subTest(mutation=mutation), self.assertRaises(ec.Invalid):
+                validate_guide(bad, view)
+        historical = copy.deepcopy(view)
+        historical['references'][draft['sharing_suggestions'][0]['reference']]['status'] = 'saved_version'
+        draft['cards'][0]['availability'] = 'saved_version'
+        with self.assertRaisesRegex(ec.Invalid, 'current knowledge'):
+            validate_guide(draft, historical)
+
     def hashes(self):
         return {p.relative_to(self.project).as_posix(): ec.digest(p.read_bytes())
                 for p in self.project.rglob('*') if p.is_file()}
@@ -173,12 +227,21 @@ class LibraryGuideTests(unittest.TestCase):
         folder, data = Library(self.project).resolve()
         run = Library.run(folder, data)
         original = (run / 'ir.json').read_bytes()
-        saved = self.save(self.draft(context=True))
+        saved = self.save(self.with_sharing(self.draft(context=True)))
         self.assertEqual(saved['guide']['context'][0]['origin'], 'user_message')
         self.assertEqual((run / 'ir.json').read_bytes(), original)
         exported = work(project=self.project, collection='My Methods', action='export')
         for path in Path(exported['skill']).parent.rglob('*'):
-            if path.is_file(): self.assertNotIn(b'I make game review videos.', path.read_bytes())
+            if path.is_file():
+                self.assertNotIn(b'I make game review videos.', path.read_bytes())
+                self.assertNotIn(b'A teammate, if you want another review', path.read_bytes())
+        from packs import build_pack
+        from zipfile import ZipFile
+        packed = build_pack(self.project, 'My Methods', destination=self.base / 'shared.lectic', include_sources=True)
+        with ZipFile(packed['pack']) as archive:
+            for name in archive.namelist():
+                self.assertNotIn(b'I make game review videos.', archive.read(name))
+                self.assertNotIn(b'A teammate, if you want another review', archive.read(name))
         self.assertTrue(validate_build(done['build'])['valid'])
 
     def test_corrected_context_creates_new_guide_preserving_old(self):
@@ -266,6 +329,13 @@ class LibraryGuideTests(unittest.TestCase):
             '--project', str(self.project)], capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertTrue(json.loads(result.stdout)['references'])
+        request = {'jsonrpc': '2.0', 'id': 1, 'method': 'initialize',
+                   'params': {'protocolVersion': '2025-06-18'}}
+        server = subprocess.run([sys.executable, '-B', str(installed / 'scripts/lectic_mcp.py')],
+                                input=json.dumps(request) + '\n', capture_output=True, text=True, encoding='utf-8')
+        self.assertEqual(server.returncode, 0, server.stderr)
+        policy = (installed / 'prompts/proactive-guidance.md').read_text(encoding='utf-8')
+        self.assertIn(policy, json.loads(server.stdout)['result']['instructions'])
 
     def test_legacy_package_visible_without_migration(self):
         done = self.build()

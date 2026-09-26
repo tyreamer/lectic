@@ -142,6 +142,25 @@
       "minItems": 0,
       "maxItems": 3
     },
+    "sharing_suggestions": {
+      "type": "array",
+      "maxItems": 1,
+      "items": {
+        "type": "object",
+        "properties": {
+          "reference": {"type": "string", "minLength": 1},
+          "pack_name": {"type": "string", "minLength": 1},
+          "recipient": {"type": "string", "minLength": 1},
+          "why_useful": {"type": "string", "minLength": 1},
+          "try_prompt": {"type": "string", "minLength": 1},
+          "limits": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+          "unit_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+          "context_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+        },
+        "required": ["reference", "pack_name", "recipient", "why_useful", "try_prompt", "limits", "unit_ids", "context_ids"],
+        "additionalProperties": false
+      }
+    },
     "recommended_card": {
       "type": "string"
     },

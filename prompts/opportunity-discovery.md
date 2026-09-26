@@ -1,6 +1,6 @@
 # Discover what this collection can become
 
-Use when content arrives without a goal (unless the user only wants storage), or asks what to build, what a collection is capable of, or what to build first. Discovery is a derived interpretation of expertise, not new source truth. Never write opportunities into IR. Don't require users to choose intent labels or formats.
+Use when the user asks what to build, what a collection is capable of, or what to build first. Content without a goal is saved first; a quick save alone does not authorize discovery. Follow [proactive-guidance.md](proactive-guidance.md) to offer relevant possibilities without requiring users to invent a goal or choose internal formats. Discovery is a derived interpretation of expertise, not new source truth. Never write opportunities into IR.
 
 ## Operate and resume
 

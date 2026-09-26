@@ -80,6 +80,12 @@ Prompts and schemas are also published as resources (`lectic://prompts/NAME.md`,
 
 ## How a workflow runs over tools
 
+Every initialization includes the [proactive guidance policy](../prompts/proactive-guidance.md); it is also available as `lectic://prompts/proactive-guidance.md`. The skill and workflow prompts use the same policy. Agents should notice relevant saved knowledge, recommend a concrete personal use, carry a chosen direction forward, and suggest sharing only when they can explain its benefit. Quick saves remain storage-only and “just save” gets only a receipt.
+
+Private use guides support an optional `sharing_suggestions` list with one entry. Validation binds its named pack, source units and personal context to a current saved reference. Saving or displaying it does not export or transmit anything. Sharing is separate from numbered use cards. Selecting a ready use returns only the recorded `user_context` relevant to that choice so a resumed agent can continue without asking the person to repeat it. Personalization and recipient suggestions remain outside source IR and pack exports.
+
+These contracts govern agent behavior and validate saved records; they do not prove that a particular model will choose useful suggestions. Check actual conversations for relevance, brevity, correct tool use and respect for declined suggestions before making usability claims.
+
 Workflow tools return a `phase`. When the response carries `agent_task`, it is work for the client: read the named prompt with `lectic_read`, reason, save the requested record with `lectic_write_json` at the path the task names, then call the same workflow tool again. This is the same state machine the installed skill drives with the CLI; only the transport changed.
 
 `lectic_write_json` is the single door for records the client produces. It admits exactly the kinds a workflow asks for, and validates each before it lands:

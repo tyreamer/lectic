@@ -57,6 +57,10 @@ Checking quotes:
 - lectic_verify checks that every quote in a collection matches the original source text. Call it when the user asks "is this verified?" or "how do I know this is accurate?". Report whether all quotes match and note any missing files, keeping the explanation brief.
 - lectic_identity shows who created a pack. If the user wants to share a pack and has not set their author details, tell them they can run `lectic identity set "Name" --contact email` to include their name on files they share.'''
 
+# The same policy is read by skill-based assistants and delivered automatically
+# to every MCP client at initialization, including clients without a filesystem.
+INSTRUCTIONS += '\n\n' + (ROOT / 'prompts/proactive-guidance.md').read_text(encoding='utf-8')
+
 
 def tool(name, description, properties, required=()):
     return {'name': name, 'description': description,
@@ -73,7 +77,7 @@ TOOLS = [
     tool('lectic_starter', 'Try Lectic offline: install its authored debugging starter, save a sample review and a second result reusing the same knowledge. Prewritten teaching examples, not live AI output. Use for an explicit request to try Lectic.', {'project': PROJECT}),
     tool('lectic_home', 'Where this project\'s Lectic knowledge lives (user home, LECTIC_HOME or a legacy project folder) and why.',
          {'project': PROJECT}),
-    tool('lectic_library', 'Read-only inventory of saved collections, ready methods, earlier results and possible next builds. When url, text or title are provided, it also scores candidate collections for the incoming material.',
+    tool('lectic_library', 'Read-only inventory of saved collections, ready methods, earlier results and possible next builds. Use when a new task could benefit from saved knowledge, even if the user has not named a pack. Inspect evidence before recommending a match. When url, text or title are provided, it also scores candidate collections for the incoming material.',
          {'project': PROJECT, 'collection': S('Limit to one collection by name.'),
           'url': S('Incoming link/URL to match candidate collections for.'),
           'text': S('Incoming text to match candidate collections for.'),
@@ -101,7 +105,7 @@ TOOLS = [
           'draft': S('Path of the discovery draft you saved (from agent_task.draft).'), 'map_id': S('Map ID for inspect/compare/select.'),
           'before': S('Earlier map ID for compare.'), 'select': S('Shown opportunity number, title or ID to build.'),
           'regenerate': B('Force a fresh discovery pass.'), 'reconciled': B('Acknowledge reconciliation when preparing knowledge.')}),
-    tool('lectic_guide', 'Prepare, save, show or select grounded next-use suggestions from the saved library.',
+    tool('lectic_guide', 'Prepare, save, show or select grounded personal next uses and optional sharing suggestions. Recommend a starting use with a reason. Suggestions do not execute work or share anything.',
          {'project': PROJECT, 'collection': S('Collection filter.'),
           'action': S('prepare | save | show | select', enum=['prepare', 'save', 'show', 'select']),
           'draft': S('Path of the use-guide draft you saved.'), 'guide_id': S('Guide ID to show/select.'), 'select': S('Card number, title or ID.')}),

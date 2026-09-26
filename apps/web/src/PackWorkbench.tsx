@@ -74,9 +74,10 @@ export default function PackWorkbench(p: Props) {
       </form>
       {loading && <div className="suggestions-loading" role="status"><span className="spinner"/> Reading your context to find useful starting points…</div>}
       {error && <p role="status" className="muted">{error}</p>}
+      {info?.suggestions?.summary && <p className="muted">{info.suggestions.summary}</p>}
       <div className="idea-grid">
         {(info?.suggestions?.ideas || []).map((idea:Idea,i:number)=><button className="idea-card" key={i} disabled={p.busy} onClick={()=>select(idea.format,idea.brief)}>
-          <h3>{idea.title}</h3><p>{idea.description}</p><span>Try this <Glyph name="share"/></span>
+          <h3>{idea.title}</h3><p>{idea.description}</p><span>{i === 0 ? "Suggested starting point" : "Try this"} <Glyph name="share"/></span>
         </button>)}
         <button className="idea-card custom-idea" disabled={p.busy} onClick={()=>select("Your Idea","")}><h3>Something else in mind?</h3><p>Tell Lectic what you want to make, explore, or work through.</p><span>Start with your idea <Glyph name="share"/></span></button>
       </div>
