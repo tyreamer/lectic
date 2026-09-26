@@ -1,0 +1,81 @@
+{
+  "name": "Customer Discovery",
+  "description": "An authored example of combining six kinds of source material into a reusable discovery playbook.",
+  "prompt": "Create a new Customer Discovery collection from these sources. Combine their advice into an interview, evidence-review, and experiment playbook. Keep the source passages attached, show any disagreements, and export a pack I can share with my team.",
+  "sources": [
+    {
+      "id": "talk", "format": "YouTube talk", "mark": "PLAY", "title": "Ask about what actually happened",
+      "filename": "founder-talk.vtt", "ready": "Caption excerpt supplied",
+      "route": "Lectic can retrieve available English YouTube captions with optional yt-dlp. This fictional example supplies its own captions.",
+      "paragraphs": [
+        "Ask the customer to describe the last time the problem occurred. Record the situation, what they tried, and what happened next.",
+        "Avoid describing your proposed solution before hearing the customer's existing workflow. A leading question can turn an interview into a pitch."
+      ]
+    },
+    {
+      "id": "podcast", "format": "Podcast / audio", "mark": "AUDIO", "title": "Listen for the workaround",
+      "filename": "podcast-transcript.txt", "ready": "Transcript supplied",
+      "route": "Audio can be saved as an attachment. Provide a transcript for knowledge extraction; Lectic has no built-in audio transcription.",
+      "paragraphs": [
+        "Ask what the person does today to work around the problem, and what that workaround costs in time, money, or effort.",
+        "Separate a compliment about an idea from evidence of a current problem. Ask for a concrete example when the answer is only a general opinion."
+      ]
+    },
+    {
+      "id": "guide", "format": "Research PDF", "mark": "PDF", "title": "Keep the observation and its context",
+      "filename": "research-guide-excerpt.txt", "ready": "Text excerpt supplied",
+      "route": "PDFs can be saved as attachments. Supply readable text through your assistant or another extractor; Lectic has no built-in PDF text extraction or OCR.",
+      "paragraphs": [
+        "Store the participant's exact words separately from your interpretation. Keep the situation and participant context with the observation.",
+        "Count independent examples before calling something a pattern. Multiple quotes from the same person are not multiple independent observations."
+      ]
+    },
+    {
+      "id": "article", "format": "Web article", "mark": "WEB", "title": "Compare the evidence before deciding",
+      "filename": "article-excerpt.md", "ready": "Article text pasted",
+      "route": "General article URLs are saved as links. Paste the article text or supply a text file to use it as evidence.",
+      "paragraphs": [
+        "Group observations by the job the person is trying to do, then compare how often the problem occurs and how costly the workaround is.",
+        "Keep contradictory observations visible. Check whether different customer contexts explain the disagreement before choosing a common recommendation."
+      ]
+    },
+    {
+      "id": "notes", "format": "Team notes", "mark": "MD", "title": "Write down what would change our mind",
+      "filename": "team-research-notes.md", "ready": "Markdown ready",
+      "route": "Pasted notes and local TXT or Markdown files are supported directly. Here, the notes are explicitly supplied as source material for the playbook.",
+      "paragraphs": [
+        "Before a discovery experiment, name the assumption being tested and the observation that would make the team reconsider it.",
+        "After an experiment, record the result, the decision, and the evidence behind that decision so another teammate can review the reasoning."
+      ]
+    },
+    {
+      "id": "workshop", "format": "Workshop video", "mark": "VIDEO", "title": "Test a concrete next step",
+      "filename": "workshop-captions.srt", "ready": "Captions supplied",
+      "route": "Video files can be saved as attachments. Supply captions or a transcript for knowledge extraction; Lectic does not transcribe the video itself.",
+      "paragraphs": [
+        "Choose a small experiment that tests one assumption. Define the next action and what outcome you will observe before running it.",
+        "Treat one positive response as a reason to investigate further, not proof of broad demand. Seek a concrete next step such as a scheduled follow-up or a trial."
+      ]
+    }
+  ],
+  "playbook": [
+    {
+      "id": "interview", "title": "Ask better interview questions", "source_ids": ["talk", "podcast"],
+      "instruction": "Start with a recent real event, then ask about the current workaround and its cost before discussing a solution.",
+      "example": "Tell me about the last time this happened. What did you do, and how much time did it take?",
+      "unit_ids": ["talk-1", "talk-2", "podcast-1", "podcast-2"]
+    },
+    {
+      "id": "evidence", "title": "Compare signals across sources", "source_ids": ["guide", "article"],
+      "instruction": "Keep exact observations separate from interpretations. Compare independent examples by job, frequency, and cost; retain contradictions with their context.",
+      "example": "Three quotes from one participant count as one participant's evidence. Compare independent cases before deciding this is a common problem.",
+      "unit_ids": ["guide-1", "guide-2", "article-1", "article-2"]
+    },
+    {
+      "id": "experiment", "title": "Turn findings into the next test", "source_ids": ["notes", "workshop"],
+      "instruction": "Choose one assumption, state what would change your mind, and run a small test with an observable next step. Save the result and decision for the team.",
+      "example": "Test whether participants will schedule a follow-up. Record the result and what it changes; a positive response alone does not establish demand.",
+      "unit_ids": ["notes-1", "notes-2", "workshop-1", "workshop-2"]
+    }
+  ]
+}

@@ -7,7 +7,9 @@
   <title>Lectic — Save videos and notes for your AI</title>
   <meta name="description" content="Save YouTube videos, transcripts, and notes on your computer so your AI assistant can search them and quote them with exact timestamps.">
   <link rel="stylesheet" href="site.css">
+  <link rel="stylesheet" href="demo.css?v=multi-source-1">
   <script src="site.js" defer></script>
+  <script src="demo.js?v=multi-source-1" defer></script>
 </head>
 <body>
   <a class="skip" href="#main">Skip to content</a>
@@ -105,36 +107,52 @@
     </section>
 
     <!-- INTERACTIVE DEMO -->
-    <section id="example" class="section">
+    <section id="example" class="section collection-demo" aria-labelledby="demo-heading">
       <div class="section-title">
-        <p class="eyebrow">Sample files</p>
-        <h2>An example you can inspect.</h2>
-        <p>Lectic includes a sample debugging transcript with three quoted sentences. Choose an example below to see how your AI uses the saved text.</p>
+        <p class="eyebrow">Sources → collection → pack</p>
+        <h2 id="demo-heading">Combine six sources into<br>a collection you can use.</h2>
+        <p>Start with a talk, a podcast, a PDF, an article, team notes, and a workshop. Ask your assistant to connect their advice into a Customer Discovery collection, then export a pack for your team.</p>
       </div>
-
-      <div class="example">
-        <div class="example-tabs" role="group" aria-label="Choose a sample">
-          <button class="selected" data-example="first" aria-pressed="true">Example 1: Review a plan</button>
-          <button data-example="second" aria-pressed="false">Example 2: Answer a question</button>
+      <p class="demo-disclosure">Interactive walkthrough · authored sample material · no uploads or AI calls on this page</p>
+      <p id="demo-load-status" role="status">Loading the example sources…</p>
+      <div id="demo-content" class="demo-shell" hidden>
+        <div class="demo-tabs" role="tablist" aria-label="Collection walkthrough">
+          <button id="demo-tab-sources" role="tab" aria-selected="true" aria-controls="demo-sources" tabindex="0" data-stage="sources"><span>01</span> Bring sources</button>
+          <button id="demo-tab-collection" role="tab" aria-selected="false" aria-controls="demo-collection" tabindex="-1" data-stage="collection"><span>02</span> Make a collection</button>
+          <button id="demo-tab-pack" role="tab" aria-selected="false" aria-controls="demo-pack" tabindex="-1" data-stage="pack"><span>03</span> Take the pack</button>
         </div>
-        <div class="example-body" aria-live="polite">
-          <div>
-            <p class="eyebrow">Question asked to AI</p>
-            <blockquote id="sample-input">Change the parser and delimiter settings together, then ship after one successful file.</blockquote>
-            <p class="fine" id="reuse-note">Uses three procedures from the saved lesson.</p>
+        <div id="demo-sources" class="demo-panel" role="tabpanel" aria-labelledby="demo-tab-sources" tabindex="0">
+          <div class="demo-panel-heading"><div><p class="eyebrow">Start with what you have</p><h3>Different formats. One topic.</h3></div><span class="demo-count">6 sample sources</span></div>
+          <div class="demo-input-layout">
+            <div id="demo-source-list" class="demo-source-list" role="group" aria-label="Inspect a sample source"></div>
+            <aside class="demo-source-preview" aria-live="polite" aria-label="Selected source content"><p class="eyebrow" id="demo-source-format"></p><h4 id="demo-source-title"></h4><div id="demo-source-passages"></div><p class="demo-route" id="demo-source-route"></p></aside>
           </div>
-          <div>
-            <p class="eyebrow">What your AI answers</p>
-            <h3 id="sample-heading">Use one controlled experiment at a time.</h3>
-            <ol id="sample-steps">
-              <li>Record the smallest failing input, expected output and actual output.</li>
-              <li>Change one suspected cause. Revert an ineffective change before testing the next hypothesis.</li>
-              <li>Keep the original reproducer and check at least one nearby boundary before shipping.</li>
-            </ol>
-            <a href="registry.html">Inspect the sample transcript and download the file →</a>
+          <div class="demo-request"><span class="demo-avatar" aria-hidden="true">You</span><p id="demo-request-text"></p></div>
+          <div class="demo-actions"><button class="button primary" data-next="collection">Send sample sources →</button><p>Your assistant does this with your material in Lectic.</p></div>
+        </div>
+        <div id="demo-collection" class="demo-panel" role="tabpanel" aria-labelledby="demo-tab-collection" tabindex="0" hidden>
+          <div class="demo-panel-heading"><div><p class="eyebrow">Your new collection</p><h3>Customer Discovery</h3></div><span class="demo-count">Saved knowledge + a reusable method</span></div>
+          <div class="demo-metrics"><div><strong>6</strong><span>sources connected</span></div><div><strong>12</strong><span>cited takeaways</span></div><div><strong>1</strong><span>discovery playbook</span></div></div>
+          <p class="demo-bridge">The sources contribute different pieces. Your collection combines them into a method you can apply to your next task.</p>
+          <div class="demo-method-layout">
+            <div id="demo-method-list" class="demo-method-list" role="group" aria-label="Explore the playbook"></div>
+            <div class="demo-method-preview" aria-live="polite"><p class="eyebrow">Combined into a practical step</p><h4 id="demo-method-title"></h4><p id="demo-method-instruction"></p><blockquote id="demo-method-example"></blockquote><p class="eyebrow">Follow it back to the sources</p><div id="demo-evidence" class="demo-evidence"></div></div>
           </div>
+          <div class="demo-actions"><button class="button primary" data-next="pack">Turn the collection into a pack →</button><button class="demo-back" data-next="sources">Back to sources</button></div>
+          <p class="fine">This playbook was authored and validated with Lectic from the exact passages shown here. The page previews that saved example; it does not generate new advice.</p>
+        </div>
+        <div id="demo-pack" class="demo-panel" role="tabpanel" aria-labelledby="demo-tab-pack" tabindex="0" hidden>
+          <div class="demo-panel-heading"><div><p class="eyebrow">Take it to another project or person</p><h3>One collection. One portable pack.</h3></div></div>
+          <div class="demo-pack-layout">
+            <div class="demo-pack-card"><span class="demo-file-mark" aria-hidden="true">.lectic</span><h4>customer-discovery.lectic</h4><p>The six source texts, twelve cited takeaways, and discovery playbook in one installable file.</p><ul><li>Keep the original passages and attribution</li><li>Reuse the method in another project</li><li>Share it with a teammate using Lectic</li></ul><a class="button primary" id="demo-download" href="packs/customer-discovery.lectic" download>Download the example pack</a><p class="fine" id="demo-pack-size"></p></div>
+            <div class="demo-pack-use"><p class="eyebrow">Put it to work</p><h4>Use the collection in your next conversation.</h4><p>With Lectic connected, give your assistant this request:</p><div class="copy-box"><code id="demo-install-text">Install this Lectic pack: https://tyreamer.github.io/lectic/packs/customer-discovery.lectic</code><button data-copy="demo-install-text" data-copy-status="demo-copy-status" aria-label="Copy example pack install request">Copy</button></div><p id="demo-copy-status" role="status" class="status"></p><p>Then ask it to apply what you collected:</p><blockquote>Use my Customer Discovery collection to review this interview plan: [paste your plan]</blockquote><a href="#start">Connect Lectic to your assistant →</a></div>
+          </div>
+          <details class="demo-pack-details"><summary>Inspect the example pack</summary><p>All source passages are fictional teaching material authored for Lectic under the MIT license. The pack includes text and caption excerpts representing the six formats, not original media files. It is unsigned; a checksum verifies download integrity, not publisher identity or effectiveness.</p><p class="hash" id="demo-pack-hash"></p><button id="demo-verify" class="verify">Verify this download</button><p id="demo-verify-status" role="status" class="fine"></p></details>
+          <div class="demo-actions"><button class="demo-back" data-next="sources">Explore the sources again</button></div>
         </div>
       </div>
+      <noscript><p>This walkthrough needs JavaScript. The example pack contains six authored source texts, twelve cited takeaways, and a reusable customer-discovery playbook.</p></noscript>
+      <p class="demo-fallback"><a href="packs/customer-discovery.lectic" download>Download the real example pack</a> · <a href="demo/customer-discovery.json">Read all six sample sources</a></p>
     </section>
 
     <!-- START / ONBOARDING -->
