@@ -7,9 +7,9 @@
   <title>Lectic — Save videos and notes for your AI</title>
   <meta name="description" content="Save YouTube videos, transcripts, and notes on your computer so your AI assistant can search them and quote them with exact timestamps.">
   <link rel="stylesheet" href="site.css">
-  <link rel="stylesheet" href="demo.css?v=multi-source-1">
+  <link rel="stylesheet" href="demo.css?v=visual-2">
   <script src="site.js" defer></script>
-  <script src="demo.js?v=multi-source-1" defer></script>
+  <script src="demo.js?v=visual-2" defer></script>
 </head>
 <body>
   <a class="skip" href="#main">Skip to content</a>
@@ -108,51 +108,43 @@
 
     <!-- INTERACTIVE DEMO -->
     <section id="example" class="section collection-demo" aria-labelledby="demo-heading">
-      <div class="section-title">
-        <p class="eyebrow">Sources → collection → pack</p>
-        <h2 id="demo-heading">Combine six sources into<br>a collection you can use.</h2>
-        <p>Start with a talk, a podcast, a PDF, an article, team notes, and a workshop. Ask your assistant to connect their advice into a Customer Discovery collection, then export a pack for your team.</p>
+      <div class="visual-demo-heading"><h2 id="demo-heading">Many sources. One pack.<br>Make it yours.</h2><span class="demo-badge">Interactive demo</span></div>
+      <div id="demo-content" class="visual-demo" data-stage="sources">
+        <div id="demo-canvas" class="demo-canvas">
+          <svg id="demo-wires" aria-hidden="true"></svg>
+          <div class="flow-column flow-inputs"><h3><span>01</span> Bring anything</h3>
+            <div class="source-tiles">
+              <div class="source-tile" data-source="video" style="--source-color:#fb7185"><svg aria-hidden="true"><use href="demo-icons.svg#video"/></svg><span>Videos</span></div>
+              <div class="source-tile" data-source="audio" style="--source-color:#c084fc"><svg aria-hidden="true"><use href="demo-icons.svg#audio"/></svg><span>Podcasts</span></div>
+              <div class="source-tile" data-source="pdf" style="--source-color:#fb923c"><svg aria-hidden="true"><use href="demo-icons.svg#pdf"/></svg><span>PDFs</span></div>
+              <div class="source-tile" data-source="web" style="--source-color:#38bdf8"><svg aria-hidden="true"><use href="demo-icons.svg#web"/></svg><span>Articles</span></div>
+              <div class="source-tile" data-source="notes" style="--source-color:#facc15"><svg aria-hidden="true"><use href="demo-icons.svg#notes"/></svg><span>Notes</span></div>
+              <div class="source-tile" data-source="workshop" style="--source-color:#34d399"><svg aria-hidden="true"><use href="demo-icons.svg#workshop"/></svg><span>Workshops</span></div>
+            </div>
+          </div>
+          <div class="flow-column flow-pack"><h3><span>02</span> Make a pack</h3>
+            <div id="demo-pack-node" class="pack-node"><div class="pack-stack" aria-hidden="true"></div><svg aria-hidden="true"><use href="demo-icons.svg#pack"/></svg><strong>.lectic</strong><span id="demo-pack-name">Your collection</span><span class="pack-dots" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span></div>
+          </div>
+          <div class="flow-column flow-share"><h3><span>03</span> Pass it on</h3>
+            <div id="demo-people" class="demo-people" aria-label="People receiving the same pack"><span class="demo-person"><svg aria-hidden="true"><use href="demo-icons.svg#person"/></svg><i aria-hidden="true">.l</i></span><span class="demo-person"><svg aria-hidden="true"><use href="demo-icons.svg#person"/></svg><i aria-hidden="true">.l</i></span><span class="demo-person"><svg aria-hidden="true"><use href="demo-icons.svg#person"/></svg><i aria-hidden="true">.l</i></span></div>
+          </div>
+          <div class="flow-column flow-outputs"><h3><span>04</span> Make anything</h3>
+            <div class="output-tiles" role="group" aria-label="Choose what to make from the pack">
+              <button class="output-tile" data-output="plan" aria-pressed="false" disabled><svg aria-hidden="true"><use href="demo-icons.svg#plan"/></svg><span>A plan</span></button>
+              <button class="output-tile" data-output="checklist" aria-pressed="false" disabled><svg aria-hidden="true"><use href="demo-icons.svg#checklist"/></svg><span>A checklist</span></button>
+              <button class="output-tile" data-output="lesson" aria-pressed="false" disabled><svg aria-hidden="true"><use href="demo-icons.svg#lesson"/></svg><span>A lesson</span></button>
+              <button class="output-tile" data-output="review" aria-pressed="false" disabled><svg aria-hidden="true"><use href="demo-icons.svg#review"/></svg><span>A review</span></button>
+              <button class="output-tile" data-output="proposal" aria-pressed="false" disabled><svg aria-hidden="true"><use href="demo-icons.svg#proposal"/></svg><span>A proposal</span></button>
+              <button class="output-tile" data-output="idea" aria-pressed="false" disabled><svg aria-hidden="true"><use href="demo-icons.svg#idea"/></svg><span>Your idea</span></button>
+            </div>
+          </div>
+        </div>
+        <div class="demo-controls"><button id="demo-action" class="button primary" type="button">Create pack <span aria-hidden="true">→</span></button><a href="packs/customer-discovery.lectic" download>Download example <span aria-hidden="true">↗</span></a></div>
+        <div id="demo-result" class="demo-result" hidden aria-live="polite"><div class="result-paper" aria-hidden="true"><svg><use id="demo-result-icon" href="demo-icons.svg#plan"/></svg><i></i><i></i><i></i></div><div class="result-copy"><span class="result-caption">Same pack. Your next creation.</span><h4 id="demo-result-title"></h4><p id="demo-result-lines"></p><label class="demo-idea-label" id="demo-idea-label" hidden>Your idea<input id="demo-idea" placeholder="What would you make?" maxlength="80"></label></div><button id="demo-copy-prompt" class="demo-copy-prompt" type="button">Copy prompt <span aria-hidden="true">↗</span></button></div>
+        <p id="demo-status" class="demo-sr-only" role="status">Create a pack from the six example sources, then share it to explore what others can make.</p>
       </div>
-      <p class="demo-disclosure">Interactive walkthrough · authored sample material · no uploads or AI calls on this page</p>
-      <p id="demo-load-status" role="status">Loading the example sources…</p>
-      <div id="demo-content" class="demo-shell" hidden>
-        <div class="demo-tabs" role="tablist" aria-label="Collection walkthrough">
-          <button id="demo-tab-sources" role="tab" aria-selected="true" aria-controls="demo-sources" tabindex="0" data-stage="sources"><span>01</span> Bring sources</button>
-          <button id="demo-tab-collection" role="tab" aria-selected="false" aria-controls="demo-collection" tabindex="-1" data-stage="collection"><span>02</span> Make a collection</button>
-          <button id="demo-tab-pack" role="tab" aria-selected="false" aria-controls="demo-pack" tabindex="-1" data-stage="pack"><span>03</span> Take the pack</button>
-        </div>
-        <div id="demo-sources" class="demo-panel" role="tabpanel" aria-labelledby="demo-tab-sources" tabindex="0">
-          <div class="demo-panel-heading"><div><p class="eyebrow">Start with what you have</p><h3>Different formats. One topic.</h3></div><span class="demo-count">6 sample sources</span></div>
-          <div class="demo-input-layout">
-            <div id="demo-source-list" class="demo-source-list" role="group" aria-label="Inspect a sample source"></div>
-            <aside class="demo-source-preview" aria-live="polite" aria-label="Selected source content"><p class="eyebrow" id="demo-source-format"></p><h4 id="demo-source-title"></h4><div id="demo-source-passages"></div><p class="demo-route" id="demo-source-route"></p></aside>
-          </div>
-          <div class="demo-request"><span class="demo-avatar" aria-hidden="true">You</span><p id="demo-request-text"></p></div>
-          <div class="demo-actions"><button class="button primary" data-next="collection">Send sample sources →</button><p>Your assistant does this with your material in Lectic.</p></div>
-        </div>
-        <div id="demo-collection" class="demo-panel" role="tabpanel" aria-labelledby="demo-tab-collection" tabindex="0" hidden>
-          <div class="demo-panel-heading"><div><p class="eyebrow">Your new collection</p><h3>Customer Discovery</h3></div><span class="demo-count">Saved knowledge + a reusable method</span></div>
-          <div class="demo-metrics"><div><strong>6</strong><span>sources connected</span></div><div><strong>12</strong><span>cited takeaways</span></div><div><strong>1</strong><span>discovery playbook</span></div></div>
-          <p class="demo-bridge">The sources contribute different pieces. Your collection combines them into a method you can apply to your next task.</p>
-          <div class="demo-method-layout">
-            <div id="demo-method-list" class="demo-method-list" role="group" aria-label="Explore the playbook"></div>
-            <div class="demo-method-preview" aria-live="polite"><p class="eyebrow">Combined into a practical step</p><h4 id="demo-method-title"></h4><p id="demo-method-instruction"></p><blockquote id="demo-method-example"></blockquote><p class="eyebrow">Follow it back to the sources</p><div id="demo-evidence" class="demo-evidence"></div></div>
-          </div>
-          <div class="demo-actions"><button class="button primary" data-next="pack">Turn the collection into a pack →</button><button class="demo-back" data-next="sources">Back to sources</button></div>
-          <p class="fine">This playbook was authored and validated with Lectic from the exact passages shown here. The page previews that saved example; it does not generate new advice.</p>
-        </div>
-        <div id="demo-pack" class="demo-panel" role="tabpanel" aria-labelledby="demo-tab-pack" tabindex="0" hidden>
-          <div class="demo-panel-heading"><div><p class="eyebrow">Take it to another project or person</p><h3>One collection. One portable pack.</h3></div></div>
-          <div class="demo-pack-layout">
-            <div class="demo-pack-card"><span class="demo-file-mark" aria-hidden="true">.lectic</span><h4>customer-discovery.lectic</h4><p>The six source texts, twelve cited takeaways, and discovery playbook in one installable file.</p><ul><li>Keep the original passages and attribution</li><li>Reuse the method in another project</li><li>Share it with a teammate using Lectic</li></ul><a class="button primary" id="demo-download" href="packs/customer-discovery.lectic" download>Download the example pack</a><p class="fine" id="demo-pack-size"></p></div>
-            <div class="demo-pack-use"><p class="eyebrow">Put it to work</p><h4>Use the collection in your next conversation.</h4><p>With Lectic connected, give your assistant this request:</p><div class="copy-box"><code id="demo-install-text">Install this Lectic pack: https://tyreamer.github.io/lectic/packs/customer-discovery.lectic</code><button data-copy="demo-install-text" data-copy-status="demo-copy-status" aria-label="Copy example pack install request">Copy</button></div><p id="demo-copy-status" role="status" class="status"></p><p>Then ask it to apply what you collected:</p><blockquote>Use my Customer Discovery collection to review this interview plan: [paste your plan]</blockquote><a href="#start">Connect Lectic to your assistant →</a></div>
-          </div>
-          <details class="demo-pack-details"><summary>Inspect the example pack</summary><p>All source passages are fictional teaching material authored for Lectic under the MIT license. The pack includes text and caption excerpts representing the six formats, not original media files. It is unsigned; a checksum verifies download integrity, not publisher identity or effectiveness.</p><p class="hash" id="demo-pack-hash"></p><button id="demo-verify" class="verify">Verify this download</button><p id="demo-verify-status" role="status" class="fine"></p></details>
-          <div class="demo-actions"><button class="demo-back" data-next="sources">Explore the sources again</button></div>
-        </div>
-      </div>
-      <noscript><p>This walkthrough needs JavaScript. The example pack contains six authored source texts, twelve cited takeaways, and a reusable customer-discovery playbook.</p></noscript>
-      <p class="demo-fallback"><a href="packs/customer-discovery.lectic" download>Download the real example pack</a> · <a href="demo/customer-discovery.json">Read all six sample sources</a></p>
+      <details class="demo-about"><summary>About this example</summary><p>This animation uses an authored Customer Discovery pack: six source excerpts, twelve cited takeaways, and one reusable method. The pictured outputs are examples of requests for a connected assistant. No uploads, AI calls, or messages are sent by this page.</p><p>Media and documents need readable text or transcripts for extraction. These samples supply them; raw PDF, audio, and video files can be saved as attachments. Recipients need Lectic installed or connected.</p><p><a href="demo/customer-discovery.json">Inspect the sources</a> · <a href="packs/customer-discovery.lectic" download>Download the verified example pack</a></p><button id="demo-verify" class="verify" type="button">Check download</button><p id="demo-verify-status" class="fine" role="status"></p></details>
+      <noscript><p>Videos, podcasts, PDFs, articles, notes, and workshops → a Lectic pack → share it → create plans, checklists, lessons, and more. Enable JavaScript to play the animation, or download the example above.</p></noscript>
     </section>
 
     <!-- START / ONBOARDING -->
