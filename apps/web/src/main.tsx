@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import "./style.css";
 import PackWorkbench, { ResultText } from "./PackWorkbench";
+import Icon, { Glyph } from "./Icon";
 
 type Config = {
   dev: boolean;
@@ -112,27 +113,11 @@ const post = (
     headers: { "Idempotency-Key": retryKey },
     body: JSON.stringify(body),
   });
-const icons: Record<string, string> = {
-  chat: "◌",
-  code: "⌘",
-  seed: "↗",
-  note: "≡",
-  url: "↗",
-  upload: "▧",
-  pack: "▱",
-};
 const provenance: Record<string, string> = {
   explicit: "Source statement", inferred: "Interpretation",
   synthesized: "Adapted from your pack", original: "Original advice",
   user_context: "Your context",
 };
-function Icon({ name }: { name: string }) {
-  return (
-    <span className={"icon " + name} aria-hidden="true">
-      {icons[name] || "▱"}
-    </span>
-  );
-}
 function App() {
   const [ready, setReady] = useState(false),
     [signed, setSigned] = useState(false),
@@ -493,7 +478,7 @@ function App() {
     return (
       <main className="loading">
         <div className="brand">
-          lectic<span>✳</span>
+          lectic<span><Glyph name="brand"/></span>
         </div>
         <p>{error || "Opening your workspace…"}</p>
       </main>
@@ -501,8 +486,8 @@ function App() {
   return (
     <>
       <header>
-        <a className="brand" href="/">
-          lectic<span>✳</span>
+        <a className="brand" href="/" aria-label="Lectic home">
+          lectic<span><Glyph name="brand"/></span>
         </a>
         <span className="pilot">
           {config.dev ? "Local development preview" : "Invited pilot"}
@@ -525,7 +510,7 @@ function App() {
                   if(response?.error)report(response.error);
                 }}
               >
-                ↗
+                <Glyph name="logout"/>
               </button>}
             </>
           ) : (
@@ -538,7 +523,7 @@ function App() {
           <div className="banner error" role="alert">
             {error}
             <button onClick={() => setError("")} aria-label="Dismiss">
-              ×
+              <Glyph name="close"/>
             </button>
           </div>
         )}
@@ -546,7 +531,7 @@ function App() {
           <div className="banner" role="status">
             {notice}
             <button onClick={() => setNotice("")} aria-label="Dismiss">
-              ×
+              <Glyph name="close"/>
             </button>
           </div>
         )}
@@ -579,7 +564,7 @@ function App() {
                   }
                 }}
               >
-                Add my copy →
+                Add my copy <Glyph name="right"/>
               </button>
             ) : (
               <SignIn login={login} />
@@ -608,7 +593,7 @@ function App() {
                     <h2>{result.title}</h2>
                   </div>
                   <div className="actions">
-                    {["Agent skill", "Prompt", "MCP server"].includes(result.format) && <button className="primary" onClick={()=>download("/results/"+result.id+"/bundle","lectic-"+result.format.toLowerCase().replaceAll(" ","-")+".zip")}>Download {result.format === "MCP server" ? "server" : result.format === "Agent skill" ? "skill" : "prompt + context"} ↓</button>}
+                    {["Agent skill", "Prompt", "MCP server"].includes(result.format) && <button className="primary" onClick={()=>download("/results/"+result.id+"/bundle","lectic-"+result.format.toLowerCase().replaceAll(" ","-")+".zip")}>Download {result.format === "MCP server" ? "server" : result.format === "Agent skill" ? "skill" : "prompt + context"} <Glyph name="download"/></button>}
                     <button
                       onClick={async () => {
                         try {
@@ -633,7 +618,7 @@ function App() {
                         )
                       }
                     >
-                      Markdown ↓
+                      Markdown <Glyph name="download"/>
                     </button>
                   </div>
                 </div>
@@ -703,7 +688,7 @@ function App() {
                       .catch(report);
                   }}
                 >
-                  ✓ This is useful
+                  <Glyph name="check"/> This is useful
                 </button>
               </article>
             )}
@@ -717,11 +702,11 @@ function App() {
               <p>Bring links, files and notes together. Lectic distills them into a context pack you can use anywhere.</p>
             </section>
             <div className="distill-visual" aria-label="Many sources become one context pack, then many possibilities">
-              <div className="input-stack"><span>▧ Video</span><span>≡ Notes</span><span>↗ Links</span><span>▤ PDFs & files</span></div>
-              <span className="flow-arrow" aria-hidden="true">→</span>
-              <div className="distilled-pack"><b aria-hidden="true">▱</b><strong>Your context pack</strong><small>The useful knowledge, together.</small></div>
-              <span className="flow-arrow" aria-hidden="true">→</span>
-              <div className="output-stack"><span>Make something</span><span>Solve a problem</span><span>Learn something</span><span>Your next idea ↗</span></div>
+              <div className="input-stack"><span><Glyph name="video"/> Video</span><span><Glyph name="note"/> Notes</span><span><Glyph name="url"/> Links</span><span><Glyph name="file"/> PDFs & files</span></div>
+              <span className="flow-arrow" aria-hidden="true"><Glyph name="right"/></span>
+              <div className="distilled-pack"><Glyph name="pack"/><strong>Your context pack</strong><small>The useful knowledge, together.</small></div>
+              <span className="flow-arrow" aria-hidden="true"><Glyph name="right"/></span>
+              <div className="output-stack"><span><Glyph name="make"/> Make something</span><span><Glyph name="solve"/> Solve a problem</span><span><Glyph name="learn"/> Learn something</span><span><Glyph name="sparkle"/> Your next idea</span></div>
             </div>
             {!signed ? <SignIn login={login}/> : <>
             <section
@@ -748,7 +733,7 @@ function App() {
                     onClick={saveText}
                     disabled={busy || !captureText.trim()}
                   >
-                    Add sources →
+                    Add sources <Glyph name="right"/>
                   </button>
                 </div>
                 <button
@@ -851,7 +836,7 @@ function App() {
             )}
             {selected.length > 0 && (
               <div className="assemble-bar">
-                <strong>{selected.length} sources →</strong>
+                <strong>{selected.length} sources <Glyph name="right"/></strong>
                 <input
                   aria-label="Pack name"
                   placeholder="Name your pack"
@@ -868,7 +853,7 @@ function App() {
                   }
                   onClick={assemble}
                 >
-                  Distill into a context pack ✦
+                  Distill into a context pack <Glyph name="sparkle"/>
                 </button>
               </div>
             )}
@@ -889,9 +874,9 @@ function App() {
                         setResult(null);
                       }}
                     >
-                      See what this could become →
+                      See what this could become <Glyph name="right"/>
                     </button>
-                    <button onClick={() => sharePack(p.id)}>Share ↗</button>
+                    <button onClick={() => sharePack(p.id)}>Share <Glyph name="share"/></button>
                   </div>
                 </article>
               ))}
@@ -901,7 +886,7 @@ function App() {
               <summary>Want to try it first? Open an example</summary>
               <p>These are sample sources written by Lectic, so you can see how a context pack works.</p>
               <div className="starter-grid">{starters.map(s=><button className={"starter "+s.color} key={s.slug} onClick={()=>choose(s)}>
-                <small>Example · Lectic-authored</small><Icon name={s.icon}/><h3>{s.title}</h3><p>{s.description}</p><span>Explore this example →</span>
+                <small>Example · Lectic-authored</small><Icon name={s.icon}/><h3>{s.title}</h3><p>{s.description}</p><span>Explore this example <Glyph name="right"/></span>
               </button>)}</div>
             </details>
             {library.results.length>0 && <h2 className="section-heading">Saved creations</h2>}
@@ -909,6 +894,7 @@ function App() {
               {library.results.map((r) => (
                 <button
                   key={r.id}
+                  aria-label={r.title}
                   onClick={async () => {
                     try {
                       const loaded = await api("/results/" + r.id);
@@ -923,9 +909,9 @@ function App() {
                     }
                   }}
                 >
-                  <span>✦</span>
+                  <span><Glyph name="sparkle"/></span>
                   {r.title}
-                  <b>↗</b>
+                  <b><Glyph name="share"/></b>
                 </button>
               ))}
             </div>
@@ -998,7 +984,7 @@ function App() {
           ))}
       </main>
       <footer>
-        <span>Collect → Distill → Use anywhere → Share</span>
+        <span>Collect <Glyph name="right"/> Distill <Glyph name="right"/> Use anywhere <Glyph name="right"/> Share</span>
         <small>Lectic · Invited pilot</small>
       </footer>
       {share && (
@@ -1014,7 +1000,7 @@ function App() {
               onClick={() => setShare("")}
               aria-label="Close"
             >
-              ×
+              <Glyph name="close"/>
             </button>
             <Icon name="pack" />
             <h2 id="share-title">Pass the pack along.</h2>
@@ -1052,7 +1038,7 @@ function App() {
               onClick={() => setSource(null)}
               aria-label="Close"
             >
-              ×
+              <Glyph name="close"/>
             </button>
             <h2 id="source-title">{source.title}</h2>
             {source.preview?.sources.map((s: any) => (

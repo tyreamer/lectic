@@ -200,6 +200,11 @@ h3 {
 .mint:hover {
   background: #d6e5d3;
 }
+.glyph {
+  display: inline-block;
+  flex-shrink: 0;
+  vertical-align: -0.16em;
+}
 .icon {
   display: inline-flex;
   justify-content: center;
@@ -729,12 +734,18 @@ footer {
 .loading .brand {
   justify-content: center;
 }
-.visually-hidden {
+.visually-hidden,
+input.visually-hidden {
   position: absolute;
   width: 1px;
   height: 1px;
+  padding: 0;
+  border: 0;
+  margin: -1px;
   overflow: hidden;
   clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 @media (max-width: 740px) {
   header {
@@ -904,13 +915,14 @@ footer {
 .collect-intro > p:last-child {max-width:650px;font-size:17px;line-height:1.55;}
 .distill-visual {display:flex;align-items:center;justify-content:center;gap:32px;padding:28px 0 38px;}
 .input-stack,.output-stack {display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
-.input-stack span,.output-stack span {padding:12px 15px;border:1px solid #dedfd5;border-radius:12px;background:white;font-size:13px;}
+.input-stack span,.output-stack span {display:flex;align-items:center;gap:7px;padding:12px 15px;border:1px solid #dedfd5;border-radius:12px;background:white;font-size:13px;}
+.input-stack .glyph,.output-stack .glyph {font-size:17px;}
 .input-stack span:nth-child(2) {background:#f4e9db;transform:rotate(3deg);}
 .input-stack span:nth-child(3) {background:#e9e5f5;transform:rotate(-3deg);}
 .output-stack span {border-style:dashed;background:transparent;}
 .flow-arrow {color:#8f9c88;font-size:26px;}
 .distilled-pack {display:flex;flex-direction:column;align-items:center;gap:10px;border:1px solid #bfd2b6;border-left:8px solid #abc79f;background:#e2ecdb;padding:24px 28px;border-radius:16px;box-shadow:6px 6px 0 #edf0e6;text-align:center;}
-.distilled-pack b {font-size:38px;font-weight:400;line-height:1;}
+.distilled-pack>.glyph {font-size:38px;}
 .distilled-pack strong {font-size:17px;}
 .distilled-pack small {font-size:11px;color:#526650;}
 .examples {margin:34px 0;padding:22px;border:1px solid #dedfd5;border-radius:14px;}
@@ -986,6 +998,10 @@ footer {
  .distilled-pack small {font-size:9px;max-width:120px;}
  .flow-arrow {font-size:18px;}
  .output-stack span {font-size:10px;padding:9px 6px;}
+ .output-stack {grid-template-columns:repeat(2,minmax(0,1fr));}
+ .input-stack span {gap:5px;}
+ .input-stack {grid-template-columns:1fr;}
+ .input-stack .glyph,.output-stack .glyph {font-size:14px;}
  .collect-intro {padding-top:34px;}
  .collect-intro>p:last-child {font-size:15px;}
  .section-heading h2 {font-size:22px;}

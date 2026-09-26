@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Glyph } from "./Icon";
 
 export type Idea = { title: string; description: string; format: string; brief: string; unit_ids: string[] };
 type Props = {
@@ -54,9 +55,9 @@ export default function PackWorkbench(p: Props) {
     "MCP server":`Make the context in ${p.pack.title} available to an AI assistant through a read-only MCP server. Include useful example queries and explain its boundaries.`,
   } as Record<string,string>)[format] || "";
   return <>
-    <button className="text-button back-link" onClick={p.back}>← Your sources & packs</button>
+    <button className="text-button back-link" onClick={p.back}><Glyph name="left"/> Your sources & packs</button>
     <section className="context-heading">
-      <span className="context-glyph" aria-hidden="true">▱</span>
+      <span className="context-glyph" aria-hidden="true"><Glyph name="pack"/></span>
       <div>
         <p className="eyebrow">{p.pack.slug || p.pack.starter || info?.starter ? "Example context pack · Lectic-authored" : "Your context pack"}</p>
         <h1>{p.pack.title}</h1>
@@ -64,7 +65,7 @@ export default function PackWorkbench(p: Props) {
         {info && <small>{info.source_count} sources · {info.preview.units.length} distilled insights</small>}
       </div>
     </section>
-    {p.pack.id && <div className="pack-actions"><button onClick={p.share}>Share pack ↗</button><button onClick={p.inspect}>What's inside</button></div>}
+    {p.pack.id && <div className="pack-actions"><button onClick={p.share}>Share pack <Glyph name="share"/></button><button onClick={p.inspect}>What's inside</button></div>}
     {!p.signed ? p.signIn : !p.pack.id ? <p role="status">Opening this example…</p> : <>
       <div className="section-heading"><div><h2>Where could this take you?</h2><p>A few starting points from your pack. You can always try something else.</p></div></div>
       <form className="personalize" onSubmit={e=>{e.preventDefault();setRequestedContext(situation.trim());}}>
@@ -75,22 +76,22 @@ export default function PackWorkbench(p: Props) {
       {error && <p role="status" className="muted">{error}</p>}
       <div className="idea-grid">
         {(info?.suggestions?.ideas || []).map((idea:Idea,i:number)=><button className="idea-card" key={i} disabled={p.busy} onClick={()=>select(idea.format,idea.brief)}>
-          <h3>{idea.title}</h3><p>{idea.description}</p><span>Try this ↗</span>
+          <h3>{idea.title}</h3><p>{idea.description}</p><span>Try this <Glyph name="share"/></span>
         </button>)}
-        <button className="idea-card custom-idea" disabled={p.busy} onClick={()=>select("Your Idea","")}><h3>Something else in mind?</h3><p>Tell Lectic what you want to make, explore, or work through.</p><span>Start with your idea ↗</span></button>
+        <button className="idea-card custom-idea" disabled={p.busy} onClick={()=>select("Your Idea","")}><h3>Something else in mind?</h3><p>Tell Lectic what you want to make, explore, or work through.</p><span>Start with your idea <Glyph name="share"/></span></button>
       </div>
-      <details className="use-with-ai"><summary>Use this with ChatGPT or Claude ↗</summary>
+      <details className="use-with-ai"><summary>Use this with ChatGPT or Claude <Glyph name="share"/></summary>
         <p>Take the context to the assistant that already knows you.</p>
-        <ol><li><button onClick={p.exportContext}>Download context file ↓</button></li><li>Attach the file in your chat.</li><li>Ask this, or ask anything you like:</li></ol>
+        <ol><li><button onClick={p.exportContext}>Download context file <Glyph name="download"/></button></li><li>Attach the file in your chat.</li><li>Ask this, or ask anything you like:</li></ol>
         <blockquote>{aiPrompt}</blockquote>
         <button onClick={async()=>{try{await navigator.clipboard.writeText(aiPrompt);setCopyStatus("Copied");}catch{setCopyStatus("Select and copy the text above.");}}}>Copy question</button><span role="status" className="copy-status">{copyStatus}</span>
       </details>
-      <details className="other-uses"><summary>Advanced options</summary><div className="formats">{formats.map(f=><button key={f} disabled={p.busy} onClick={()=>select(f,template(f))}>{f}</button>)}<button onClick={p.download}>Download .lectic pack ↓</button></div></details>
+      <details className="other-uses"><summary>Advanced options</summary><div className="formats">{formats.map(f=><button key={f} disabled={p.busy} onClick={()=>select(f,template(f))}>{f}</button>)}<button onClick={p.download}>Download .lectic pack <Glyph name="download"/></button></div></details>
       {editing && <section className="compose idea-compose">
         <div className="section-heading"><h2>{p.format === "Your Idea" ? "What would you like to make?" : "Make it yours"}</h2><button className="text-button" onClick={()=>setEditing(false)}>Close</button></div>
         <label htmlFor="brief">{p.format === "Review" ? "Paste what you want reviewed" : "Make it yours"}</label>
         <textarea ref={briefInput} id="brief" value={p.brief} onChange={e=>p.changeBrief(e.target.value)} maxLength={12000} placeholder="Tell Lectic what you want to create with this context…" rows={4}/>
-        <button className="primary" disabled={p.busy || p.brief.trim().length<5} onClick={p.create}>{p.busy?"Creating…":p.format === "Your Idea"?"Make it happen ✦":"Create "+p.format.toLowerCase()+" ✦"}</button>
+        <button className="primary" disabled={p.busy || p.brief.trim().length<5} onClick={p.create}>{p.busy?"Creating…":p.format === "Your Idea"?"Make it happen":"Create "+p.format.toLowerCase()} {!p.busy && <Glyph name="sparkle"/>}</button>
         <small>{p.format === "MCP server" ? "Downloads a working server bundle. You choose where to connect it." : p.format === "Agent skill" ? "Downloads SKILL.md and its source context." : p.format === "Prompt" ? "A reusable prompt with the context included." : "Your pack supplies the context. You supply the direction."}</small>
       </section>}
     </>}
