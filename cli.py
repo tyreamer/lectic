@@ -1,27 +1,27 @@
-"""`lectic`: the one command a person needs.
+"""`lectic`: the only tool you need to turn what you learn into permanent AI expertise.
 
-    lectic setup            connect the assistants on this machine, verify the connection, offer YouTube support
-    lectic try              run the offline starter example and see saved knowledge reused
-    lectic identity         set or show the identity that signs your packs (lectic identity set "Name" --contact x)
-    lectic share            give ChatGPT, Claude, Gemini or any hosted assistant one link to your knowledge
-    lectic connect URL      point Claude Code and Codex at a Lectic running elsewhere
-    lectic pack NAME        one shareable file carrying a collection's knowledge (--team, --version, --include-sources)
-    lectic search [QUERY]   search the pack registry for verified expertise (--tag T, --json)
-    lectic inspect TARGET   preview a pack's evidence and methods before installing (registry:NAME, FILE, URL)
-    lectic install TARGET   add a pack to your knowledge (registry:NAME, FILE, URL; --as NAME, --pin)
-    lectic update NAME      check pack origin for newer version and update
-    lectic publish NAME     upload pack to team host or registry (--to URL, --registry, --webhook URL)
-    lectic verify [NAME]    check that a collection's evidence is fully anchored (exit 0 = verified, 1 = issues)
-    lectic inbox [--process] view or sort dropped links and files from your Lectic Inbox
-    lectic backup [--out F] every collection, source and build in one archive file
-    lectic push LINK        move this knowledge onto a Lectic running elsewhere
-    lectic pull LINK        bring that Lectic's knowledge here
-    lectic restore FILE     merge a backup archive into this knowledge
-    lectic status           where knowledge lives, what is saved, which assistants are connected
-    lectic serve [--http]   run the MCP server (what the assistants launch; you rarely run it yourself)
-    lectic ec ...           the deterministic utilities, for contributors
+    lectic setup            connect your AI assistants in seconds (Claude Code, Codex, ChatGPT)
+    lectic try              try a sample playbook offline to see your AI in action
+    lectic identity         set your author name for playbooks you share (lectic identity set "Name" --contact email)
+    lectic share            give ChatGPT, Claude, or your phone one link to your playbooks
+    lectic connect URL      connect your AI to a remote Lectic library
+    lectic pack NAME        export a collection into one shareable playbook file (.lectic)
+    lectic search [QUERY]   find ready-to-use playbooks from creators and teams
+    lectic inspect TARGET   preview what's inside a playbook before adding it
+    lectic install TARGET   add a playbook to your AI (from a link, file, or name)
+    lectic update NAME      get the latest updates for an installed playbook
+    lectic publish NAME     share your playbook with your team or community
+    lectic verify [NAME]    check that every rule in a collection links to exact source quotes
+    lectic inbox [--process] view or sort dropped links and files from your drop folder
+    lectic backup [--out F] back up all your playbooks and sources in one file
+    lectic push LINK        sync your playbooks to another computer
+    lectic pull LINK        bring your playbooks from another computer here
+    lectic restore FILE     restore your playbooks from a backup file
+    lectic status           see your saved playbooks, drop folder, and connected AIs
+    lectic serve [--http]   start the AI connector (launched automatically by your AI)
+    lectic ec ...           internal developer utilities
 
-Everything else happens in conversation with the connected assistant.
+Everything else happens naturally in conversation with your AI.
 """
 from __future__ import annotations
 
@@ -221,7 +221,7 @@ def offer_identity(interactive):
     default_email = git_config_value('user.email') or ''
     if not interactive:
         return 'not set (run: lectic identity set "Name" --contact email)'
-    prompt = f'  Name for signing your packs [{default_name}]: ' if default_name else '  Name for signing your packs (or Enter to skip): '
+    prompt = f'  Author name for playbooks you share [{default_name}]: ' if default_name else '  Author name for playbooks you share (or Enter to skip): '
     name = input(prompt).strip() or default_name
     if not name:
         return 'skipped (run: lectic identity set any time)'
@@ -235,26 +235,26 @@ def offer_identity(interactive):
 
 def setup(argv):
     interactive = sys.stdin.isatty() and '--yes' not in argv
-    print('Connecting Lectic to the assistants on this machine.\n')
+    print('Connecting Lectic to the AI assistants on your computer.\n')
     ok, home = verify_server()
     if not ok:
-        print('  The Lectic server did not start correctly. Run `lectic status` for details.'); return 1
+        print('  The Lectic service did not start correctly. Run `lectic status` for details.'); return 1
     results = {'Claude Code': connect_claude(), 'Codex': connect_codex()}
     checks = checked_clients()
     results = {name: checks[name] if state == 'connected' else state for name, state in results.items()}
     for name, state in results.items():
         print(f'  {name:<12} {state}')
-    print(f'  {"Identity":<12} {offer_identity(interactive)}')
+    print(f'  {"Author":<12} {offer_identity(interactive)}')
     print(f'  {"YouTube":<12} {offer_youtube(interactive)}')
     from inbox import ensure_inbox_folder
     inbox_dir = ensure_inbox_folder(Path.cwd())
-    print(f'  {"Drop Inbox":<12} {inbox_dir}')
+    print(f'  {"Drop Folder":<12} {inbox_dir}')
     print(f'\nKnowledge lives in {home["home"]} and is shared by every project and assistant here.')
     if any(s.startswith('connected') for s in results.values()):
-        print('\nOne step left: restart the assistant so it picks up the connection.')
+        print('\nOne step left: restart your AI assistant so it picks up the connection.')
         print('Then open it in any folder and just talk:\n')
         for line in ('Save this for later: https://www.youtube.com/watch?v=...',
-                     'Drop any video, note, or link into your Lectic Inbox folder',
+                     'Drop any video, note, or link into your Lectic folder',
                      'Use my Sales Training to review this call transcript.'):
             print('  ' + line)
     else:

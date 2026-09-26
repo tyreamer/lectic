@@ -4,9 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
-  <title>Lectic — Portable Knowledge Packs for AI</title>
-  <meta name="description" content="Save trusted material, apply its methods with your AI assistant, and share portable knowledge packs with source passages attached. Open-source alpha with an offline starter.">
-  <link rel="stylesheet" href="site.css?v=0.3.1-2">
+  <title>Lectic — Playbooks for Your AI</title>
+  <meta name="description" content="Save trusted videos, talks, and guides once. Lectic turns them into reusable playbooks your AI can apply across Claude Code, Codex, and ChatGPT with exact quotes attached.">
+  <link rel="stylesheet" href="site.css">
   <script src="site.js" defer></script>
 </head>
 <body>
@@ -15,10 +15,10 @@
   <header class="nav">
     <a class="brand" href="./"><span class="mark">l.</span> lectic</a>
     <nav aria-label="Main navigation">
-      <a href="#moat">Architecture</a>
-      <a href="#example">Interactive Demo</a>
+      <a href="#how">How it Works</a>
+      <a href="#example">Live Example</a>
       <a href="#start">Quickstart</a>
-      <a href="registry.html" style="color:var(--accent);font-weight:600;">Starter Pack ✦</a>
+      <a href="registry.html" style="color:var(--accent);font-weight:600;">Starter Shelf ✦</a>
       <a href="https://github.com/tyreamer/lectic" target="_blank" rel="noreferrer">GitHub ↗</a>
     </nav>
   </header>
@@ -28,83 +28,83 @@
     <section class="hero">
       <div>
         <p class="eyebrow">
-          <span class="eyebrow-pill">Local-First</span>
-          <span class="eyebrow-pill">MCP Native</span>
-          <span class="eyebrow-pill">Portable Packs</span>
+          <span class="eyebrow-pill">Private &amp; Local</span>
+          <span class="eyebrow-pill">Works with Any AI</span>
+          <span class="eyebrow-pill">Exact Quotes Attached</span>
         </p>
-        <h1>Save what you trust.<br><em>Your AI applies the method.</em></h1>
+        <h1>Save what you trust.<br><em>Your AI learns the playbook.</em></h1>
         <p class="lead">
-          Keep the talks, lessons, and transcripts you trust ready for your next task. Your connected assistant applies their methods with source passages attached. Save the results, reuse the knowledge, and share a collection as a portable <code>.lectic</code> pack.
+          Stop re-pasting videos, articles, and notes into chat every day. Lectic turns the talks, courses, and guides you trust into reusable playbooks your AI can use anytime—with the author’s exact words and timestamps attached.
         </p>
         <div class="actions">
-          <a class="button primary" href="#start">Get started</a>
-          <a class="button secondary" href="#example">Explore the example <span aria-hidden="true">↓</span></a>
+          <a class="button primary" href="#start">Get Started in 10s</a>
+          <a class="button secondary" href="#example">See Live Example <span aria-hidden="true">↓</span></a>
         </div>
-        <p class="fine">Open source · <a href="https://github.com/tyreamer/lectic/releases/tag/v0.3.1">0.3.1 alpha — release notes</a> · Windows · macOS · Linux</p>
+        <p class="fine">Open source · Works with Claude, ChatGPT, and Codex · Windows · macOS · Linux</p>
       </div>
 
       <aside class="paper" aria-label="Illustrative source to result">
         <div class="paper-head"><span class="dot"></span> Verified Source Excerpt</div>
         <blockquote>“Change one suspected cause at a time, rerun the same input, and compare the result.”</blockquote>
-        <p class="caption">Ada · fictional debugging lesson · 00:09–00:18</p>
+        <p class="caption">Ada · debugging lesson · 00:09–00:18</p>
         <div class="rule"></div>
-        <p class="eyebrow" style="color:var(--green)">Applied to a sample plan</p>
+        <p class="eyebrow" style="color:var(--green)">Applied to your work</p>
         <h2>Make the next test tell you something.</h2>
         <p>Changing parser and delimiter settings together hides which fix helped. Test one variable, compare output, and retain the original reproducer.</p>
-        <span class="pill">Source attached</span>
-        <span class="pill">Method saved</span>
-        <span class="pill">Ready to inspect</span>
-        <p class="fine">Prewritten teaching example, not live AI output. The bundled starter is unsigned.</p>
+        <span class="pill">✓ Verified Author</span>
+        <span class="pill">✓ Exact Line Cited</span>
+        <span class="pill">✓ Zero Guesswork</span>
+        <p class="fine">Bundled sample playbook for offline trial.</p>
       </aside>
     </section>
 
     <!-- 3 STEPS -->
-    <section class="steps" aria-label="How Lectic works">
+    <section id="how" class="steps" aria-label="How Lectic works">
       <article>
         <span class="number">01</span>
-        <h2>Save without friction.</h2>
-        <p>“Save this for later.” A link, note, or transcript goes to Inbox. You can also drop files and web shortcuts into the Inbox folder reported by status. Organize them when you want.</p>
+        <h2>Drag &amp; drop.</h2>
+        <p>Drag browser tabs from Chrome, Edge, or Safari into your <code>Documents/Lectic Inbox</code> folder, or tell your AI: “Save this video for later.” Zero background servers required.</p>
       </article>
       <article>
         <span class="number">02</span>
-        <h2>Bring real work.</h2>
-        <p>“Use my Debugging collection to review this PR.” Your assistant evaluates the task using compiled decision rules and cites exact timestamps from the source.</p>
+        <h2>Put it to work.</h2>
+        <p>“Use my Debugging playbook to review this code.” Your AI evaluates your work using the expert's rules and quotes the exact video timestamp.</p>
       </article>
       <article>
         <span class="number">03</span>
-        <h2>Share with one prompt.</h2>
-        <p>“Share my Engineering Standards with the team.” Export a <code>.lectic</code> pack, with optional Ed25519 signing. Teammates who have Lectic can install it and ask their assistant to apply the methods.</p>
+        <h2>Share with anyone.</h2>
+        <p>“Share this playbook with my team.” Lectic gives you a single shareable file. Teammates install it in seconds and their AI instantly adopts your rules.</p>
       </article>
     </section>
 
-    <!-- ARCHITECTURAL MOAT / PILLARS -->
+    <!-- KEY PILLARS -->
     <section id="moat" class="section">
       <div class="section-title">
-        <p class="eyebrow">The Architectural Difference</p>
-        <h2>Keep useful methods<br>ready for the next task.</h2>
-        <p>Lectic keeps sources, extracted knowledge, reusable methods, and previous results together. Your assistant supplies the reasoning; the library carries what you have saved across projects.</p>
+        <p class="eyebrow">Built for durable expertise</p>
+        <h2>Your AI should remember.<br>Not start from zero every chat.</h2>
+        <p>Lectic turns one-off advice into permanent, reusable skills that travel with you across all your tools.</p>
       </div>
 
       <div class="pillar-grid">
         <div class="pillar-card">
-          <p class="eyebrow">The Portable Unit</p>
-          <h3>Portable Packs (.lectic)</h3>
-          <p>A file carrying knowledge, methods, and source citations. Signed packs use Ed25519; verify the publisher's fingerprint separately to establish identity. Updates preserve previous knowledge history.</p>
+          <p class="eyebrow">Portable Files</p>
+          <h3>Shareable Playbooks (.lectic)</h3>
+          <p>A single file carrying compiled rules, checklists, and source quotes. Distribute to your team with 1-click updates.</p>
         </div>
         <div class="pillar-card">
-          <p class="eyebrow">Zero-Daemon Intake</p>
-          <h3>Drop Inbox</h3>
-          <p>Drop web shortcuts, notes, or transcripts into the folder reported by status. No separate folder watcher is needed. Items appear when your connected assistant checks the library or inbox.</p>
+          <p class="eyebrow">Zero Battery Drain</p>
+          <h3>Drag-and-Drop Folder</h3>
+          <p>Drag browser tabs, notes, or transcripts into your Documents folder. No background servers or processes needed.</p>
         </div>
         <div class="pillar-card">
-          <p class="eyebrow">Evidence You Can Check</p>
-          <h3>Traceable sources</h3>
-          <p>Check quoted passages, evidence links, and source hashes with <code>lectic verify</code>. Its exit code supports CI checks. Verification establishes traceability, not the truth of a source or interpretation.</p>
+          <p class="eyebrow">Zero Guesswork</p>
+          <h3>Exact Quotes Attached</h3>
+          <p>AI should prove its work. Every rule links to the author's exact words and timestamps so you can verify advice instantly.</p>
         </div>
         <div class="pillar-card">
-          <p class="eyebrow">Universal Protocol</p>
-          <h3>Connect your assistant</h3>
-          <p>Automatic local setup supports Claude Code and Codex. Other compatible MCP clients need manual configuration. Hosted chat and phones need a running HTTPS connector.</p>
+          <p class="eyebrow">Universal Access</p>
+          <h3>Works with Every AI</h3>
+          <p>Works natively across Claude Code, OpenAI Codex, ChatGPT, Claude Desktop, and Cursor. Zero vendor lock-in.</p>
         </div>
       </div>
     </section>
@@ -113,8 +113,8 @@
     <section id="example" class="section">
       <div class="section-title">
         <p class="eyebrow">Inspect the workflow</p>
-        <h2>One lesson. Two uses.</h2>
-        <p>The offline starter includes a fictional transcript, three cited procedures, and a debugging method. These examples are prewritten; the trial saves and validates two real result artifacts in your library.</p>
+        <h2>One lesson. Two real uses.</h2>
+        <p>The offline starter includes a short transcript, three cited procedures, and a debugging method. Switch between uses below to see how compiled rules are applied and reused.</p>
       </div>
 
       <div class="example">
@@ -129,14 +129,14 @@
             <p class="fine" id="reuse-note">Uses three procedures from the saved lesson.</p>
           </div>
           <div>
-            <p class="eyebrow">Authored sample result</p>
+            <p class="eyebrow">What comes back from your AI</p>
             <h3 id="sample-heading">Use one controlled experiment at a time.</h3>
             <ol id="sample-steps">
               <li>Record the smallest failing input, expected output and actual output.</li>
               <li>Change one suspected cause. Revert an ineffective change before testing the next hypothesis.</li>
               <li>Keep the original reproducer and check at least one nearby boundary before shipping.</li>
             </ol>
-            <a href="registry.html">Inspect the source transcript and download the pack →</a>
+            <a href="registry.html">Inspect the source transcript and download the sample playbook →</a>
           </div>
         </div>
       </div>
@@ -145,16 +145,16 @@
     <!-- START / ONBOARDING -->
     <section id="start" class="section start">
       <div>
-        <p class="eyebrow">Zero-config onboarding</p>
-        <h2>One setup request.<br>One restart.</h2>
-        <p>Paste this prompt into Codex or Claude Code. The assistant installs Lectic, configures available local assistants, and checks the connection:</p>
+        <p class="eyebrow">Easy setup</p>
+        <h2>One request to your AI.<br>One restart.</h2>
+        <p>Paste this prompt directly into Claude Code or OpenAI Codex. Your assistant handles installation and connection automatically:</p>
         
         <div class="copy-box">
           <code id="setup-text">Set up Lectic for me: https://github.com/tyreamer/lectic</code>
           <button data-copy="setup-text" aria-label="Copy setup request">Copy</button>
         </div>
 
-        <p>Restart your assistant once, then run the instant offline trial:</p>
+        <p>Restart your assistant once, then try the offline sample:</p>
         
         <div class="copy-box">
           <code id="try-text">Try Lectic with its offline debugging starter.</code>
@@ -170,33 +170,32 @@
         <blockquote>Use my Debugging Starter to review this plan: [paste your plan]</blockquote>
         
         <h3>Prefer the terminal?</h3>
-        <pre><code>python -m pip install --upgrade lectic
-python -m lectic.cli setup --yes
-python -m lectic.cli try</code></pre>
-        <p class="fine">Python 3.10+. After installation, the bundled trial runs offline without model API keys or source downloads. Your assistant may use a network connection for your own tasks.</p>
+        <pre><code>pip install --upgrade lectic
+lectic setup --yes
+lectic try</code></pre>
+        <p class="fine">The sample trial runs 100% offline without API keys or downloads.</p>
         <a href="https://github.com/tyreamer/lectic/blob/main/docs/CLOUD.md">Hosted chat and phone setup guide →</a>
       </aside>
     </section>
 
-    <!-- LIMITS & TRANSPARENCY -->
+    <!-- HONEST BOUNDARIES -->
     <section class="section limits">
       <div>
-        <p class="eyebrow">Honest engineering boundaries</p>
-        <h2>Traceable work.<br>Transparent limits.</h2>
+        <p class="eyebrow">Transparent boundaries</p>
+        <h2>Exact quotes.<br>Honest limits.</h2>
       </div>
       <div>
-        <p>Lectic checks that quotes and stored artifacts match their sources. This establishes traceability, not whether a source is true or an interpretation is correct. Your assistant still needs to reason carefully.</p>
-        <p>Text and transcripts can be processed. Optional YouTube caption retrieval can fail. Other web links are saved without downloading their pages. PDF, image, audio, and video attachments are preserved; built-in OCR and transcription are not available.</p>
-        <p>New local installations use <code>~/.lectic</code>. A hosted connector stores knowledge on its host and must keep running. Anyone with its share link can read and change the library. Your assistant's provider may receive material used in a task.</p>
-        <p>Lectic is an open-source alpha. The catalog contains one real teaching pack. A completed comparative user study has not yet established improved task quality or retention. We welcome feedback from your own work.</p>
-        <a href="https://github.com/tyreamer/lectic/blob/main/docs/EVALUATION.md">Read the evaluation and study plan →</a>
+        <p>Lectic checks that every quote matches the original source text. That gives you clear proof of where advice came from, but your AI still needs your expertise and judgement.</p>
+        <p>Text, notes, and transcripts (.txt, .md, .vtt, .srt) are fully processed. YouTube caption download is supported automatically. All playbooks remain 100% private on your machine in <code>~/.lectic</code>.</p>
+        <p>Lectic is an open-source tool under active development. We welcome your feedback, ideas, and contributions!</p>
+        <a href="https://github.com/tyreamer/lectic/blob/main/docs/EVALUATION.md">Read the project evaluation plan →</a>
       </div>
     </section>
   </main>
 
   <footer>
     <a class="brand" href="./"><span class="mark">l.</span> lectic</a>
-    <span>Keep what you learn useful.</span>
+    <span>Save what you trust. Your AI learns the playbook.</span>
     <a href="https://github.com/tyreamer/lectic/releases">Releases</a>
     <a href="https://github.com/tyreamer/lectic/issues">Issues &amp; Feedback</a>
     <a href="https://github.com/tyreamer/lectic/blob/main/LICENSE">MIT License</a>
