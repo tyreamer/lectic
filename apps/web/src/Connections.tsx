@@ -9,6 +9,7 @@ type Props = {
   mcpUrl: string | null;
   login: (provider: "google" | "apple") => void;
   checkAccount: () => Promise<unknown>;
+  loginError?: string;
 };
 
 function Login({login}: Pick<Props,"login">) {
@@ -68,7 +69,7 @@ export function ConnectionConsent(props: Props & {authorizationId: string}) {
         <details><summary>Connection details</summary><p>Client ID: {details.client.id}</p><p>Return address: {details.redirect_uri}</p><p>Identity information requested: {details.scope || "email"}</p><small>The app name is supplied by the app registering this request.</small></details>
         <div className="actions"><button className="primary" disabled={busy} onClick={()=>decide(true)}>{busy?"Connecting…":"Connect my Lectic"}</button><button disabled={busy} onClick={()=>decide(false)}>Not now</button></div>
       </> : !error && <p>Checking your connection request…</p>}
-      {error && <div role="alert" className="error"><p>{error}</p><p>Return to your AI chat to start a new connection request.</p></div>}
+      {(error || props.loginError) && <div role="alert" className="error"><p>{error || props.loginError}</p><p>Return to your AI chat to start a new connection request.</p></div>}
     </section>
   </main>;
 }

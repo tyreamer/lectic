@@ -218,7 +218,8 @@ function App() {
             autoRefreshToken: true,
           },
         });
-        const { data } = await auth.auth.getSession();
+        const { data, error: sessionError } = await auth.auth.getSession();
+        if(sessionError)setError(sessionError.message);
         setSigned(!!data.session);
         auth.auth.onAuthStateChange((event, s) => {
           setSigned(!!s);
@@ -496,7 +497,7 @@ function App() {
         <p>{error || "Opening your workspace…"}</p>
       </main>
     );
-  const connectionProps = {auth,signed,enabled:config.chatEnabled,mcpUrl:config.mcpUrl,login,checkAccount:()=>api("/library")};
+  const connectionProps = {auth,signed,enabled:config.chatEnabled,mcpUrl:config.mcpUrl,login,loginError:error,checkAccount:()=>api("/library")};
   if(consentRoute)return <ConnectionConsent {...connectionProps} authorizationId={authorizationId}/>;
   return (
     <>
