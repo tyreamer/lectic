@@ -23,7 +23,7 @@ SKILL_NAMES = {'lectic', 'expertise-compiler'}
 # Same clean payload as install_skill.py; installed receipts/backups live outside it.
 PAYLOAD = ['SKILL.md', 'LICENSE', 'README.md', 'DESIGN.md', 'agents', 'scripts',
            'schemas', 'prompts', 'fixtures', 'docs']
-OPTIONAL = ['NORTH_STAR.md']
+OPTIONAL = ['NORTH_STAR.md', 'registry']
 LIMIT = 32 * 1024 * 1024
 
 

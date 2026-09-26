@@ -70,7 +70,7 @@ lectic connect https://your-host/t/<secret>/mcp
 
 `lectic setup` switches a machine back to its own local knowledge at any time.
 
-YouTube retrieval from a datacenter is often blocked by YouTube. If captions fail on the hosted server, save the link there and process the collection once from a machine on a home connection with `lectic connect` pointed at the server; the retrieved captions are cached in the home.
+YouTube retrieval from a datacenter is often blocked by YouTube. Connecting a home computer to the hosted server does not move retrieval: tools still run on the server. If captions fail there, process them in a local Lectic home on a permitted network, then transfer the resulting knowledge with `lectic push`. Existing collections that differ remain separate; inspect the merge report. The server can also use an explicitly configured permitted proxy.
 
 ## Where to paste the link
 

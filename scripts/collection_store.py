@@ -5,7 +5,7 @@ import uuid
 from ec import VERSION, Invalid, fingerprint, plan_records, read, require, safe_child, validate_schema, validate_sources, validate_ir, validate_units, write, write_run
 from ingestors import TranscriptInput, adapter_for
 from home import storage_root
-from store import LocalStore
+from store import LocalStore, home_transaction
 
 
 class Library:
@@ -14,6 +14,10 @@ class Library:
         self.root = Path(home).resolve() if home else storage_root(self.project)
         self.store = LocalStore(self.root)
         self.path = self.root / 'library.json'
+        self._versions = {}
+        self.reload()
+
+    def reload(self):
         self.index = read(self.path) if self.path.exists() else {'schema_version':VERSION,'collections':[], 'active_collection':None}
         require(type(self.index) is dict and self.index.get('schema_version') == VERSION and type(self.index.get('collections')) is list, 'Malformed collection library')
         seen_ids, seen_names = set(), set()
@@ -37,17 +41,29 @@ class Library:
         require(len(revisions) == len(set(revisions)) and data['active_revision'] in revisions, 'Malformed source revisions')
         if 'revision_history' in data:
             require(set(data['revision_history'])<=set(revisions) and data['revision_history'][-1]==data['active_revision'], 'Malformed revision history')
+        self._versions[data['collection_id']] = fingerprint(data)
         return folder, data
 
+    @home_transaction
     def save(self, folder, data):
         validate_schema(data, 'collection')
+        self.reload()
+        record = folder / 'collection.json'
+        if record.exists():
+            require(fingerprint(read(record)) == self._versions.get(data['collection_id']),
+                    'This collection changed in another operation; reopen it and retry. Nothing was overwritten.')
+        require(not any(c['name'].casefold() == data['name'].casefold() and c['collection_id'] != data['collection_id']
+                        for c in self.index['collections']), 'That collection name already exists; reopen the library and retry')
         write(folder / 'collection.json', data)
+        self._versions[data['collection_id']] = fingerprint(data)
         entry = {'collection_id':data['collection_id'],'name':data['name'],'path':folder.relative_to(self.root).as_posix()}
         self.index['collections'] = [c for c in self.index['collections'] if c['collection_id'] != data['collection_id']] + [entry]
         self.index['active_collection'] = data['collection_id']
         write(self.path, self.index)
 
+    @home_transaction
     def archive(self, input=None, *, name=None, collection=None, metadata=None, adopt=None, add=False, remove=None, replace=False):
+        self.reload()
         existing = self.resolve(collection) if collection else None
         if existing:
             folder, data = existing
@@ -94,8 +110,18 @@ class Library:
                 if previous: self.carry_checkpoints(previous, staging)
         revision_id = 'source-' + corpus['corpus_id'].split('-')[1][:24]
         destination = folder / 'sources' / revision_id
+        if adopt and (original / 'ir.json').exists():
+            incoming_ir = validate_ir(original)
+            if destination.exists() and (not (destination / 'ir.json').exists() or
+                    fingerprint(validate_ir(destination)) != fingerprint(incoming_ir)):
+                # A source corpus can carry several interpretations. Keep each adopted
+                # run immutable so old builds retain their exact historical knowledge.
+                revision_id += '-ir-' + fingerprint(incoming_ir)[:16]
+                destination = folder / 'sources' / revision_id
         if destination.exists():
             require(validate_sources(destination)[0] == corpus, 'Source revision identity collision')
+            if adopt and (original / 'ir.json').exists():
+                require(fingerprint(validate_ir(destination)) == fingerprint(incoming_ir), 'Knowledge revision identity collision')
         else:
             with self.store.stage(destination, '.archive-') as staging:
                 assemble(staging)
@@ -136,6 +162,7 @@ class Library:
         write(candidate/'source-change.json',{'previous_corpus':validate_sources(previous)[0]['corpus_id'],
               'retained_unit_ids':sorted(valid),'invalidated_unit_ids':sorted(set(original)-set(valid))})
 
+    @home_transaction
     def attach_shared(self, selector, sources, managed_ids):
         """Set capture-owned memberships; keep manual sources and all old snapshots.
 
@@ -143,6 +170,7 @@ class Library:
         blob store, so the snapshot keeps its self-contained layout without owning a
         second copy of any payload the filesystem can share.
         """
+        self.reload()
         folder,data=self.resolve(selector); previous=self.run(folder,data)
         old,docs,_=validate_sources(previous)
         files={sid:(previous,d) for sid,d in docs.items() if sid not in managed_ids}

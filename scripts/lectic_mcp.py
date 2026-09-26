@@ -1,6 +1,6 @@
 """Lectic as an MCP server: the same home, reached through tools instead of an installed skill.
 
-Stdlib only. Speaks JSON-RPC 2.0 over stdio (one JSON message per line) as the
+Speaks JSON-RPC 2.0 over stdio (one JSON message per line) as the
 Model Context Protocol specifies, so Claude Code, Codex and other MCP clients can
 operate the compiler without file access to the Lectic home. Every record the
 assistant used to write straight to disk now enters through `lectic_write_json`,
@@ -29,26 +29,22 @@ from ec import (ROOT, VERSION, Invalid, read, require, safe_child, validate_capa
                 validate_schema, validate_sources, validate_units, write)
 from home import describe, storage_root
 
-SERVER_VERSION = '0.1'
+from release_version import VERSION as SERVER_VERSION
 PROTOCOL_VERSIONS = ['2025-06-18', '2025-03-26', '2024-11-05']
 
 INSTRUCTIONS = '''Lectic keeps what the user trusts (videos, transcripts, talks, training) as reusable, evidence-backed expertise, shared by every assistant and project on their machine. You supply the reasoning; these tools own storage, identity, validation and provenance.
 
 Be effortless to use:
-- When the user shares source data (a link, video, pasted text, transcript, or file):
-  ALWAYS ask which collection to add it to before assuming or creating a new one!
-  Users are usually adding to an existing collection and need to see their existing collections to choose from.
-  1. Call `lectic_collection_candidates` (passing url, title, text snippet, or files) to check existing collections and identify intelligent candidate matches based on topic, creator, and keywords.
-  2. Ask the user which collection to add this to. Present the intelligent candidate collection(s) with clear reasons, list the other existing collections, and offer the option to create a new collection (suggesting a relevant name).
-  3. Only after the user confirms their choice (or if they explicitly named a collection upfront in their message), save it to that collection using `lectic_capture_save(collections=[chosen])` or `lectic_work(action='add', collection=chosen)`.
+- When the user asks to save a link, text or file, call lectic_capture_save immediately. Honor a named collection; otherwise leave collections empty to save to Inbox. Confirm the save and stop. Sorting is optional, and capture alone does not authorize retrieval or processing.
+- "Try Lectic": call lectic_starter. Show its real saved sample review and second-use result, label these as prewritten teaching examples, and give its next prompt for the user's own work.
 - "What have I saved?" / "What could this become?" / "What should I build first?": lectic_library, then lectic_map. Show concrete jobs with what to give and what comes back; the user should not have to invent a goal.
 - A real task ("use my X to review this", "teach me", "help me decide"): write a brief, run lectic_work to completion, and lead with the result. Only then mention the saved method and one concrete next use.
 - Speak in outcomes and plain names. Never show IDs, hashes, paths, phases or JSON to the user, and never ask them to run commands or edit files.
 - Lectic Drop Inbox: Users can drop links, web shortcuts, notes, or files into their Lectic Inbox folder without running any server. When `inbox_pending` appears in `lectic_library`, mention what was dropped and ask if they'd like them added to the suggested collections. When confirmed, call `lectic_inbox(action='route')`.
-- "Share my X" / "pack this": call `lectic_pack(collection=X, team=True)`. Tell the user their pack is ready, give the pack file path (or link), and provide the exact 1-sentence prompt for their recipient: "To use this in ChatGPT, Claude, or Codex, just paste this file/link and tell your assistant: 'Install this pack'". Never tell users or recipients to run terminal commands.
-- "Install this pack" / "Install X" / user shares a .lectic file or link: call `lectic_install(location=..., pin=True)`. Announce the installation in warm, human terms: name the collection, how many expert rules and ready methods it includes, and give them one concrete prompt to try right now (e.g. "You can now say: 'Use my [Collection] to [method title]'"). Never mention terminal commands, CLI flags, hashes, or technical schemas.
+- "Share my X" / "pack this": call lectic_pack(collection=X). Sources are excluded by default; include full sources only when requested and permitted. Report pack warnings, especially source files that recipients cannot retrieve. If needed, ask whether the user may include those originals, honoring existing authorization. Link the resulting file and explain that the recipient needs Lectic connected before asking their assistant to install it.
+- "Install this pack": call lectic_install. Report verified or partial exactly as returned, including unavailable sources and dropped units. Only describe methods as ready when their installed evidence supports them. Offer a concrete next-use prompt.
 - "Search packs" / "find expertise" / "marketplace": call lectic_search with query or tag; preview with lectic_inspect before installing if the user wants to see what's inside; install with lectic_install(location="registry:NAME", pin=True).
-- Ask questions when they matter for organization and user intent (such as always asking which collection source data belongs to).
+- Ask only when missing information materially affects the requested result.
 
 How the tools work:
 - Workflow tools (lectic_work, lectic_map, lectic_guide, lectic_capture, lectic_compile) return a `phase`. When a response carries `agent_task`, it is work for you: read the named prompt with lectic_read, do the reasoning, save the record it asks for with lectic_write_json at the path it names, then call the same workflow tool again.
@@ -73,6 +69,7 @@ L = lambda d: {'type': 'array', 'items': {'type': 'string'}, 'description': d}
 PROJECT = S('Working folder the user is in; defaults to the server\'s configured project.')
 
 TOOLS = [
+    tool('lectic_starter', 'Try Lectic offline: install its authored debugging starter, save a sample review and a second result reusing the same knowledge. Prewritten teaching examples, not live AI output. Use for an explicit request to try Lectic.', {'project': PROJECT}),
     tool('lectic_home', 'Where this project\'s Lectic knowledge lives (user home, LECTIC_HOME or a legacy project folder) and why.',
          {'project': PROJECT}),
     tool('lectic_library', 'Read-only inventory of saved collections, ready methods, earlier results and possible next builds. When url, text or title are provided, it also scores candidate collections for the incoming material.',
@@ -80,7 +77,7 @@ TOOLS = [
           'url': S('Incoming link/URL to match candidate collections for.'),
           'text': S('Incoming text to match candidate collections for.'),
           'title': S('Incoming title to match candidate collections for.')}),
-    tool('lectic_collection_candidates', 'Find candidate collections for incoming source material (URL, text, title, files) using topic, creator and keyword matching. Always call this when source material is shared so you can present candidate collections and existing collections to the user to choose from, or offer creating a new one.',
+    tool('lectic_collection_candidates', 'Find candidate collections for incoming source material (URL, text, title, files) using topic, creator and keyword matching. Use when the user asks to organize material; saving to Inbox does not need this step.',
          {'project': PROJECT, 'url': S('Incoming link/URL.'), 'text': S('Incoming text or transcript snippet.'),
           'title': S('Title if known.'), 'files': L('Filenames or file paths.'), 'note': S('User note if any.')}),
     tool('lectic_work', 'Goal-driven coordinator: save sources as a collection, prepare knowledge, apply it to a brief, export a method, or manage collections. Returns the next phase and any agent_task for you.',
@@ -149,6 +146,8 @@ TOOLS = [
          {'project': PROJECT, 'collection': S('Collection name or pack file to publish.'),
           'to': S('Destination URL (GitHub Release URL/repo, S3/R2 presigned PUT URL, or HTTP PUT URL).'),
           'token': S('Optional auth token (defaults to GITHUB_TOKEN environment variable).'),
+          'download_url': S('Recipient GET URL; required separately for presigned uploads. Verified before reporting published.'),
+          'include_sources': B('Include full source text when rebuilding a collection for publication. Default false.'),
           'webhook': S('Optional Slack/Discord webhook URL to notify.')}, ['collection', 'to']),
     tool('lectic_backup', 'Write this home\'s whole knowledge to one archive file: every collection, source, capture and build. The file restores onto any machine.',
          {'project': PROJECT, 'out': S('Destination file or folder (default: a timestamped file in the project).')}),
@@ -160,7 +159,7 @@ TOOLS = [
          {'project': PROJECT, 'folder': S('Build folder path from a complete response.')}, ['folder']),
     tool('lectic_verify', 'Check that a collection\'s knowledge units are fully evidence-anchored in their sources. Returns unit counts by status and lists any broken evidence links. Use before presenting results to confirm the evidence guarantee.',
          {'project': PROJECT, 'collection': S('Collection name or ID to verify. Defaults to the active collection.')}, []),
-    tool('lectic_identity', 'Show the local signing identity (name, contact, key ID) or set it. Identities are used to sign packs so recipients know who built them.',
+    tool('lectic_identity', 'Show the local signing identity (name, contact, key ID) or set it. Identities are used to sign packs so recipients can verify the signing key; the claimed name is not independently authenticated.',
          {'project': PROJECT,
           'action': S('show | set', enum=['show', 'set']),
           'name': S('Your full name (for action=set).'),
@@ -229,7 +228,9 @@ class Server:
         require(handler is not None, 'Unknown tool: ' + str(name))
         require(isinstance(args, dict), 'Tool arguments must be an object')
         try:
-            value = handler(**args)
+            from store import LocalStore
+            with LocalStore(storage_root(self.resolve_project(args.get('project')))).transaction('knowledge', reentrant=True):
+                value = handler(**args)
             text = value if isinstance(value, str) else json.dumps(value, ensure_ascii=False, indent=2)
             return {'content': [{'type': 'text', 'text': text}], 'isError': False}
         except (Invalid, ValueError, OSError, KeyError, TypeError) as exc:
@@ -240,6 +241,10 @@ class Server:
 
     def tool_home(self, project=None):
         return describe(self.resolve_project(project))
+
+    def tool_starter(self, project=None):
+        from starter import try_starter
+        return try_starter(self.resolve_project(project))
 
     def tool_library(self, project=None, collection=None, url='', text='', title=''):
         from library_guide import library_view
@@ -258,16 +263,15 @@ class Server:
                 view['inbox_count'] = inbox_info['count']
                 view['inbox_folder'] = inbox_info['inbox_folder']
                 view['inbox_guidance'] = f"The user has {inbox_info['count']} item(s) waiting in their Lectic Drop Inbox ({inbox_info['inbox_folder']}). Let them know what was dropped and ask if they'd like them added to the suggested collections."
-        except Exception:
-            pass
+        except (OSError, ValueError) as exc:
+            view['inbox_issues'] = [str(exc)]
         return view
 
     def tool_inbox(self, project=None, action='list', items=None):
         from inbox import scan_inbox, route_all_inbox
         project = self.resolve_project(project)
         if action == 'route':
-            mapping = items if isinstance(items, dict) else {}
-            return route_all_inbox(project, mapping=mapping)
+            return route_all_inbox(project, mapping=items)
         return scan_inbox(project)
 
     def tool_collection_candidates(self, project=None, url='', text='', title='', files=(), note=''):
@@ -296,6 +300,9 @@ class Server:
         project = self.resolve_project(project)
         require((url or '').strip() or (text or '').strip() or files, 'Nothing was shared to save')
         inbox = storage_root(project) / 'capture-drop'
+        from privacy import require_shareable
+        for source in files or ():
+            require_shareable(source, storage_root(project))
         record = save_capture(inbox, url=url or '', text=text or '', files=list(files or ()), note=note or '',
                               collections=list(collections or ()), title=title or '', origin='assistant-supplied')
         report = capture_command(project=project, action='import', inbox=str(inbox))
@@ -307,10 +314,10 @@ class Server:
         if not collections:
             from candidate_collections import find_candidate_collections
             cand = find_candidate_collections(project, url=url, text=text, title=title, files=files, note=note)
-            result['warning'] = 'No collection was specified. Ask the user which collection to add this source data to before assuming or processing.'
+            result['collections'] = ['Inbox']
+            result['guidance'] = 'Saved to Inbox. Sorting is optional; do not ask a follow-up question just to finish this save.'
             result['candidate_collections'] = cand['candidates']
             result['all_collections'] = [c['name'] for c in cand['all_collections']]
-            result['prompt_guidance'] = cand['prompt_guidance']
         return result
 
     def tool_compile(self, project=None, input=None, run=None, **kwargs):
@@ -318,9 +325,9 @@ class Server:
         require(not run or not input, 'Give either input or run, not both')
         return compile_workflow(input, run, project=self.resolve_project(project), **kwargs)
 
-    def tool_pack(self, project=None, collection=None, out=None, include_sources=True, team=True, version=None):
+    def tool_pack(self, project=None, collection=None, out=None, include_sources=None, team=False, version=None):
         from packs import build_pack
-        return build_pack(self.resolve_project(project), collection, out, bool(include_sources), team=bool(team), version=version)
+        return build_pack(self.resolve_project(project), collection, out, include_sources, team=bool(team), version=version)
 
     def tool_search(self, project=None, query=None, tag=None):
         from registry import search_registry
@@ -337,24 +344,27 @@ class Server:
     def tool_install(self, project=None, location=None, name=None, as_name=None, pin=False, inspect=False):
         require(location, 'location is required for install')
         target_name = as_name or name
+        origin_location = None
         if str(location).startswith('registry:'):
             if inspect:
                 from registry import inspect_registry_pack
                 return inspect_registry_pack(location, project=self.resolve_project(project))
-            from registry import resolve_registry_pack
+            from registry import resolve_registry_pack, registry_pack_location
             entry = resolve_registry_pack(location, project=self.resolve_project(project))
-            location = entry['url']
+            origin_location = entry['url']
+            location = registry_pack_location(entry, self.resolve_project(project))
             target_name = target_name or entry.get('install_name') or entry['name']
         from packs import inspect_pack, install_pack
-        return inspect_pack(location) if inspect else install_pack(self.resolve_project(project), location, name=target_name, pin=bool(pin))
+        return inspect_pack(location) if inspect else install_pack(self.resolve_project(project), location, name=target_name, pin=bool(pin), origin_location=origin_location)
 
     def tool_update(self, project=None, collection=None, force=False):
         from packs import update_pack
         return update_pack(self.resolve_project(project), collection, force=bool(force))
 
-    def tool_publish(self, project=None, collection=None, to=None, token=None, webhook=None):
+    def tool_publish(self, project=None, collection=None, to=None, token=None, webhook=None, download_url=None, include_sources=False):
         from publish import publish_pack
-        return publish_pack(self.resolve_project(project), collection, to, token=token, webhook_url=webhook)
+        return publish_pack(self.resolve_project(project), collection, to, token=token, webhook_url=webhook,
+                            download_url=download_url, include_sources=include_sources)
 
     def tool_backup(self, project=None, out=None):
         from home_archive import backup
@@ -406,6 +416,8 @@ class Server:
             return safe_child(ROOT / kind, rest)
         home = storage_root(self.resolve_project(project))
         candidate = (Path(path) if Path(path).is_absolute() else self.resolve_project(project) / path).resolve()
+        from privacy import require_shareable
+        require_shareable(candidate, home)
         roots = [home] if writable else [home, ROOT]
         for root in roots:
             try:

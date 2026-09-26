@@ -63,7 +63,7 @@ class RegistryTests(unittest.TestCase):
         schema = ec.read(root / 'schemas' / 'registry.schema.json')
         index = ec.read(root / 'registry' / 'index.json')
         ec.validate_schema(index, 'registry')
-        self.assertGreaterEqual(len(index['packs']), 4)
+        self.assertGreaterEqual(len(index['packs']), 1)
         for pack in index['packs']:
             self.assertIn('name', pack)
             self.assertIn('title', pack)
@@ -75,28 +75,28 @@ class RegistryTests(unittest.TestCase):
     def test_search_registry_queries_and_tags(self):
         # All packs
         all_packs = search_registry(project=self.author)
-        self.assertGreaterEqual(len(all_packs), 4)
+        self.assertGreaterEqual(len(all_packs), 1)
 
         # Query filter
-        eng_packs = search_registry(query='distributed', project=self.author)
+        eng_packs = search_registry(query='debugging', project=self.author)
         self.assertEqual(len(eng_packs), 1)
-        self.assertEqual(eng_packs[0]['name'], 'distributed-systems-adr')
+        self.assertEqual(eng_packs[0]['name'], 'debugging-starter')
 
         # Tag filter
         testing_packs = search_registry(tag='testing', project=self.author)
         self.assertEqual(len(testing_packs), 1)
-        self.assertEqual(testing_packs[0]['name'], 'engineering-standards')
+        self.assertEqual(testing_packs[0]['name'], 'debugging-starter')
 
         # No matches
         empty = search_registry(query='nonexistent_pack_xyz', project=self.author)
         self.assertEqual(len(empty), 0)
 
     def test_format_search_results(self):
-        packs = search_registry(query='growth', project=self.author)
-        formatted = format_search_results(packs, query='growth')
-        self.assertIn('growth-frameworks', formatted)
-        self.assertIn('TR', formatted)
-        self.assertIn('lectic install registry:growth-frameworks', formatted)
+        packs = search_registry(query='debugging', project=self.author)
+        formatted = format_search_results(packs, query='debugging')
+        self.assertIn('debugging-starter', formatted)
+        self.assertIn('Lectic project', formatted)
+        self.assertIn('lectic install registry:debugging-starter', formatted)
 
         # Empty formatting
         empty_formatted = format_search_results([], query='xyz')
@@ -104,32 +104,32 @@ class RegistryTests(unittest.TestCase):
 
     def test_resolve_registry_pack(self):
         # By slug
-        entry = resolve_registry_pack('engineering-standards', project=self.author)
-        self.assertEqual(entry['name'], 'engineering-standards')
-        self.assertEqual(entry['publisher'], 'Lectic Core Team')
+        entry = resolve_registry_pack('debugging-starter', project=self.author)
+        self.assertEqual(entry['name'], 'debugging-starter')
+        self.assertEqual(entry['publisher'], 'Lectic project (unsigned teaching fixture)')
 
         # With registry: prefix
-        entry2 = resolve_registry_pack('registry:engineering-standards', project=self.author)
-        self.assertEqual(entry2['name'], 'engineering-standards')
+        entry2 = resolve_registry_pack('registry:debugging-starter', project=self.author)
+        self.assertEqual(entry2['name'], 'debugging-starter')
 
         # Case-insensitive
-        entry3 = resolve_registry_pack('registry:ENGINEERING-STANDARDS', project=self.author)
-        self.assertEqual(entry3['name'], 'engineering-standards')
+        entry3 = resolve_registry_pack('registry:DEBUGGING-STARTER', project=self.author)
+        self.assertEqual(entry3['name'], 'debugging-starter')
 
         # Invalid pack name raises Invalid
         with self.assertRaises(ec.Invalid):
             resolve_registry_pack('registry:unknown-pack-404', project=self.author)
 
     def test_inspect_registry_pack_and_formatting(self):
-        info = inspect_registry_pack('registry:fifa-market-tactics', project=self.author)
-        self.assertEqual(info['registry_entry']['name'], 'fifa-market-tactics')
-        self.assertIn('Market Dip Opportunity Scanner', info['methods'])
-        self.assertIn('lectic install registry:fifa-market-tactics', info['install_command'])
+        info = inspect_registry_pack('registry:debugging-starter', project=self.author)
+        self.assertEqual(info['registry_entry']['name'], 'debugging-starter')
+        self.assertIn('Debugging experiment planner', [m['title'] for m in info['methods']])
+        self.assertIn('lectic install registry:debugging-starter', info['install_command'])
 
         formatted = format_inspect_report(info)
-        self.assertIn('FUT Accountant', formatted)
-        self.assertIn('Install:     lectic install registry:fifa-market-tactics', formatted)
-        self.assertIn('Market Dip Opportunity Scanner', formatted)
+        self.assertIn('No publisher signature', formatted)
+        self.assertIn('Install:     lectic install registry:debugging-starter', formatted)
+        self.assertIn('Debugging experiment planner', formatted)
 
     def test_prepare_registry_entry_for_signed_pack(self):
         inputs = {'debugging.srt': ec.ROOT / 'fixtures/debugging/debugging.srt'}
@@ -166,43 +166,43 @@ class RegistryTests(unittest.TestCase):
         # CLI search
         buf = io.StringIO()
         with redirect_stdout(buf):
-            code = cli.main(['search', 'systems'])
+            code = cli.main(['search', 'debugging'])
         self.assertEqual(code, 0)
-        self.assertIn('distributed-systems-adr', buf.getvalue())
+        self.assertIn('debugging-starter', buf.getvalue())
 
         # CLI search --json
         buf = io.StringIO()
         with redirect_stdout(buf):
-            code = cli.main(['search', 'systems', '--json'])
+            code = cli.main(['search', 'debugging', '--json'])
         self.assertEqual(code, 0)
         parsed = json.loads(buf.getvalue())
         self.assertIsInstance(parsed, list)
-        self.assertEqual(parsed[0]['name'], 'distributed-systems-adr')
+        self.assertEqual(parsed[0]['name'], 'debugging-starter')
 
         # CLI inspect registry:NAME
         buf = io.StringIO()
         with redirect_stdout(buf):
-            code = cli.main(['inspect', 'registry:growth-frameworks'])
+            code = cli.main(['inspect', 'registry:debugging-starter'])
         self.assertEqual(code, 0)
-        self.assertIn('growth-frameworks', buf.getvalue())
-        self.assertIn('Pricing Leverage Evaluator', buf.getvalue())
+        self.assertIn('debugging-starter', buf.getvalue())
+        self.assertIn('Debugging experiment planner', buf.getvalue())
 
     def test_mcp_search_and_inspect_tools(self):
         server = Server(project=str(self.author))
 
         # Test lectic_search tool
-        res = server.call('lectic_search', {'query': 'distributed'})
+        res = server.call('lectic_search', {'query': 'debugging'})
         self.assertFalse(res['isError'])
         content = json.loads(res['content'][0]['text'])
         self.assertEqual(len(content), 1)
-        self.assertEqual(content[0]['name'], 'distributed-systems-adr')
+        self.assertEqual(content[0]['name'], 'debugging-starter')
 
         # Test lectic_inspect tool
-        res_inspect = server.call('lectic_inspect', {'target': 'registry:engineering-standards'})
+        res_inspect = server.call('lectic_inspect', {'target': 'registry:debugging-starter'})
         self.assertFalse(res_inspect['isError'])
         inspect_data = json.loads(res_inspect['content'][0]['text'])
-        self.assertIn('Deterministic Test Verifier', inspect_data['methods'])
-        self.assertEqual(inspect_data['registry_entry']['name'], 'engineering-standards')
+        self.assertIn('Debugging experiment planner', [m['title'] for m in inspect_data['methods']])
+        self.assertEqual(inspect_data['registry_entry']['name'], 'debugging-starter')
 
     def test_install_registry_pack_resolves_and_installs(self):
         inputs = {'debugging.srt': ec.ROOT / 'fixtures/debugging/debugging.srt'}

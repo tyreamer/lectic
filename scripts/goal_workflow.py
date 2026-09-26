@@ -9,6 +9,7 @@ from collection_store import Library
 from scoped_export import export_method, selected_excerpts
 from workflow import checkpoint_state
 from outcomes import INTENTS, GUIDANCE, validate_outcome, render_outcome, render_method
+from store import home_transaction
 
 GOAL_QUESTION = 'What are you hoping this material helps you do?'
 
@@ -104,6 +105,7 @@ def validate_legacy_method(folder,manifest,method,selected,run):
     require(read(exported / 'sources/excerpts.json') == selected_excerpts(selected,docs,segments), 'Export source metadata differs from private originals')
 
 
+@home_transaction
 def work(*, project='.', input=None, metadata=None, collection=None, name=None, action='work', brief=None,
          target=None, adopt=None, reconciled=False, reviewed=False, remove=None, before=None, after=None,
          before_knowledge=None,after_knowledge=None):
@@ -119,7 +121,9 @@ def work(*, project='.', input=None, metadata=None, collection=None, name=None, 
     if action in {'archive','restore'}:
         return {'phase':action+'d','summary':library.set_archived(collection,action=='archive')}
     if input or adopt or remove:
-        folder, data = library.archive(str(path(input)) if input else None, name=name, collection=collection,
+        from ingestors.youtube import YouTubeIngestor
+        source_input = input if input and YouTubeIngestor.accepts(input) else str(path(input)) if input else None
+        folder, data = library.archive(source_input, name=name, collection=collection,
                                        metadata=path(metadata), adopt=path(adopt), add=action == 'add',
                                        remove=remove, replace=action=='replace')
     else:

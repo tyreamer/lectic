@@ -14,7 +14,7 @@ from ec import (VERSION, Invalid, digest, fingerprint, normalize, read, require,
                 validate_ir, validate_schema, validate_sources, validate_units, write)
 from collection_store import Library
 from home import storage_root
-from store import LocalStore
+from store import LocalStore, home_transaction
 
 TEXT_EXTENSIONS={'.txt','.md','.vtt','.srt'}
 
@@ -112,7 +112,10 @@ class CaptureStore:
         else: event=validate_capture(supplied)
         cid=event['capture_id']
         # Resolve all attachment paths before accepting this envelope; never read outside its folder.
-        for attachment in event.get('attachments',[]): safe_child(path.parent,attachment['path'])
+        from privacy import require_shareable
+        require_shareable(path, self.home)
+        for attachment in event.get('attachments',[]):
+            require_shareable(safe_child(path.parent,attachment['path']), self.home)
         existing=(self.root/'state'/f'{cid}.json').exists()
         record=self.root/'records'/f'{cid}.json'
         immutable(record,event)
@@ -386,6 +389,7 @@ class CaptureStore:
                 'limits':'Evidence links show cited source influence, not every influence on model reasoning. Personal context is separate from source evidence.'}
 
 
+@home_transaction
 def capture_command(*,project='.',action='list',inbox=None,collection=None,items=None,to=None,
                     query=None,since=None,until=None,note=None,build=None):
     store=CaptureStore(project)

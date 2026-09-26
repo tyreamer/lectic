@@ -31,6 +31,8 @@
           "url": {
             "type": "string"
           },
+          "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+          "bundled_path": {"type": "string"},
           "install_name": {
             "type": "string"
           },

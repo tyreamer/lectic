@@ -42,7 +42,7 @@ class IdentityTests(unittest.TestCase):
         self.assertEqual(record['name'], 'Alice Example')
         self.assertEqual(record['contact'], 'alice@example.com')
         self.assertIsInstance(record['key_id'], str)
-        self.assertEqual(len(record['key_id']), 16)
+        self.assertEqual(len(record['key_id']), 64)
         self.assertIsInstance(record['key_hex'], str)
         self.assertEqual(len(record['key_hex']), 64)  # 32 bytes = 64 hex chars
 
@@ -107,7 +107,7 @@ class IdentityTests(unittest.TestCase):
         self.assertEqual(publisher['contact'], 'charlie@example.com')
         self.assertEqual(publisher['key_id'], identity['key_id'])
         self.assertIsInstance(publisher['signature'], str)
-        self.assertEqual(len(publisher['signature']), 64)  # SHA-256 hex
+        self.assertEqual(len(publisher['signature']), 128)  # Ed25519: 64 bytes
 
     def test_verify_manifest_passes_for_own_pack(self):
         identity = save_identity(str(self.project), 'Diana', 'diana@example.com')
@@ -116,7 +116,7 @@ class IdentityTests(unittest.TestCase):
         manifest['publisher'] = publisher
         ok, msg = verify_manifest(manifest, identity)
         self.assertTrue(ok)
-        self.assertIn('Verified', msg)
+        self.assertIn('Valid Ed25519', msg)
 
     def test_verify_manifest_fails_for_tampered_manifest(self):
         identity = save_identity(str(self.project), 'Eve', 'eve@example.com')

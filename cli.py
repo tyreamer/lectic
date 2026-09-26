@@ -1,6 +1,7 @@
 """`lectic`: the one command a person needs.
 
     lectic setup            connect the assistants on this machine, verify the connection, offer YouTube support
+    lectic try              run the offline starter example and see saved knowledge reused
     lectic identity         set or show the identity that signs your packs (lectic identity set "Name" --contact x)
     lectic share            give ChatGPT, Claude, Gemini or any hosted assistant one link to your knowledge
     lectic connect URL      point Claude Code and Codex at a Lectic running elsewhere
@@ -103,6 +104,31 @@ def codex_connected():
     return path.is_file() and f'[mcp_servers.{SERVER_NAME}]' in path.read_text(encoding='utf-8')
 
 
+def configured_spec(client):
+    try:
+        if client == 'Claude Code':
+            data = json.loads(claude_config_path().read_text(encoding='utf-8'))
+            return data.get('mcpServers', {}).get(SERVER_NAME)
+        try:
+            import tomllib
+        except ImportError:
+            import tomli as tomllib
+        data = tomllib.loads(codex_config_path().read_text(encoding='utf-8'))
+        return data.get('mcp_servers', {}).get(SERVER_NAME)
+    except (OSError, ValueError, AttributeError):
+        return None
+
+
+def checked_clients():
+    from client_check import check_connection
+    states = {}
+    for client in ('Claude Code', 'Codex'):
+        spec = configured_spec(client)
+        states[client] = ('connected (configured server reachable; restart required after setup)' if check_connection(spec)[0]
+                          else 'configured, server UNREACHABLE') if spec else 'not connected'
+    return states
+
+
 CODEX_BLOCK = re.compile(r'\n?\[mcp_servers\.' + SERVER_NAME + r'\]\n(?:(?!\[).*\n?)*')
 
 
@@ -110,7 +136,15 @@ def connect_codex(url=None):
     path = codex_config_path()
     if not path.parent.is_dir(): return 'not installed'
     existing = path.read_text(encoding='utf-8') if path.is_file() else ''
-    literal = lambda value: "'" + str(value).replace("'", "''") + "'"
+    try:
+        import tomllib
+    except ImportError:
+        import tomli as tomllib
+    try:
+        tomllib.loads(existing)
+    except ValueError:
+        return 'failed: Codex config is not valid TOML; it was left unchanged'
+    literal = lambda value: json.dumps(str(value), ensure_ascii=False)
     if url:
         block = f'\n[mcp_servers.{SERVER_NAME}]\nurl = {literal(url)}\n'
     else:
@@ -118,8 +152,14 @@ def connect_codex(url=None):
         block = (f'\n[mcp_servers.{SERVER_NAME}]\ncommand = {literal(command[0])}\n'
                  f'args = [{", ".join(literal(a) for a in command[1:])}]\n')
     if block.strip() in existing: return 'connected'
-    existing = CODEX_BLOCK.sub('\n', existing)  # replace an earlier Lectic entry, keep everything else
-    path.write_text(existing.rstrip('\n') + ('\n' if existing.strip() else '') + block, encoding='utf-8')
+    kept, skip = [], False
+    for line in existing.splitlines(keepends=True):
+        if re.match(r'^\s*\[', line):
+            skip = bool(re.match(r'^\s*\[mcp_servers\.(?:lectic|"lectic"|\'lectic\')(?:\.|\])', line))
+        if not skip: kept.append(line)
+    updated = ''.join(kept).rstrip('\n') + block
+    tomllib.loads(updated)
+    path.write_text(updated, encoding='utf-8')
     return 'connected'
 
 
@@ -127,12 +167,9 @@ def connect_codex(url=None):
 
 def verify_server():
     """Prove the assistants will get a working server: run a real handshake and one tool call."""
-    from lectic_mcp import Server
-    server = Server(Path.cwd())
-    init = server.handle({'jsonrpc': '2.0', 'id': 1, 'method': 'initialize', 'params': {'protocolVersion': '2025-06-18'}})
-    call = server.handle({'jsonrpc': '2.0', 'id': 2, 'method': 'tools/call', 'params': {'name': 'lectic_home', 'arguments': {}}})
-    ok = 'result' in init and 'result' in call and not call['result']['isError']
-    return ok, json.loads(call['result']['content'][0]['text']) if ok else None
+    from client_check import check_connection
+    command = server_command()
+    return check_connection({'command': command[0], 'args': command[1:]}, cwd=Path.cwd())
 
 
 def youtube_route():
@@ -183,9 +220,6 @@ def offer_identity(interactive):
     default_name = git_config_value('user.name') or os.environ.get('USERNAME') or os.environ.get('USER') or ''
     default_email = git_config_value('user.email') or ''
     if not interactive:
-        if default_name:
-            rec = save_identity('.', default_name, default_email)
-            return f"{default_name} <{default_email}> (auto-configured, key: {rec['key_id']})"
         return 'not set (run: lectic identity set "Name" --contact email)'
     prompt = f'  Name for signing your packs [{default_name}]: ' if default_name else '  Name for signing your packs (or Enter to skip): '
     name = input(prompt).strip() or default_name
@@ -206,6 +240,8 @@ def setup(argv):
     if not ok:
         print('  The Lectic server did not start correctly. Run `lectic status` for details.'); return 1
     results = {'Claude Code': connect_claude(), 'Codex': connect_codex()}
+    checks = checked_clients()
+    results = {name: checks[name] if state == 'connected' else state for name, state in results.items()}
     for name, state in results.items():
         print(f'  {name:<12} {state}')
     print(f'  {"Identity":<12} {offer_identity(interactive)}')
@@ -214,7 +250,7 @@ def setup(argv):
     inbox_dir = ensure_inbox_folder(Path.cwd())
     print(f'  {"Drop Inbox":<12} {inbox_dir}')
     print(f'\nKnowledge lives in {home["home"]} and is shared by every project and assistant here.')
-    if any(s == 'connected' for s in results.values()):
+    if any(s.startswith('connected') for s in results.values()):
         print('\nOne step left: restart the assistant so it picks up the connection.')
         print('Then open it in any folder and just talk:\n')
         for line in ('Save this for later: https://www.youtube.com/watch?v=...',
@@ -224,7 +260,8 @@ def setup(argv):
     else:
         print('\nNo supported assistant was found. Install Claude Code or Codex, then run `lectic setup` again,')
         print('or connect any MCP client with:  ' + ' '.join(server_command()))
-    return 0
+    return 0 if any(state.startswith('connected') for state in results.values()) and not any(
+        state.startswith('failed') or 'UNREACHABLE' in state for state in results.values()) else 1
 
 
 def status(argv):
@@ -283,15 +320,15 @@ def status(argv):
             print(f'Identity    not set (run: lectic identity set "Name" --contact email)')
     except Exception:
         pass
-    print(f'Claude Code {"connected" if claude_connected() else "not connected"}')
-    print(f'Codex       {"connected" if codex_connected() else "not connected"}')
+    connections = checked_clients()
+    for name, state in connections.items(): print(f'{name:<12}{state}')
     print(f'YouTube     {"ready, " + youtube_route() if youtube_available() else "not installed"}')
     link = live_link(info['home'])
     print(f'Share link  {link + "  (live)" if link else "not sharing (run: lectic share)"}')
     ok, _ = verify_server()
     print(f'Server      {"ok" if ok else "FAILED"}')
     if not (claude_connected() or codex_connected()): print('\nRun `lectic setup` to connect an assistant.')
-    return 0
+    return 0 if ok and not any('UNREACHABLE' in state for state in connections.values()) else 1
 
 
 def option(argv, name, default=None):
@@ -417,6 +454,10 @@ def connect(argv):
     url = next((a for a in argv if a.startswith('http')), None)
     if not url:
         print('Usage: lectic connect https://host/t/TOKEN/mcp   (the link `lectic share` or your server printed)'); return 2
+    from client_check import check_connection
+    if not check_connection({'url': url})[0]:
+        print('The remote Lectic server did not complete a connection check. Existing assistant settings were left unchanged.')
+        return 1
     results = {'Claude Code': connect_claude(url=url), 'Codex': connect_codex(url=url)}
     for name, state in results.items(): print(f'  {name:<12} {state}')
     if any(v == 'connected' for v in results.values()):
@@ -450,7 +491,9 @@ def pack(argv):
     out = option(argv, '--out')
     version = option(argv, '--version')
     team = '--team' in argv
-    inc_sources = '--include-sources' in argv or team
+    if '--include-sources' in argv and '--exclude-sources' in argv:
+        print('Choose either --include-sources or --exclude-sources.'); return 2
+    inc_sources = False if '--exclude-sources' in argv else '--include-sources' in argv or team
     result = build_pack(os.getcwd(), name, out, include_sources=inc_sources, team=team, version=version)
     team_note = " (team pack)" if team else ""
     ver_note = f" v{result['version']}" if result.get('version') else ""
@@ -460,6 +503,7 @@ def pack(argv):
     else:
         print('  Unsigned — run `lectic identity set "Name" --contact email` to sign packs')
     print(result['share_note'])
+    for warning in result.get('warnings', []): print('  ' + warning)
     if team:
         dist = result.get('distribution', {})
         install_as = dist.get('install_name', 'standards')
@@ -530,16 +574,18 @@ def install(argv):
         return inspect_cmd([location])
     as_name = option(argv, '--as') or option(argv, '--name')
     pin = '--pin' in argv
+    origin_location = None
     if location.startswith('registry:'):
-        from registry import resolve_registry_pack
+        from registry import resolve_registry_pack, registry_pack_location
         try:
             entry = resolve_registry_pack(location, project=os.getcwd())
-            location = entry['url']
+            origin_location = entry['url']
+            location = registry_pack_location(entry, os.getcwd())
             as_name = as_name or entry.get('install_name') or entry['name']
         except Exception as exc:
             print(f"Registry error: {exc}")
             return 1
-    report = install_pack(os.getcwd(), location, name=as_name, pin=pin)
+    report = install_pack(os.getcwd(), location, name=as_name, pin=pin, origin_location=origin_location)
     state = 'verified' if report['verification'] == 'verified' else f"partial: {report['sources_verified']} of {report['sources_total']} sources, {report['units_installed']} of {report['units_in_pack']} units"
     pin_note = f" [pinned: v{report['pinned_version']}]" if report.get('pinned') else ""
     print(f"Installed {report['collection']}{pin_note} ({state}).")
@@ -572,7 +618,7 @@ def update(argv):
 def publish(argv):
     """Publish a compiled pack to a team host or registry."""
     from publish import publish_pack
-    flags_with_val = {'--to', '--token', '--webhook', '--tags'}
+    flags_with_val = {'--to', '--token', '--webhook', '--tags', '--download-url'}
     def is_flag_val(a):
         return any(option(argv, f) == a for f in flags_with_val)
     name = next((a for a in argv if not a.startswith('--') and not is_flag_val(a)), None)
@@ -586,12 +632,14 @@ def publish(argv):
     raw_tags = option(argv, '--tags')
     tags = [t.strip() for t in raw_tags.split(',')] if raw_tags else None
 
-    download_url = to_url
+    download_url = option(argv, '--download-url') or to_url
     if to_url:
         try:
-            res = publish_pack(os.getcwd(), name, to_url, token=token, webhook_url=webhook)
+            res = publish_pack(os.getcwd(), name, to_url, token=token, webhook_url=webhook,
+                               download_url=option(argv, '--download-url'), include_sources='--include-sources' in argv)
             download_url = res['download_url']
             print(res['message'])
+            if res['phase'] != 'published': return 1
             if res.get('webhook_sent'):
                 print(f"  Notified webhook: {webhook}")
             elif res.get('webhook_error'):
@@ -603,7 +651,9 @@ def publish(argv):
     if to_registry:
         from registry import prepare_registry_entry
         try:
-            reg_entry = prepare_registry_entry(os.getcwd(), name, download_url or f"https://.../{name}.lectic", tags=tags)
+            if not download_url:
+                print('Supply a working recipient link with --download-url when preparing a registry entry.'); return 2
+            reg_entry = prepare_registry_entry(os.getcwd(), name, download_url, tags=tags)
             print("\nRegistry Entry (for registry/index.json):")
             print(json.dumps(reg_entry, indent=2))
             print("\nTo submit this pack to the community marketplace:")
@@ -727,17 +777,35 @@ def ec(argv):
     return core.main()
 
 
+def try_example(argv):
+    from starter import try_starter
+    result = try_starter(os.getcwd())
+    if '--json' in argv:
+        print(json.dumps(result, indent=2))
+    else:
+        print('Debugging Starter is ready. This is a prewritten teaching example; no model was called.')
+        print('Sample review: ' + result['first_result'])
+        print('Second use:    ' + result['second_result'])
+        print(f"Reused {len(result['reuse']['reused_units'])} saved knowledge units; no sources were fetched again.")
+        print('\nTry your own work with a connected assistant:\n  ' + result['next_prompt'])
+    return 0
+
+
 def main(argv=None):
     argv = list(sys.argv[1:] if argv is None else argv)
     command = argv[0] if argv else 'status'
-    handlers = {'setup': setup, 'identity': identity, 'share': share, 'connect': connect,
+    handlers = {'setup': setup, 'try': try_example, 'identity': identity, 'share': share, 'connect': connect,
                 'pack': pack, 'install': install, 'update': update, 'publish': publish, 'verify': verify,
                 'search': search, 'inspect': inspect_cmd, 'inbox': inbox_cmd,
                 'backup': backup, 'push': push, 'pull': pull, 'restore': restore,
                 'status': status, 'serve': serve, 'ec': ec}
     if command in {'-h', '--help', 'help'} or command not in handlers:
         print(__doc__.strip()); return 0 if command in {'-h', '--help', 'help'} else 2
-    return handlers[command](argv[1:])
+    try:
+        return handlers[command](argv[1:])
+    except (OSError, ValueError) as exc:
+        print('Lectic could not finish: ' + str(exc))
+        return 1
 
 
 if __name__ == '__main__':

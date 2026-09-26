@@ -13,7 +13,7 @@ PAYLOAD = ['SKILL.md', 'LICENSE', 'README.md', 'DESIGN.md', 'agents', 'scripts',
 def payload_files(source):
     result = {}
     # Older source checkouts remain installable; include architecture guidance when present.
-    names = PAYLOAD + (['NORTH_STAR.md'] if (Path(source) / 'NORTH_STAR.md').is_file() else [])
+    names = PAYLOAD + [name for name in ('NORTH_STAR.md', 'registry') if (Path(source) / name).exists()]
     for name in names:
         item = Path(source) / name
         require(item.exists(), f'Incomplete skill: missing {name}')

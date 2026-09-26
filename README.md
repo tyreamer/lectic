@@ -1,218 +1,95 @@
-<div align="center">
-
 # Lectic
 
-### Save what you trust. Your AI learns the method, not just the words.
+Save useful material once. Apply its methods to real work, with the source passages attached.
 
-[![Tests](https://github.com/tyreamer/lectic/actions/workflows/tests.yml/badge.svg)](https://github.com/tyreamer/lectic/actions/workflows/tests.yml)
-[![PyPI](https://img.shields.io/pypi/v/lectic?color=4b8bba)](https://pypi.org/project/lectic/)
-[![Python: 3.10+](https://img.shields.io/badge/python-3.10%2B-3776ab)](https://github.com/tyreamer/lectic/blob/main/docs/DEVELOPING.md)
-[![License: MIT](https://img.shields.io/badge/license-MIT-4b8bba)](https://github.com/tyreamer/lectic/blob/main/LICENSE)
-[![Marketplace](https://img.shields.io/badge/marketplace-registry-67e7db)](https://tyreamer.github.io/lectic/registry.html)
+Lectic is an open-source **alpha** for people who want their AI assistant to reuse the talks, lessons and transcripts they trust. It keeps sources, extracted knowledge, reusable methods and previous results in a shared personal library. Your connected assistant supplies the reasoning.
 
-**[Start](#start)** · **[What it does](#what-it-does)** · **[Packs & Team Distribution](#portable-packs--team-distribution)** · **[Marketplace](#expertise-marketplace)** · **[Evidence Proof](#the-evidence-guarantee)** · **[Status](#current-status)**
+## Start with one request
 
-Works with **Claude Code** · **Codex** · **ChatGPT** · **Claude Desktop** · **Cursor** · any MCP client
-
-</div>
-
-Most AI forgets everything the moment you close a chat. If you find a great video, lesson, or guide from someone who really knows their craft, you end up re-pasting transcripts forever or settling for generic AI advice.
-
-Lectic fixes this. You save videos, articles, and transcripts once. Lectic turns that material into reusable, evidence-anchored tools—checklists, reviewers, diagnosis guides, and lessons—traceable back to the author's exact words. Save it once; use it across ChatGPT, Claude, Codex, Claude Code, and your phone.
-
----
-
-## Start
-
-### 1. Ask your assistant to set it up
-Paste this into Claude Code, Codex, or any agent with terminal access:
+Paste this into **Codex or Claude Code**:
 
 > Set up Lectic for me: https://github.com/tyreamer/lectic
 
-It reads [AGENTS.md](https://github.com/tyreamer/lectic/blob/main/AGENTS.md) and handles everything: installs the package, sets up signing identity, hooks up MCP tools, and tests the connection.
+The assistant follows [AGENTS.md](AGENTS.md), installs Lectic, configures available local assistants and checks the server. **Restart the assistant once** after setup.
 
-### 2. Or install it yourself in 30 seconds
+Then say:
 
-```bash
-pip install lectic
-lectic setup
+> Try Lectic with its offline debugging starter.
+
+The bundled example produces a source-backed review of a sample debugging plan and a second checklist that reuses the same three procedures. It works without YouTube or a model API key. These are clearly labeled authored teaching examples, not live AI output or proof of effectiveness.
+
+Then try your own work:
+
+> Use my Debugging Starter to review this plan: [paste your plan]
+
+For manual setup with Python 3.10 or newer:
+
+```sh
+python -m pip install --upgrade lectic
+python -m lectic.cli setup --yes
 ```
 
-`lectic setup` configures your local assistants automatically, generates your cryptographic signing key, and offers YouTube caption support.
+After restarting your assistant, the offline trial is also available as `python -m lectic.cli try`. Run `python -m lectic.cli status` to see your knowledge folder, inbox, server health and configured connection checks. Setup cannot verify that an already-open assistant has reloaded its tools; restart is required.
 
-### 3. Talk naturally to your assistant
+## Save now, organize later
 
-Open any connected assistant and speak in plain English:
+> Save this for later: [link]
 
-> Save this YouTube talk to my engineering collection: https://www.youtube.com/watch?v=…
+> Add this transcript to Leadership.
 
-> Search the pack registry for distributed systems.
+> What could my saved Leadership material help me do?
 
-> Install the distributed-systems pack from the registry.
+> Use my Leadership collection to review this message.
 
-> Use my engineering standards to review this pull request architecture.
+A save without a collection goes straight to **Inbox**. Saving stores the exact link, text or file; it does not download a webpage, extract knowledge or start a paid model call. Personal notes stay separate from source evidence.
 
-> I want to share my engineering standards with my team.
+You can also drop notes, transcripts and web shortcuts into the **Lectic Inbox** folder reported by status. They appear when the assistant checks the library or inbox. Select items to sort; failed imports stay visible and the original file remains available for a safe retry.
 
-You can also drag browser tabs, drop `.url` shortcuts, or save text notes directly into your `Documents/Lectic Inbox` folder—no background servers or daemons required. When you next chat with your AI, it will notice your dropped items and ask where you'd like them filed.
+## What works today
 
-Run `lectic status` anytime to see what's saved, connected, and waiting in your inbox.
+- **Source-backed work:** reviews, plans, checklists, lessons and other outcomes created by your assistant using cited knowledge.
+- **Reuse and history:** saved collections work across projects sharing the same Lectic home. New goals can reuse existing knowledge. Updates preserve earlier source revisions and results.
+- **Portable packs:** inspect, install and share a collection as a `.lectic` file. Installation verifies available source bytes and reports partial installs explicitly.
+- **Honest evidence checks:** exact quotes, hashes and links are checked deterministically. This establishes traceability, not that a source is true or an interpretation is correct.
+- **Public signature verification:** new signed packs use Ed25519. A valid signature establishes possession of the embedded key. Verify the publisher's fingerprint through a trusted channel to establish identity. Older HMAC packs are labeled unverified.
+- **One personal home:** new installations use `~/.lectic`, or `LECTIC_HOME` if configured. Existing legacy project storage is preserved and identified in status.
 
-**Want to use it in ChatGPT on the web, Claude, or your phone?** Run:
-```bash
-lectic share
-```
-This generates a private, secure link you can plug into ChatGPT Actions or an iPhone Share Sheet Shortcut ([cloud & phone guide](https://github.com/tyreamer/lectic/blob/main/docs/CLOUD.md)).
+The maintained website and starter catalog are at [tyreamer.github.io/lectic](https://tyreamer.github.io/lectic/). The catalog currently contains **one real bundled teaching pack**. There is no claim of a populated community marketplace.
 
----
+## Input and connection limits
 
-## What it does
-
-- **Zero-Daemon Drop Folder & Intelligent Intake.** Drag browser tabs, `.url` shortcuts, or notes directly into your `Documents/Lectic Inbox` folder without keeping background processes or servers alive. When you chat with your AI, Lectic analyzes creators and keywords, identifies intelligent candidate collections, and routes them with your confirmation.
-- **Pure Conversational Sharing & 1-Command Onboarding.** Tell your AI "Share my engineering standards." It packages everything—heuristics, rules, and source evidence—into a signed pack and gives you a 1-sentence prompt for your teammate: *"Install this Lectic pack: [link]"*. When your teammate pastes that into Claude Code, Codex, or ChatGPT, their AI immediately adopts your standards.
-- **Portable Knowledge Packs (`.lectic`).** Export your collection into a single, signed file (`lectic pack "Engineering Standards" --team`). Knowledge units, decision rules, capability maps, and evidence excerpts travel together in one verifiable package.
-- **The Expertise Marketplace.** Discover, inspect, and install community and team packs by name (`lectic search`, `lectic inspect registry:NAME`, `lectic install registry:NAME`). Browse the web marketplace at [tyreamer.github.io/lectic/registry.html](https://tyreamer.github.io/lectic/registry.html).
-- **The Evidence Guarantee (`lectic verify`).** AI should show its work. Every unit of knowledge in Lectic is anchored to an exact substring in the source transcript. `lectic verify` checks evidence integrity with a deterministic exit code (0 = verified, 1 = broken), ready for CI pipelines.
-- **Cryptographic Author Identity.** Packs are signed with author credentials (`lectic identity set "Name" --contact email`). Recipients verify who compiled the pack and know that its contents haven't been tampered with.
-- **Local-First & Zero Vendor Lock-in.** Your knowledge lives in `~/.lectic`. Back up everything with `lectic backup`, restore anywhere with `lectic restore`, or sync across machines with `lectic push`/`pull`.
-
----
-
-## Portable Packs & Team Distribution
-
-Share a collection with your engineering team, course students, or peers with complete evidence guarantees.
-
-```bash
-# Set your author signing identity
-lectic identity set "Alex Rivera" --contact alex@platform.org
-
-# Export a team pack (bundles full sources and Claude/Codex/ChatGPT install instructions)
-lectic pack "Engineering Standards" --team --version 2.1.0
-
-# Publish to team storage (GitHub Releases, S3, R2, or HTTP PUT) with webhook alerts
-lectic publish "Engineering Standards" --to https://github.com/org/repo --webhook https://hooks.slack.com/...
-```
-
-Recipients install with predictable naming and version pinning:
-```bash
-lectic install https://github.com/org/repo/releases/download/v2.1.0/standards.lectic --as standards --pin
-```
-
-When standards evolve, team members update with one command:
-```bash
-lectic update standards
-# -> Updated standards from 2.0.0 to 2.1.0 (3 new conventions added, 1 modified)
-```
-
----
-
-## Expertise Marketplace
-
-Lectic includes a decentralized, Homebrew/Cargo-style registry ([`registry/index.json`](https://github.com/tyreamer/lectic/blob/main/registry/index.json)) hosting verified domain expertise packs.
-
-### Search and inspect from the CLI
-```bash
-# Search available packs by keyword or category tag
-lectic search engineering
-lectic search --tag architecture
-
-# Preview evidence, methods, and README before installing
-lectic inspect registry:distributed-systems-adr
-
-# Install with version pinning
-lectic install registry:distributed-systems-adr --as distributed-systems --pin
-```
-
-### Or search via your AI assistant
-All connected assistants have native MCP access to `lectic_search` and `lectic_inspect`:
-> "Find me a verified pack for FIFA market trading and install it."
-
-### Publish your own pack to the marketplace
-1. Compile and sign your pack: `lectic pack my-topic --team`
-2. Generate registry entry: `lectic publish my-topic --to <URL> --registry`
-3. Submit a Pull Request adding the JSON entry to `registry/index.json` in [`tyreamer/lectic`](https://github.com/tyreamer/lectic).
-
-Browse the interactive web catalog at [**tyreamer.github.io/lectic/registry.html**](https://tyreamer.github.io/lectic/registry.html).
-
----
-
-## The Evidence Guarantee
-
-Unlike generic vector databases or RAG pipelines that summarize blindly, Lectic deterministically tracks every claim back to the author's exact words:
-
-```bash
-lectic verify "Engineering Standards"
-```
-```text
-Verification: Engineering Standards
-  Overall: verified (exit 0)
-  Units:   38 verified, 0 broken citations
-  Sources: 4 of 4 sources verified against content hashes
-```
-
-Run `lectic verify` in GitHub Actions or your pre-commit hooks to guarantee that your AI tools never act on broken or hallucinated heuristics.
-
----
-
-## CLI Reference
-
-| Command | Description |
+| Input or environment | Current behavior |
 | --- | --- |
-| `lectic setup` | Configure local assistants, signing identity, and YouTube support |
-| `lectic identity` | Show or configure the cryptographic author signing key (`--contact`) |
-| `lectic search [QUERY]` | Search the pack registry for verified expertise (`--tag`, `--json`) |
-| `lectic inspect TARGET` | Preview manifest, methods & README without installing (`registry:NAME`, file, URL) |
-| `lectic install TARGET` | Install pack into knowledge home (`--as NAME`, `--pin`, `registry:NAME`) |
-| `lectic update NAME` | Check pack origin for newer releases and update in-place (`--force`) |
-| `lectic pack NAME` | Compile collection into shareable `.lectic` file (`--team`, `--version`) |
-| `lectic publish NAME` | Upload pack to team host or community registry (`--to`, `--registry`, `--webhook`) |
-| `lectic verify [NAME]` | Deterministic CI check for evidence linkage (exit 0 = verified, 1 = issues) |
-| `lectic share` | Generate a private link for ChatGPT, Claude web, or phone shortcuts |
-| `lectic backup` | Package all collections, sources, and builds into a single archive file |
-| `lectic restore FILE` | Restore an archive into the local knowledge home |
-| `lectic push / pull LINK` | Sync knowledge between two Lectic servers |
-| `lectic status` | View saved collections, connected assistants, and evidence health |
+| Pasted text; local TXT, Markdown, VTT and SRT | Saved, then processed when useful for an authorized task |
+| YouTube links | Saved immediately; optional `yt-dlp` retrieves available English captions during processing |
+| Other web links | Saved as links; no general article downloader |
+| PDF, images, video or audio files | Preserved as attachments; no built-in OCR or transcription |
+| Codex and Claude Code on your machine | Setup configures a local server; restart once |
+| Hosted chat or a phone | Needs a running HTTPS Lectic connector; a chat attachment alone does not install tools |
 
----
+YouTube can block a network or have no accessible captions. Lectic reports this and keeps the capture; it never substitutes a video title for its content. See [YouTube support](docs/YOUTUBE.md).
 
-## Current Status
+For hosted chat, another computer or your phone, see the [cloud guide](docs/CLOUD.md). A share link works while its server is running; a quick tunnel changes address after restart. **Anyone holding the link can read and change your knowledge.** Keep it private. Connecting a local client to a remote server still runs retrieval on that remote server.
 
-| Area | Available today | Boundary |
-| --- | --- | --- |
-| **Packs & Distribution** | Signed `.lectic` archives, `--team` bundling, `--pin`, `INSTALL.md`, GitHub/S3 upload, webhooks | Distribution requires an author-managed file host (GitHub, S3, R2, etc.) |
-| **Marketplace** | Decentralized `registry/index.json`, `lectic search`, `lectic inspect`, web UI at `registry.html` | Submissions reviewed via GitHub Pull Requests |
-| **Evidence Guarantee** | `lectic verify` deterministic check (exit code 0/1), HMAC-SHA256 author signing | Confirms exact textual citation support; does not evaluate subjective opinion |
-| **Intelligent Intake** | Creator and topic matching, candidate collection suggestions, interactive prompt | Deferred YouTube captions via `yt-dlp`; text and transcript uploads |
-| **Assistant Protocol** | Universal MCP server (stdio and streamable HTTP) for Claude Code, Codex, ChatGPT, Cursor | Single-user local server architecture |
-| **Storage & Backup** | Local-first in `~/.lectic`, full archive backups (`backup`/`restore`), live server sync (`push`/`pull`) | Multi-tenant user permissioning is out of scope |
+## Share and back up
 
----
-
-## Documentation
-
-| Guide | Purpose |
-| --- | --- |
-| [Web Marketplace](https://tyreamer.github.io/lectic/registry.html) | Interactive catalog of verified knowledge packs |
-| [Packs & Team Distribution](https://github.com/tyreamer/lectic/blob/main/docs/PACKS.md) | Creating, signing, distributing, and updating `.lectic` packs |
-| [MCP Server](https://github.com/tyreamer/lectic/blob/main/docs/MCP.md) | Connect Claude Code, Codex, ChatGPT, or custom MCP clients |
-| [Anywhere](https://github.com/tyreamer/lectic/blob/main/docs/CLOUD.md) | ChatGPT, Claude web, Gemini, and iPhone Share Sheet setup |
-| [CLI Reference](https://github.com/tyreamer/lectic/blob/main/docs/CLI.md) | Complete flag and command specifications |
-| [YouTube Retrieval](https://github.com/tyreamer/lectic/blob/main/docs/YOUTUBE.md) | Retrieve and timestamp YouTube captions on demand |
-| [Capture Details](https://github.com/tyreamer/lectic/blob/main/docs/CAPTURE.md) | Ingestion states, background sync, and folder imports |
-| [Architecture & Design](https://github.com/tyreamer/lectic/blob/main/DESIGN.md) | Compiler design, schemas, and verification internals |
-| [Contributing & Developing](https://github.com/tyreamer/lectic/blob/main/docs/DEVELOPING.md) | Running tests, code organization, and PR guidelines |
-
----
-
-## Contributing
-
-Contributions including reproducible test cases, evidence extractors, and registry packs are welcome! See the [development guide](https://github.com/tyreamer/lectic/blob/main/docs/DEVELOPING.md).
-
-Run the full test suite:
-```bash
-python -m unittest discover -s tests -v
+```sh
+python -m lectic.cli identity set "Alex Rivera" --contact alex@example.com
+python -m lectic.cli pack "Leadership"
+python -m lectic.cli install ./leadership.lectic --as Leadership --pin
+python -m lectic.cli backup
 ```
 
-## License
+Normal packs contain excerpts and source links. For material you may redistribute, `--include-sources` bundles full originals. `--team` also includes originals by default; `--exclude-sources` explicitly overrides it. Recipients need Lectic installed or connected. Unsupported or inaccessible sources can make a links-only install partial or impossible.
 
-[MIT](https://github.com/tyreamer/lectic/blob/main/LICENSE). Imported content retains its original ownership and licensing.
+Version pinning records the installed version; nothing auto-updates packs. An explicit `update` request checks the origin and advances the version while preserving prior knowledge history. Backups and transfers merge additively and report collections that differ. Signing keys, cookies and connection secrets are not included in knowledge backups; preserve your signing identity separately in private storage.
+
+Publishing by collection name rebuilds its current content. Full originals require `--include-sources`. Presigned uploads require a separate `--download-url`; a successful upload is only reported as published after that recipient link returns the correct bytes. Existing GitHub assets are preserved: use a new version or filename.
+
+## Release and quality status
+
+The source tree is preparing **0.3.1**. [Release notes](docs/RELEASE-0.3.1.md) distinguish candidate checks from publication. Installing from PyPI obtains the latest published package, which can differ from this branch.
+
+The test suite covers storage, evidence linkage, workflows, transport, packs and regression cases. It does **not** establish that Lectic improves a user's work over a strong assistant with the same sources. The [evaluation protocol](docs/EVALUATION.md) and [review report](docs/reviews/2026-09-25-project-review.md) describe that remaining work.
+
+For contributors: [development guide](docs/DEVELOPING.md), [architecture](DESIGN.md), [MCP tools](docs/MCP.md), [MIT license](LICENSE).

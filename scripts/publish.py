@@ -8,12 +8,12 @@ from urllib.parse import urlsplit, urlunsplit
 import urllib.request
 import urllib.error
 
-from ec import VERSION, Invalid, require
+from ec import VERSION, Invalid, digest, require
 from collection_store import Library
 from packs import build_pack, open_pack, slug
 
 
-def publish_pack(project, target, to_url, token=None, webhook_url=None):
+def publish_pack(project, target, to_url, token=None, webhook_url=None, download_url=None, include_sources=False):
     """Publish a compiled pack to a team host.
 
     target: a collection name or a path to an existing .lectic file.
@@ -35,11 +35,8 @@ def publish_pack(project, target, to_url, token=None, webhook_url=None):
         require(resolved is not None, f"Collection or pack file '{target}' not found")
         folder, data = resolved
         candidate = project / (slug(data['name']) + '.lectic')
-        if candidate.is_file():
-            pack_path = candidate.resolve()
-        else:
-            packed = build_pack(project, data['name'], destination=candidate, team=True)
-            pack_path = Path(packed['pack'])
+        packed = build_pack(project, data['name'], destination=candidate, team=True, include_sources=include_sources)
+        pack_path = Path(packed['pack'])
 
     require(pack_path.is_file(), f"Pack file not found: {pack_path}")
     raw_bytes = pack_path.read_bytes()
@@ -49,7 +46,13 @@ def publish_pack(project, target, to_url, token=None, webhook_url=None):
     install_name = manifest.get('distribution', {}).get('install_name') or slug(pack_name)
 
     to_url_str = str(to_url).strip()
-    is_github = 'github.com' in to_url_str or (re.match(r'^[a-zA-Z0-9_.-]+/[a-zA-Z0-9_.-]+$', to_url_str) and not to_url_str.startswith('http'))
+    is_github = urlsplit(to_url_str).hostname in {'github.com', 'api.github.com'} or (re.fullmatch(r'[a-zA-Z0-9_.-]+/[a-zA-Z0-9_.-]+', to_url_str) and not to_url_str.startswith('http'))
+    if not is_github:
+        parsed = urlsplit(to_url_str)
+        require(parsed.scheme == 'https' or (parsed.scheme == 'http' and parsed.hostname in {'localhost', '127.0.0.1'}),
+                'Upload over HTTPS (HTTP is supported only on localhost)')
+        presigned = any(key in parsed.query for key in ('X-Amz-', 'Signature=', 'AWSAccessKeyId='))
+        require(not presigned or download_url, 'A presigned upload needs an explicit recipient download URL (--download-url). Its PUT signature cannot be converted to a GET link.')
 
     if is_github:
         auth_token = token or os.environ.get('GITHUB_TOKEN') or os.environ.get('GH_TOKEN')
@@ -112,15 +115,10 @@ def publish_pack(project, target, to_url, token=None, webhook_url=None):
                 else:
                     raise Invalid(f"GitHub API error ({exc.code}): {exc}")
 
-        # Remove duplicate asset if one already exists
+        # Replacing an asset by delete-then-upload can destroy the working release.
+        # Publish a new version or choose a new filename instead.
         for asset in release.get('assets', []):
-            if asset.get('name') == pack_path.name:
-                try:
-                    del_req = urllib.request.Request(asset['url'], headers=gh_headers, method='DELETE')
-                    with urllib.request.urlopen(del_req, timeout=30) as resp:
-                        pass
-                except Exception:
-                    pass
+            require(asset.get('name') != pack_path.name, 'That release asset already exists. Use a new version or filename; the existing asset was preserved.')
 
         upload_url_template = release.get('upload_url', '')
         upload_url = upload_url_template.split('{')[0] + f'?name={pack_path.name}'
@@ -158,12 +156,15 @@ def publish_pack(project, target, to_url, token=None, webhook_url=None):
         except urllib.error.HTTPError as exc:
             raise Invalid(f"HTTP upload failed ({exc.code}): {exc}")
 
-        # For presigned S3 / R2 URLs, the clean GET download URL is the URL without query params
-        parsed = urlsplit(to_url_str)
-        if parsed.query and ('X-Amz-' in parsed.query or 'Signature=' in parsed.query or 'AWSAccessKeyId=' in parsed.query):
-            download_url = urlunsplit((parsed.scheme, parsed.netloc, parsed.path, '', ''))
-        else:
-            download_url = to_url_str
+        download_url = download_url or to_url_str
+
+    from packs import fetch
+    try:
+        require(digest(fetch(download_url)) == digest(raw_bytes), 'Recipient download differs from the uploaded pack')
+    except (OSError, ValueError):
+        return {'phase': 'uploaded_unverified', 'name': pack_name, 'version': version,
+                'download_url': download_url, 'webhook_sent': False,
+                'message': 'Upload completed, but the recipient download could not be verified. Check its access policy or supply a working GET link before sharing.'}
 
     # Optional webhook notification
     webhook_sent = False

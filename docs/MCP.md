@@ -2,7 +2,7 @@
 
 `scripts/lectic_mcp.py` exposes the compiler over the Model Context Protocol (JSON-RPC over stdio). Any MCP client can then operate Lectic through tools: Claude Code, Codex and others reach the same Lectic home without an installed skill and without touching its files directly. Reasoning still belongs to the client; the server owns storage, identity, validation and provenance.
 
-It is stdlib-only Python 3.10+, like the rest of the compiler. There is nothing to install beyond a checkout (or an installed skill, which contains the same `scripts/` folder).
+It requires Python 3.10+ and the package runtime dependencies (`cryptography`, plus `tomli` on Python 3.10). Install Lectic as a package before launching the server.
 
 ## Connect a client
 

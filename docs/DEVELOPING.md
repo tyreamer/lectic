@@ -4,7 +4,7 @@ The installed SKILL.md is the current conversational interface to the core compi
 
 ## Local checks
 
-Python 3.10+ is sufficient for the core and offline test suite. Live YouTube acquisition additionally requires optional yt-dlp. From a checkout:
+Python 3.10+ and the declared package dependencies are required for the core and offline test suite. Install them with `python -m pip install -e .`. Live YouTube acquisition additionally requires optional yt-dlp. From a checkout:
 
 ```text
 python -m unittest discover -s tests -v

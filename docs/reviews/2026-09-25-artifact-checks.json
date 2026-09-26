@@ -1,0 +1,42 @@
+[
+  {
+    "artifact": "lectic-0.3.1-py3-none-any.whl",
+    "sha256": "ed0a56022ccd587cac86a1f2322bf5c297a48da37e1093efbda9c279f1b18dde",
+    "bytes": 338552,
+    "code_revision": "d4422fdca550045be8962b42cf168cbd9ab34847",
+    "report": {
+      "version": "0.3.1",
+      "package_root": "C:\\Users\\TR\\AppData\\Local\\Temp\\lectic-final-artifacts-gh_bh638\\wheel\\lectic",
+      "checks": [
+        "packaged resources present",
+        "catalog schema, actual pack bytes, checksum and declared contents",
+        "offline starter produces two validated results and reuses three units",
+        "fresh interpreter and different project reuse the same saved results",
+        "real HTTP handshake, home lookup and starter reuse",
+        "public signature verification, same-source interpretation update and preserved history",
+        "knowledge backup/restore and repeated additive merge"
+      ],
+      "status": "passed"
+    }
+  },
+  {
+    "artifact": "lectic-0.3.1.tar.gz",
+    "sha256": "5f1f7714083b55b41f31548250ab17530f0b6f7dc54cf3882681eb58a4f12566",
+    "bytes": 339086,
+    "code_revision": "d4422fdca550045be8962b42cf168cbd9ab34847",
+    "report": {
+      "version": "0.3.1",
+      "package_root": "C:\\Users\\TR\\AppData\\Local\\Temp\\lectic-final-artifacts-gh_bh638\\sdist\\lectic",
+      "checks": [
+        "packaged resources present",
+        "catalog schema, actual pack bytes, checksum and declared contents",
+        "offline starter produces two validated results and reuses three units",
+        "fresh interpreter and different project reuse the same saved results",
+        "real HTTP handshake, home lookup and starter reuse",
+        "public signature verification, same-source interpretation update and preserved history",
+        "knowledge backup/restore and repeated additive merge"
+      ],
+      "status": "passed"
+    }
+  }
+]

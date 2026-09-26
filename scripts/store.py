@@ -13,12 +13,37 @@ compare-and-swap; nothing above this module may rely on hard links, directory
 renames or process locks directly.
 """
 from contextlib import contextmanager
+from functools import wraps
+import inspect
 import os
 from pathlib import Path
 import shutil
 import tempfile
+import threading
 
 from ec import Invalid, digest, require
+
+_held = threading.local()
+
+
+def home_transaction(function):
+    """Serialize a public operation across clients sharing a home.
+
+    Nested compiler calls in the same thread may reuse this lock. Other threads
+    and processes must retry; they never observe a half-finished mutation.
+    """
+    signature = inspect.signature(function)
+
+    @wraps(function)
+    def locked(*args, **kwargs):
+        from home import storage_root
+        arguments = signature.bind(*args, **kwargs).arguments
+        owner = arguments.get('self')
+        root = (owner.root if owner is not None else
+                arguments.get('home') or storage_root(arguments.get('project') or '.'))
+        with LocalStore(root).transaction('knowledge', reentrant=True):
+            return function(*args, **kwargs)
+    return locked
 
 
 class LocalStore:
@@ -83,8 +108,13 @@ class LocalStore:
     # --- mutable indexes -------------------------------------------------
 
     @contextmanager
-    def transaction(self, name):
+    def transaction(self, name, reentrant=False):
         """Serialize writers of a named index family. The OS releases the lock on interruption."""
+        key = (os.getpid(), str(self.root), name)
+        held = getattr(_held, 'keys', set())
+        if reentrant and key in held:
+            yield
+            return
         locks = self.root / '.locks'
         locks.mkdir(parents=True, exist_ok=True)
         with (locks / (name + '.lock')).open('a+b') as lock:
@@ -100,8 +130,10 @@ class LocalStore:
             except OSError as exc:
                 raise Invalid('Another ' + name + ' operation is active; retry after it finishes') from exc
             try:
+                _held.keys = held | {key}
                 yield
             finally:
+                _held.keys = held
                 lock.seek(0)
                 if os.name == 'nt': msvcrt.locking(lock.fileno(), msvcrt.LK_UNLCK, 1)
                 else: fcntl.flock(lock, fcntl.LOCK_UN)

@@ -13,6 +13,7 @@ from datetime import datetime, timezone
 import io
 import json
 from pathlib import Path
+from release_version import VERSION as RELEASE_VERSION
 import re
 import shutil
 import tempfile
@@ -23,7 +24,7 @@ import zipfile
 from ec import VERSION, Invalid, digest, fingerprint, read, require, safe_child, validate_schema, write
 from collection_store import Library
 from home import storage_root
-from store import LocalStore
+from store import LocalStore, home_transaction
 
 ARCHIVE_VERSION = '1.0'
 SUFFIX = '.lectic-home'
@@ -44,6 +45,7 @@ def portable(relative):
 
 # ---------------------------------------------------------------- write
 
+@home_transaction
 def archive_home(home):
     home = Path(home)
     members = {}
@@ -52,13 +54,15 @@ def archive_home(home):
         if not path.is_file() or path.is_symlink(): continue
         relative = path.relative_to(home).as_posix()
         if not portable(relative): continue
+        from privacy import require_shareable
+        require_shareable(path, home)
         raw = path.read_bytes()
         require(len(raw) <= MAX_MEMBER_BYTES, 'Home file exceeds the supported size: ' + relative)
         members[relative] = raw
     require(members, 'This home has nothing saved yet: ' + str(home))
     library = read(home / 'library.json') if (home / 'library.json').is_file() else {'collections': []}
     manifest = {'schema_version': ARCHIVE_VERSION, 'created_at': datetime.now(timezone.utc).isoformat(),
-                'lectic_version': VERSION, 'collections': [{'collection_id': c['collection_id'], 'name': c['name']}
+                'lectic_version': RELEASE_VERSION, 'collections': [{'collection_id': c['collection_id'], 'name': c['name']}
                                                            for c in library.get('collections', [])],
                 'blob_count': sum(1 for p in members if p.startswith('blobs/')),
                 'files': {path: digest(raw) for path, raw in sorted(members.items())}}
@@ -95,6 +99,7 @@ def open_archive(raw):
 
 # ---------------------------------------------------------------- merge
 
+@home_transaction
 def merge_archive(project, raw, home=None):
     """Add what is missing; never overwrite, never silently reconcile a divergence."""
     home = Path(home) if home else storage_root(project)

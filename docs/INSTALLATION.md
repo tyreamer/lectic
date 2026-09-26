@@ -37,7 +37,7 @@ Describe what you're working on and what would make the result useful, alongside
 
 Before executing a task, the skill checks actual command access, Python 3.10+ and persistent project files. ChatGPT sessions without those capabilities should continue in Work mode with appropriate access, or another capable host. A mode name alone is not sufficient: [Work capabilities depend on permissions and environment](https://learn.chatgpt.com/docs/enterprise/chatgpt-work-local-security), and [command-network access has separate controls from web search](https://learn.chatgpt.com/docs/sandboxing). Handoff instructions retain the original inputs and goal; an automatic transfer is claimed only when it actually succeeds.
 
-The core needs Python 3.10+ and no third-party Python runtime packages. Processing YouTube links additionally needs a current `yt-dlp` executable on the assistant's PATH and network access. This optional dependency is detected, never installed silently. Ask your assistant to install it when you authorize setup; local transcript files work without it. [Caption selection, failure handling and live retest](YOUTUBE.md).
+The core needs Python 3.10+ and the package dependencies: `cryptography`, plus `tomli` on Python 3.10. Install or upgrade Lectic through its package to obtain them. Processing YouTube links additionally needs a current `yt-dlp` executable on the assistant's PATH and network access. This optional dependency is detected, never installed silently. Ask your assistant to install it when you authorize setup; local transcript files work without it. [Caption selection, failure handling and live retest](YOUTUBE.md).
 
 For a first real task and reuse checks, follow the [alpha testing guide](testing-guide.md).
 

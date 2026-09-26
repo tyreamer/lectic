@@ -5,6 +5,7 @@ minimum evidence shapes, not entailment or real-world effectiveness.
 """
 import json
 from pathlib import Path
+from store import home_transaction
 from ec import (ROOT, VERSION, fingerprint, read, require, safe_child, text_write,
                 validate_ir, validate_schema, write)
 from collection_store import Library
@@ -157,6 +158,7 @@ def compare_maps(old,new):
     return changes
 
 
+@home_transaction
 def capability_map(*,project='.',collection=None,action='discover',draft=None,map_id=None,
                    before=None,select=None,regenerate=False,reconciled=False,use_context=None):
     from goal_workflow import compiler_hash, work
