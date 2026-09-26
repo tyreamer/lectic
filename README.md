@@ -88,7 +88,7 @@ Publishing by collection name rebuilds its current content. Full originals requi
 
 ## Release and quality status
 
-The source tree is preparing **0.3.1**. [Release notes](docs/RELEASE-0.3.1.md) distinguish candidate checks from publication. Installing from PyPI obtains the latest published package, which can differ from this branch.
+**0.3.1 is an alpha release.** Read the [release notes](docs/RELEASE-0.3.1.md), get the [release artifacts](https://github.com/tyreamer/lectic/releases/tag/v0.3.1), or install from [PyPI](https://pypi.org/project/lectic/0.3.1/). The [website and HTML pitch](https://tyreamer.github.io/lectic/) show the current workflow and its limits.
 
 The test suite covers storage, evidence linkage, workflows, transport, packs and regression cases. It does **not** establish that Lectic improves a user's work over a strong assistant with the same sources. The [evaluation protocol](docs/EVALUATION.md) and [review report](docs/reviews/2026-09-25-project-review.md) describe that remaining work.
 

@@ -1,6 +1,8 @@
-# Lectic 0.3.1 release candidate
+# Lectic 0.3.1
 
-This release makes the alpha's save → apply → reuse → update → share workflow easier to try and safer to trust. Publication is separate from preparation; this document does not claim that PyPI or the live website already serves this version.
+This release makes the alpha's save → apply → reuse → update → share workflow easier to try and safer to trust.
+
+Release date: September 25, 2026. [GitHub release](https://github.com/tyreamer/lectic/releases/tag/v0.3.1) · [PyPI package](https://pypi.org/project/lectic/0.3.1/) · [Website and HTML pitch](https://tyreamer.github.io/lectic/).
 
 ## Changes
 
