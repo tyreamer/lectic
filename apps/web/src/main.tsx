@@ -5,6 +5,7 @@ import "./style.css";
 import PackWorkbench, { ResultText } from "./PackWorkbench";
 import Icon, { Glyph } from "./Icon";
 import StartHere from "./StartHere";
+import Connections, { ConnectionConsent } from "./Connections";
 
 type Config = {
   dev: boolean;
@@ -13,6 +14,8 @@ type Config = {
   maxUpload: number;
   maxSources: number;
   previewKey?: string;
+  chatEnabled: boolean;
+  mcpUrl: string | null;
 };
 type Starter = {
   slug: string;
@@ -32,6 +35,7 @@ type Card = {
   format?: string;
   source_count?: number;
   needs_upload?: boolean;
+  processing_deferred?: boolean;
   starter?: string;
 };
 type Operation = {
@@ -130,7 +134,7 @@ function App() {
       results: [],
       operations: [],
     });
-  const [tab, setTab] = useState(()=>sessionStorage.getItem("lectic-operation") || (new URLSearchParams(location.search).has("code") && sessionStorage.getItem("lectic-selection")) ? "Make" : "Start"),
+  const [tab, setTab] = useState(()=>new URLSearchParams(location.search).get("view")==="library" ? "Library" : new URLSearchParams(location.search).get("view")==="connections" ? "Connections" : sessionStorage.getItem("lectic-operation") || (new URLSearchParams(location.search).has("code") && sessionStorage.getItem("lectic-selection")) ? "Make" : "Start"),
     [chosen, setChosen] = useState<{
       id?: string;
       slug?: string;
@@ -166,6 +170,8 @@ function App() {
   const token = location.pathname.startsWith("/s/")
     ? location.pathname.split("/")[2]
     : null;
+  const consentRoute = location.pathname === "/connect/approve";
+  const authorizationId = consentRoute ? new URLSearchParams(location.search).get("authorization_id") || "" : "";
   useEffect(()=>{
     if(current)sessionStorage.setItem("lectic-operation",current);
     else sessionStorage.removeItem("lectic-operation");
@@ -246,7 +252,7 @@ function App() {
     return()=>cancelAnimationFrame(frame);
   },[result?.id]);
   useEffect(() => {
-    if (!ready || !signed) return;
+    if (!ready || !signed || consentRoute) return;
     refresh().catch(report);
     post("/events", {
       name: localStorage.getItem("lectic-visited")
@@ -306,7 +312,7 @@ function App() {
     if (!auth) return;
     const { error } = await auth.auth.signInWithOAuth({
       provider,
-      options: { redirectTo: location.origin + (token ? "/s/" + token : "/") },
+      options: { redirectTo: location.origin + (consentRoute ? "/connect/approve?authorization_id="+encodeURIComponent(authorizationId) : token ? "/s/" + token : tab==="Connections" ? "/?view=connections" : "/") },
     });
     if (error) report(error);
   }
@@ -490,6 +496,8 @@ function App() {
         <p>{error || "Opening your workspace…"}</p>
       </main>
     );
+  const connectionProps = {auth,signed,enabled:config.chatEnabled,mcpUrl:config.mcpUrl,login,checkAccount:()=>api("/library")};
+  if(consentRoute)return <ConnectionConsent {...connectionProps} authorizationId={authorizationId}/>;
   return (
     <>
       <header>
@@ -501,6 +509,7 @@ function App() {
         </span>
         <nav>
           <button className={tab === "Start" ? "active" : ""} onClick={()=>setTab("Start")}>Start here</button>
+          <button className={tab === "Connections" ? "active" : ""} onClick={()=>setTab("Connections")}>Connect AI</button>
           {signed ? (
             <>
               <button
@@ -527,7 +536,8 @@ function App() {
         </nav>
       </header>
       <main>
-        {tab === "Start" && !(token && preview) && <StartHere openLibrary={()=>setTab("Library")}/>}
+        {tab === "Start" && !(token && preview) && <StartHere openLibrary={()=>setTab("Library")} openConnections={()=>setTab("Connections")}/>}
+        {tab === "Connections" && <Connections {...connectionProps}/>}
         {error && (
           <div className="banner error" role="alert">
             {error}
@@ -813,6 +823,7 @@ function App() {
                       </button>
                     </>
                   )}
+                  {s.processing_deferred && <button onClick={()=>post("/captures/"+s.id+"/process").then(op=>{setCurrent(op.operation_id);refresh();}).catch(report)}>Prepare for a pack</button>}
                   {s.needs_upload && <button onClick={()=>{
                     fallback.current = null; resumeUpload.current = s.id;
                     file.current?.click();

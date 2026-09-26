@@ -2,6 +2,8 @@
 
 Lectic keeps one home per user. `lectic setup` connects the assistants on the same machine to it. This guide is for everything else: ChatGPT, Claude on the web, Gemini, your phone, or a second computer.
 
+**Invited hosted pilot:** the new [personal chat connection](PERSONAL_CHAT.md) uses sign-in, consent and revocable OAuth access to each user's own library. It is implemented locally and awaits hosted activation. The instructions below describe the existing self-hosted connection, whose secret URL grants access to one running home; do not confuse it with a personal pilot account or a pack-sharing link.
+
 All of them need the same thing: **one link**. The link is an HTTPS address ending in `/t/<secret>/mcp`. Hosted assistants add it as a connector; your phone posts captures to its `/capture` sibling; Claude Code and Codex on another machine take it with `lectic connect`. The secret is made once per home, never typed, and is the whole of the link's security: anyone holding it can read and change your knowledge, so treat it like a password. `lectic share --new-link` retires it.
 
 There is no separate cloud copy of your knowledge to keep in sync. Wherever the server runs, that home is the knowledge.

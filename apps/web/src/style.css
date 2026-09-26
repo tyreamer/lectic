@@ -1033,3 +1033,16 @@ input.visually-hidden {
  .collect-intro>p:last-child {font-size:15px;}
  .section-heading h2 {font-size:22px;}
 }
+.connection-page { max-width: 740px; margin: 3rem auto; }
+.connection-page h1 { font-size: clamp(2rem, 5vw, 3.2rem); }
+.connection-page .actions { display: flex; gap: .7rem; flex-wrap: wrap; margin-top: 1.5rem; }
+.connection-page details { overflow-wrap: anywhere; }
+.connection-row { display: flex; justify-content: space-between; align-items: center; gap: 1rem; border-top: 1px solid var(--line, #dce2d7); padding: 1rem 0; }
+.connection-row > div { min-width: 0; overflow-wrap: anywhere; }
+.connection-row button { flex-shrink: 0; }
+.chat-prompt input[readonly] { width: 100%; box-sizing: border-box; margin: .6rem 0 1rem; }
+@media (max-width: 740px) {
+  header { flex-wrap: wrap; height: auto; min-height: 78px; padding-top: 12px; padding-bottom: 12px; }
+  nav { flex-wrap: wrap; min-width: 0; }
+  nav button { white-space: nowrap; }
+}

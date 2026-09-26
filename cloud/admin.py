@@ -2,7 +2,7 @@
 import argparse
 import json
 import time
-from sqlalchemy import select, update
+from sqlalchemy import select, update, text
 from .config import Settings
 from .db import Database, invites, accounts, jobs, calls, events, budgets
 
@@ -14,11 +14,19 @@ def main():
     revoke=sub.add_parser('uninvite'); revoke.add_argument('email')
     sub.add_parser('report')
     sub.add_parser('init-local')
+    sub.add_parser('configure-chat')
     args=parser.parse_args()
     settings=Settings(); settings.validate(); db=Database(settings)
     if args.command=='init-local':
         if not settings.dev: raise ValueError('Apply the migration to production instead.')
         db.initialize(); return
+    if args.command=='configure-chat':
+        if settings.dev: raise ValueError('Configure chat only in the dedicated hosted project.')
+        with db.transaction() as c:
+            c.execute(text("INSERT INTO public.pilot_oauth_config (id, resource) VALUES ('mcp', :resource) ON CONFLICT (id) DO UPDATE SET resource = EXCLUDED.resource"),
+                      {'resource':settings.mcp_resource})
+        print('OAuth resource configured: '+settings.mcp_resource)
+        print('Enable the Lectic token hook and OAuth server in Supabase, then set LECTIC_CHAT_ENABLED=1.'); return
     if args.command in {'invite','uninvite'}:
         email=args.email.strip().lower()
         if '@' not in email or len(email)>320: raise ValueError('Use a valid email.')

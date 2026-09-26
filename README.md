@@ -33,7 +33,7 @@ The implementation includes a React app, FastAPI service, durable worker, accoun
 
 **Release status:** this is a local pilot implementation, not a publicly available hosted service. Dedicated cloud accounts, configured Google/Apple sign-in, iOS signing and device checks, real hosting retrieval measurements, and the ten-person usability study remain launch gates. No cloud resources have been provisioned. See [pilot setup, evidence and limitations](docs/PILOT.md).
 
-The next onboarding priority is a secure personal connection from an existing hosted AI chat to the pilot. That connection is not implemented yet; the current starting prompts do not imply automatic connection. Additional library and mobile features should wait until this primary route proves useful.
+Personal chat connections are now implemented for local verification: **Connect AI → sign in and approve → give your AI your own sources → build and reuse a pack**. The authenticated MCP endpoint uses the same personal library and durable processing as the web app, with revocable connections and proactive guidance. Hosted activation and real ChatGPT/Claude/Gemini interoperability checks still require the dedicated cloud accounts. See the [personal connection guide and launch checks](docs/PERSONAL_CHAT.md). Additional library and mobile features should wait until this primary route proves useful.
 
 Public Instagram/X retrieval is best effort. An incomplete post stays **Needs content** with **Add screenshots or video**; a caption or thumbnail never stands in for the complete post. Uploaded media uses automatic transcripts/OCR and sampled video frames, with those derivations labeled separately.
 

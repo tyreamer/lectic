@@ -24,6 +24,11 @@ class Settings:
     monthly_microdollars: int = field(default_factory=lambda: int(os.getenv("LECTIC_AI_BUDGET_MICRODOLLARS", "30000000")))
     invite_limit: int = 10
     dev: bool = field(default_factory=lambda: os.getenv("LECTIC_DEV", "") == "1")
+    chat_enabled: bool = field(default_factory=lambda: os.getenv("LECTIC_CHAT_ENABLED", "") == "1")
+
+    @property
+    def mcp_resource(self):
+        return self.origin + "/mcp"
 
     def validate(self):
         if self.dev:

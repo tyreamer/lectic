@@ -28,7 +28,7 @@ def context_text(context):
         lines += ["## "+title, "", unit["statement"], "", "Evidence status: "+unit["status"]+".", ""]
         for evidence in unit["evidence"]:
             source = sources.get(evidence["source_id"], {})
-            lines += ["> "+evidence["quote"].replace("\n","\n> "), "", "Source: "+(source.get("title") or evidence["source_id"])+" · "+evidence["segment_id"]+" · "+(source.get("caption_type") or "supplied text"), ""]
+            lines += ["> "+evidence["quote"].replace("\n","\n> "), "", "Source: "+(source.get("title") or evidence["source_id"])+" · "+evidence["source_id"]+" / "+evidence["segment_id"]+" · "+(source.get("caption_type") or "supplied text"), ""]
             if source.get("url"): lines += ["Original: "+source["url"], ""]
         if unit.get("scope"): lines += ["Scope: "+unit["scope"], ""]
     return "\n".join(lines)

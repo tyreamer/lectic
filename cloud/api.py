@@ -10,7 +10,7 @@ from fastapi import FastAPI, Depends, Request, HTTPException, Header
 from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, ConfigDict
-from sqlalchemy import select, update
+from sqlalchemy import select, update, func
 from .config import Settings, ROOT
 from .db import Database, accounts, captures, packs, results, jobs, shares, backups, events, Conflict, uid, hash_json
 from .auth import identity
@@ -30,6 +30,7 @@ class Capture(Input):
     filename: str = Field(default="", max_length=200)
     size: int = Field(default=0, ge=0)
     parent_id: UUID | None = None
+    process: bool = True
 
 
 class Assembly(Input):
@@ -73,6 +74,9 @@ def create_app(settings=None, auth=None):
     async def headers(request, call_next):
         if settings.dev and request.headers.get("host", "").split(":")[0] not in {"127.0.0.1", "localhost", "testserver"}:
             return JSONResponse({"detail": "Local preview only"}, 403)
+        if request.url.path == "/mcp":
+            origin = request.headers.get("origin")
+            if origin and not settings.allows_origin(origin): return JSONResponse({"detail": "Origin not allowed"}, 403)
         if request.method not in {"GET", "HEAD", "OPTIONS"}:
             origin = request.headers.get("origin")
             if origin and not settings.allows_origin(origin): return JSONResponse({"detail": "Origin not allowed"}, 403)
@@ -113,6 +117,8 @@ def create_app(settings=None, auth=None):
     def config():
         return {"supabaseUrl": settings.supabase_url, "publishableKey": settings.publishable_key,
                 "dev": settings.dev, "maxUpload": settings.max_upload, "maxSources": settings.max_sources,
+                "chatEnabled": settings.chat_enabled and not settings.dev,
+                "mcpUrl": settings.mcp_resource if settings.chat_enabled and not settings.dev else None,
                 **({"previewKey": hash_json(str(settings.data))[:16]} if settings.dev else {})}
 
     @app.get("/api/v1/starters")
@@ -123,6 +129,7 @@ def create_app(settings=None, auth=None):
         def items(tab):
             return [{"id": r["id"], "title": r["title"], "created": r["created"],
                      **({"state": r["state"], "kind": r["data"]["kind"], "reason": r["data"].get("reason"),
+                         "processing_deferred": r["state"] == "saved" and not r["data"].get("process", True),
                          "needs_upload": r["data"]["kind"] == "upload" and not r["data"].get("sha256")} if tab is captures else
                         {"source_count": r["data"].get("source_count"), "format": r["data"].get("format"),
                          "starter": r["data"].get("starter")})} for r in db.listing(tab, owner)]
@@ -149,7 +156,8 @@ def create_app(settings=None, auth=None):
             account = c.execute(select(accounts).where(accounts.c.id == owner).with_for_update()).mappings().one()
             old = c.execute(select(jobs).where(jobs.c.owner == owner, jobs.c.key == retry_key)).mappings().first()
             if old:
-                if old["payload"].get("request") != payload: raise Conflict("Retry key already used.")
+                previous = old["payload"].get("request") or {}
+                if {"process": True, **previous} != payload: raise Conflict("Retry key already used.")
                 return {"capture_id": old["payload"]["capture_id"], "operation_id": old["id"]}
             size = body.size if body.kind == "upload" else len(body.text.encode())
             if account["used_bytes"] + size > settings.max_storage: raise HTTPException(413, "Your originals storage is full.")
@@ -158,7 +166,24 @@ def create_app(settings=None, auth=None):
             c.execute(captures.insert().values(id=ident, owner=owner, title=body.title, state="saved", data=payload, bytes=size))
             job = db.enqueue(owner, "capture", {"capture_id": ident, "request": payload}, retry_key, connection=c)
             if body.kind == "upload": c.execute(update(jobs).where(jobs.c.id == job["id"]).values(status="awaiting_upload"))
+            elif not body.process: c.execute(update(jobs).where(jobs.c.id == job["id"]).values(status="deferred"))
         return {"capture_id": ident, "operation_id": job["id"]}
+
+    @app.post("/api/v1/captures/{ident}/process", status_code=202)
+    def process_source(ident: UUID, owner=Depends(identity)):
+        row = owned(captures, ident, owner)
+        with db.transaction() as c:
+            c.execute(select(accounts.c.id).where(accounts.c.id == owner).with_for_update()).first()
+            operation = c.execute(select(jobs).where(jobs.c.owner == owner, jobs.c.kind == "capture",
+                jobs.c.payload["capture_id"].as_string() == str(ident)).with_for_update()).mappings().first()
+            if not operation: raise HTTPException(404, "Source operation not found")
+            if operation["status"] == "deferred":
+                pending = c.execute(select(func.count()).select_from(jobs).where(jobs.c.owner == owner,
+                    jobs.c.status.in_(["saved", "processing", "awaiting_upload"]))).scalar_one()
+                if pending >= 50: raise Conflict("Your pending queue is full. Finish or cancel some saves first.")
+                c.execute(update(jobs).where(jobs.c.id == operation["id"]).values(status="saved"))
+                c.execute(update(captures).where(captures.c.id == str(ident), captures.c.owner == owner).values(data={**row["data"], "process": True}))
+            return {"operation_id": operation["id"]}
 
     @app.put("/api/v1/captures/{ident}/content", status_code=202)
     async def upload(ident: UUID, request: Request, owner=Depends(identity)):
@@ -185,7 +210,8 @@ def create_app(settings=None, auth=None):
                 c.execute(update(captures).where(captures.c.id == str(ident)).values(data=data))
                 active = c.execute(select(jobs).where(jobs.c.owner == owner, jobs.c.kind == "capture")).mappings().all()
                 job = next(j for j in active if j["payload"]["capture_id"] == str(ident))
-                if job["status"] == "awaiting_upload": c.execute(update(jobs).where(jobs.c.id == job["id"]).values(status="saved"))
+                if job["status"] == "awaiting_upload":
+                    c.execute(update(jobs).where(jobs.c.id == job["id"]).values(status="saved" if data.get("process", True) else "deferred"))
             return {"operation_id": job["id"]}
         finally:
             temporary.unlink(missing_ok=True)
@@ -215,7 +241,28 @@ def create_app(settings=None, auth=None):
         suggestions = r["data"].get("suggestions") if context is None else r["data"].get("suggestion_sets", {}).get(hash_json(context))
         if suggestions and suggestions.get("guidance_version") != GUIDANCE_VERSION: suggestions = None
         return {"id": r["id"], "title": r["title"], "preview": r["data"]["preview"], "source_count": r["data"]["source_count"],
-                "suggestions": suggestions, "starter": r["data"].get("starter")}
+                "suggestions": suggestions, "starter": r["data"].get("starter"), "source_ids": r["data"].get("capture_ids", [])}
+
+    @app.get("/api/v1/packs/{ident}/evidence")
+    def evidence(ident: UUID, source_id: str, segment_id: str, owner=Depends(identity)):
+        from zipfile import ZipFile
+        owned(packs, ident, owner)
+        if len(source_id) > 160 or len(segment_id) > 160: raise HTTPException(422, "Invalid reference")
+        with ZipFile(asset_path(settings, owner, str(ident), "lectic")) as archive:
+            # Iterate validated archive entries; never interpolate a requested path.
+            for name in archive.namelist():
+                if not name.startswith("sources/documents/") or not name.endswith(".json"): continue
+                document = json.loads(archive.read(name))
+                if document["source_id"] != source_id: continue
+                segment = next((s for s in document["segments"] if s["segment_id"] == segment_id), None)
+                if segment:
+                    derivation = None
+                    if "sources/derivations.json" in archive.namelist():
+                        records = json.loads(archive.read("sources/derivations.json"))["records"]
+                        derivation = next((r for r in records if r["filename"] == document["filename"]), None)
+                    return {"source_id": source_id, "title": document["title"], "caption_type": document["caption_type"],
+                            "url": document.get("url"), "segment": segment, "derivation": derivation}
+        raise HTTPException(404, "Reference not found in this pack")
 
     @app.post("/api/v1/packs/{ident}/suggestions", status_code=202)
     def suggest(ident: UUID, body: SuggestionContext | None = None, owner=Depends(identity)):
@@ -346,6 +393,17 @@ def create_app(settings=None, auth=None):
             ident = uid()
             c.execute(events.insert().values(id=ident, owner=owner, name=body.name, data={"result_id": str(body.result_id) if body.result_id else None}))
         return {"operation_id": ident}
+
+    # Explicit function registry: chat shares the API's ownership, quota, retry and
+    # job rules. A client cannot supply a route, tenant, filesystem path or handler.
+    from .chat import mount_chat
+    mount_chat(app, {
+        "library": library, "capture": capture, "process": process_source,
+        "source": source, "assemble": assemble, "pack": pack, "evidence": evidence,
+        "context": portable_context, "create": create, "result": result,
+        "job": job, "cancel": cancel, "retry": retry, "share": share,
+        "shares": my_shares, "revoke": revoke, "copy": copy,
+    }, {"capture": Capture, "assemble": Assembly, "create": Creation})
 
     dist = ROOT / "apps/web/dist"
     if dist.is_dir():
