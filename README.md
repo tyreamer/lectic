@@ -1,59 +1,45 @@
-<div align="center">
-
 # Lectic
 
-### Save what you trust. Your AI learns the playbook.
+Save videos and notes on your computer so your AI assistant can search them and quote them.
 
 [![Tests](https://github.com/tyreamer/lectic/actions/workflows/tests.yml/badge.svg)](https://github.com/tyreamer/lectic/actions/workflows/tests.yml)
 [![PyPI](https://img.shields.io/pypi/v/lectic?color=38bdf8)](https://pypi.org/project/lectic/)
 [![Python: 3.10+](https://img.shields.io/badge/python-3.10%2B-3776ab)](https://github.com/tyreamer/lectic/blob/main/docs/DEVELOPING.md)
 [![License: MIT](https://img.shields.io/badge/license-MIT-34d399)](https://github.com/tyreamer/lectic/blob/main/LICENSE)
-[![Catalog](https://img.shields.io/badge/starter-shelf-38bdf8)](https://tyreamer.github.io/lectic/registry.html)
 
-**[Quickstart](#quickstart-in-10-seconds)** · **[How it Works](#the-problem--the-solution)** · **[Daily Flow](#talk-naturally-to-your-ai)** · **[Key Benefits](#why-lectic)** · **[Sharing](#share-with-your-team)**
-
-Works with **Claude Code** · **OpenAI Codex** · **ChatGPT** · **Claude Desktop** · **Cursor** · any AI assistant
-
-</div>
+Works with Claude Code, OpenAI Codex, ChatGPT, Claude Desktop, and Cursor.
 
 ---
 
-### The Problem & The Solution
+## What Lectic does
 
-**Your AI has amnesia.**
+When you paste text or a video link into a chat with an AI, the AI forgets that information as soon as you close the conversation.
 
-You watch a brilliant 40-minute talk, study an expert teardown, or read a masterclass on engineering. You paste it into Claude or ChatGPT, get one great answer, and close the chat.
-
-The next day, **the AI forgets everything**. You're back to re-pasting excerpts, re-prompting context, or settling for generic chatbot fluff.
-
-**Lectic gives your AI a permanent memory playbook.**
-
-Save talks, articles, and transcripts once. Lectic turns that material into reusable rules, checklists, and reviewer playbooks—with the author's exact quotes and timestamps attached.
-
-Save it once; your AI applies those lessons across Claude, ChatGPT, Codex, and your team forever.
+Lectic saves your links, notes, and video transcripts into folders on your computer. When you ask your AI a question, it searches those saved files, writes an answer based on what you saved, and shows you the exact sentence and timestamp from the original source.
 
 ---
 
-## Quickstart in 10 Seconds
+## How to set it up
 
-### 1. Let your AI set it up for you (Zero-command install)
-Paste this directly into **Claude Code** or **OpenAI Codex**:
+### 1. Ask your assistant to set it up
+
+If you use Claude Code or OpenAI Codex, paste this sentence into your chat:
 
 > Set up Lectic for me: https://github.com/tyreamer/lectic
 
-Your assistant handles installation and connection automatically. **Restart your assistant once** after setup.
+Your assistant will download Lectic and connect to it automatically. When it finishes, restart your assistant once so it can use its new tools.
 
-### 2. Try the instant offline sample
-Say to your assistant:
+### 2. Try an offline test
+
+Say this to your assistant:
 
 > Try Lectic with its offline debugging starter.
 
-It immediately reviews a sample debugging plan and generates a reusable checklist using real expert procedures—**running 100% offline without API keys or downloads**.
+Lectic creates a test collection containing three sentences from a sample debugging lesson. It reviews a sample plan using those sentences and prints the exact quotes. This test runs on your computer without downloading anything or calling an external API.
 
-Then try your own work:
-> Use my Debugging Starter to review this plan: [paste your plan]
+### 3. Or install it using your terminal
 
-### 3. Or install via terminal in 30 seconds
+If you prefer to install it yourself, run these commands in your terminal:
 
 ```bash
 pip install --upgrade lectic
@@ -61,100 +47,86 @@ lectic setup --yes
 lectic try
 ```
 
-Run `lectic status` anytime to see your saved playbooks and connected AIs.
+You can run `lectic status` at any time to see where your files are saved and which assistants are connected.
 
 ---
 
-## Talk Naturally to Your AI
+## How to use it every day
 
-Speak in plain English:
+### 1. Save files and links
 
-- **Save without friction:**
-  > Save this video for later: https://www.youtube.com/watch?v=…
-  
-  *(Saves straight to your **Inbox**—no tagging required, no extra API fees.)*
+You can tell your assistant:
 
-- **Drag and Drop:**
-  Drag browser tabs from Chrome, Edge, or Safari, or drop notes directly into your `Documents/Lectic Inbox` folder. No background servers running, zero battery drain. When you next chat with your AI, it surfaces what you dropped:
-  > *"I noticed you dropped a link to an engineering talk into your Lectic folder. Would you like me to add it to your Architecture playbook?"*
+> Save this video: https://www.youtube.com/watch?v=24JAM7BACtA
 
-- **Put playbooks to work:**
-  > Use my Debugging playbook to review this code change.
-  
-  *(Your AI evaluates your work using the expert's rules and quotes the exact source timestamp.)*
+Your assistant saves the link to your Inbox folder. If you give the name of a collection, it puts the link into that collection.
 
-- **Share with teammates:**
-  > Share my Engineering Standards playbook with the team.
-  
-  *(Your assistant exports a single file and gives a 1-sentence prompt for your teammate: `"Install this Lectic pack: [link]"`.)*
+You can also drag web links from Chrome, Edge, or Safari directly into the `Documents/Lectic Inbox` folder on your computer. You can also drop text files (`.txt`, `.md`) and transcript files (`.vtt`, `.srt`) into that folder. Lectic does not need a background app running to notice these files. The next time you open your assistant, it will tell you what files are waiting in your folder and ask where you want to put them.
 
-**Want to use it in ChatGPT on the web or your phone?** Run `lectic share` to get a private link for ChatGPT or your iPhone ([cloud & phone guide](docs/CLOUD.md)).
+### 2. Ask questions about what you saved
 
----
+You can ask your assistant to read your saved files and answer questions:
 
-## Why Lectic?
+> What does my debugging video say about fixing parser bugs?
 
-### 1. Drag-and-Drop Folder
-No background servers or battery drain. Drag tabs from Chrome, Edge, or Safari (`.url`, `.webloc`), or drop text notes (`.txt`, `.md`) and transcripts (`.vtt`, `.srt`) straight into `Documents/Lectic Inbox`. Syncs effortlessly between phone and laptop via iCloud or OneDrive.
+Your assistant reads your saved transcript, summarizes the advice, and quotes the exact sentence and timestamp:
 
-### 2. Shareable Playbooks (`.lectic`)
-Export any collection into one clean file (`lectic pack "Engineering Standards"`). Your rules, checklists, and source quotes travel together in a neat, shareable bundle.
+> According to Ada in debugging-lesson.vtt at 00:09, "Change one suspected cause at a time, rerun the same input, and compare the result."
 
-### 3. Exact Quotes Attached (Zero Guesswork)
-Your AI shows where every piece of advice came from. Every rule is anchored to an exact quote and timestamp in the original transcript. Run `lectic verify` anytime to confirm that all citations are intact.
+### 3. Share collections with coworkers
 
-### 4. Verified Author Stamp
-Playbooks are stamped with the author's name and verification key, guaranteeing that the playbook is authentic and hasn't been modified.
+You can export a collection into a single `.lectic` file to share with other people:
 
-### 5. Team Standards in 1 Step
-Compile team conventions once. New hires install them in seconds (`lectic install <url> --as engineering --pin`) and their AI immediately works inside the team's conventions across Claude and ChatGPT. Update in place anytime with `lectic update engineering`.
+```bash
+# 1. Set your name and email address so recipients know who created the file
+lectic identity set "Alex Rivera" --contact alex@example.com
+
+# 2. Export your collection into a single file
+lectic pack "Engineering Standards" --team
+
+# 3. Send that file to a coworker. They install it by running:
+lectic install engineering-standards.lectic --as standards --pin
+```
+
+When your coworker asks their assistant about engineering standards, their assistant will search and quote the same material. When you update the file, your coworker can run `lectic update standards` to get the latest version.
 
 ---
 
-## Supported Inputs & Formats
+## Supported files
 
-| What you save | How Lectic handles it |
+| File type | What Lectic does with it |
 | --- | --- |
-| **Notes & text snippets** | Saved immediately; organized when you're ready |
-| **Transcripts (.txt, .md, .vtt, .srt)** | Parsed with timestamps so your AI can cite exact moments |
-| **Browser drag-and-drop** | Drag tabs straight into your Lectic folder from Chrome, Edge, or Safari |
-| **YouTube links** | Saved instantly; English captions downloaded automatically if available |
-| **Claude Code, Codex, Cursor** | Connected automatically via open AI tools standard |
-| **ChatGPT & Mobile** | Connect securely via private web link (`lectic share`) |
+| **YouTube links** | Saves the link and downloads English captions automatically if they are available. |
+| **Notes and text files (.txt, .md)** | Saves the text and splits it into searchable sections. |
+| **Video and audio transcripts (.vtt, .srt)** | Saves the text along with timestamps so your AI can quote exact minutes and seconds. |
+| **Browser links (.url, .webloc)** | Reads the web address when you drag a tab from your browser into your Lectic folder. |
+
+Other web pages are saved as links for your reference. Lectic does not download full article text from general websites.
 
 ---
 
-## Share with Your Team
+## Checking your files
 
-Share playbooks with teammates, students, or friends:
+You can check whether every quote in a collection still matches the original file text by running:
 
 ```bash
-# Set your author name
-lectic identity set "Alex Rivera" --contact alex@platform.org
-
-# Export a team playbook with full source material
-lectic pack "Engineering Standards" --team --version 2.1.0
-
-# Upload to your team's storage (GitHub, S3, or Google Drive)
-lectic publish "Engineering Standards" --to https://github.com/org/repo
+lectic verify "Engineering Standards"
 ```
 
-Your teammates install with one predictable command:
-```bash
-lectic install https://github.com/org/repo/releases/download/v2.1.0/standards.lectic --as standards --pin
-```
-
-When standards evolve, teammates update with one command:
-```bash
-lectic update standards
-```
+If all quotes match their sources, Lectic prints `verified` and exits with code 0. If a quote was edited, deleted, or its source file was moved, Lectic prints which quote failed and exits with code 1. You can run this command in automated test scripts to make sure your AI never quotes broken sources.
 
 ---
 
-## Honest Boundaries
+## Where your files are kept
 
-- **Exact Quotes, Not Magic:** Lectic confirms that every quote matches the original source text. That gives you clear proof of where advice came from, but your AI still needs your expertise and judgement.
-- **Local & 100% Yours:** Your playbooks live on your own computer in `~/.lectic`. Back up with `lectic backup`, restore anywhere with `lectic restore`.
-- **Open Source:** MIT licensed and actively developed. Feedback, feature requests, and PRs are warmly welcomed!
+All of your saved files, notes, and collections are stored in a folder called `.lectic` in your user directory (for example, `C:\Users\YourName\.lectic` on Windows or `/Users/yourname/.lectic` on macOS). Lectic does not send your files to a cloud server. Your data stays on your computer.
 
-For contributors: [development guide](docs/DEVELOPING.md) · [architecture](DESIGN.md) · [tool reference](docs/MCP.md) · [MIT license](LICENSE).
+If you want to use Lectic with ChatGPT on the web or on your phone, you can run `lectic share` to create a temporary, password-protected web address. Anyone who has that address can read your saved files, so keep that address private.
+
+---
+
+## Contributing and license
+
+Lectic is open-source software licensed under the MIT license.
+
+For technical details, read the [developer documentation](docs/DEVELOPING.md), the [architecture notes](DESIGN.md), and the [MCP tool reference](docs/MCP.md).
