@@ -41,6 +41,11 @@ class Settings:
     def home(self, owner: str) -> Path:
         return self.account_dir(owner) / "home"
 
+    def allows_origin(self, origin: str) -> bool:
+        if self.dev:
+            return origin in {"http://127.0.0.1:8780", "http://localhost:8780"}
+        return origin == self.origin
+
     @property
     def db_url(self):
         return self.database or "sqlite:///" + (self.data / "pilot.sqlite").as_posix()

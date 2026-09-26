@@ -8,7 +8,8 @@ The owner explicitly chose to keep it local on September 26, 2026 and will provi
 
 | Area | Behavior |
 |---|---|
-| Web app | Responsive React/TypeScript library, three starter cards, preserved pack selection through OAuth, six creation choices, source disclosures, copy and Markdown download. |
+| Web app | Sources first; optional, labeled examples; pack selection preserved through OAuth. Three suggestions grounded in each pack, optionally tailored to the user's situation; open-ended creation, source disclosures, copy and Markdown download. |
+| Portable context | Readable `.txt` download with distilled knowledge and quotations, plus a question to ask an assistant that knows the user. `.lectic` remains available. Advanced options can produce a reusable prompt, agent skill or local read-only MCP server bundle. |
 | Sources | URL/text capture and bounded uploads, Inbox by default, Saved / Processing / Ready / Needs content states, screenshot/video fallback. |
 | Compiler | Exact-quote extraction, cross-source reconciliation, coverage assessment, reusable methods, validated outcomes, separate assistant semantic review. |
 | Media | PDF text and page OCR, image interpretation, timestamped Whisper transcription, up to 12 sampled video frames. Originals remain private. |
@@ -41,7 +42,11 @@ $env:LECTIC_AI_BUDGET_MICRODOLLARS='1000000'
 .venv/Scripts/python -m lectic.cloud.service
 ```
 
-Open **http://127.0.0.1:8780**. Local mode uses a visibly labeled development account, SQLite and local private files. It cannot be enabled on a public origin. The current review instance uses a **$1 AI ceiling**, separate from the proposed $30 monthly pilot allowance.
+Open **http://127.0.0.1:8780** or **http://localhost:8780**. Both loopback origins work in development; production still accepts only its configured origin. Local mode uses a visibly labeled development account, SQLite and local private files. It cannot be enabled on a public origin. The current review instance uses a **$1 AI ceiling**, separate from the proposed $30 monthly pilot allowance.
+
+The home screen starts with personal sources. The three teaching packs are optional examples, not unexplained entries in the person's library. Opening a pack offers three uses based on its actual distilled knowledge. An optional situation field personalizes them; it does not change the shared pack. Suggestions are cached per pack/context, and neither suggestions nor new creations repeat ingestion. The context download contains the selected pack's knowledge and evidence, not the owner's personal goals or library. Uploading that file to another assistant is a manual action, not an account connection.
+
+For cloud regression checks from a hyphenated worktree path, run `../../.venv/Scripts/python.exe -m pytest . -q --rootdir=. --confcutdir=.` from `cloud/tests` so pytest does not import the checkout folder as a Python package.
 
 FFmpeg and ffprobe are needed for media. Set `LECTIC_FFMPEG` and `LECTIC_FFPROBE` to their executable paths if they are not on PATH. The production image supplies them. Neither system Python nor an unrelated `DATABASE_URL` is reused for hosted data.
 

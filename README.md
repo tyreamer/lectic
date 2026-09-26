@@ -11,7 +11,11 @@ The released local edition works with connected AI assistants. The new web pilot
 
 ## Web pilot — available for local review
 
-Choose **Customer Discovery Guide**, **Code Debugging Playbook**, or **Startup Principles**, then make a plan, checklist, lesson, review, proposal, or your own idea. Creations use real model calls, include expandable source references, and can be copied or downloaded as Markdown. All three starters are original Lectic-authored teaching material under MIT.
+Bring links, files and notes together, then distill them into a **context pack**: reusable knowledge with its source evidence. Open the pack for three concrete starting ideas. Add what you are working on to get suggestions for your situation, or describe your own idea. Creations use real model calls and include expandable source references.
+
+You can also download the pack as a readable context file, attach it in ChatGPT or Claude, and ask: **“Based on what you know about me, how could I use this?”** Share the pack so someone else can use the same knowledge differently. `.lectic` downloads remain available; advanced options include reusable prompts, agent skills and a local read-only MCP server bundle.
+
+Want to try an example first? **Customer Discovery Guide**, **Code Debugging Playbook**, and **Startup Principles** sit in a separate, optional examples section. All three are Lectic-authored teaching material under MIT.
 
 The implementation includes a React app, FastAPI service, durable worker, account-scoped storage, cost reservations, media processing, multi-source packs, fixed-version share links, and Swift/Kotlin capture companions. The existing local compiler and `.lectic` format remain supported.
 

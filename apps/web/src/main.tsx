@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { createRoot } from "react-dom/client";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import "./style.css";
+import PackWorkbench, { ResultText } from "./PackWorkbench";
 
 type Config = {
   dev: boolean;
@@ -28,6 +29,7 @@ type Card = {
   format?: string;
   source_count?: number;
   needs_upload?: boolean;
+  starter?: string;
 };
 type Operation = {
   id: string;
@@ -57,6 +59,7 @@ type Result = {
   id: string;
   title: string;
   markdown: string;
+  format: string;
   references: Reference[];
   outcome: {
     summary: string;
@@ -140,12 +143,13 @@ function App() {
       results: [],
       operations: [],
     });
-  const [tab, setTab] = useState("Make"),
+  const [tab, setTab] = useState(()=>sessionStorage.getItem("lectic-operation") || new URLSearchParams(location.search).has("code") ? "Make" : "Library"),
     [chosen, setChosen] = useState<{
       id?: string;
       slug?: string;
       title: string;
       example?: string;
+      starter?: string;
     } | null>(() =>
       JSON.parse(sessionStorage.getItem("lectic-selection") || "null"),
     );
@@ -226,7 +230,7 @@ function App() {
             setChosen(null); setResult(null); setSource(null); setCurrent(null);
             setBrief(""); setShare(""); setMyShares([]); setSelected([]);
             setCaptureText(""); setPackName(""); setNotice(""); setError("");
-            setTab("Make"); autoCreate.current = false; done.current.clear();
+            setTab("Library"); autoCreate.current = false; done.current.clear();
             sessionStorage.removeItem("lectic-auto-create");
           }
         });
@@ -240,6 +244,15 @@ function App() {
       sessionStorage.setItem("lectic-selection", JSON.stringify(chosen));
     else sessionStorage.removeItem("lectic-selection");
   }, [chosen]);
+  useEffect(()=>{
+    if(!result || tab !== "Make")return;
+    const frame=requestAnimationFrame(()=>{
+      const output=document.getElementById("saved-result");
+      output?.scrollIntoView({block:"start"});
+      output?.focus({preventScroll:true});
+    });
+    return()=>cancelAnimationFrame(frame);
+  },[result?.id]);
   useEffect(() => {
     if (!ready || !signed) return;
     refresh().catch(report);
@@ -271,9 +284,10 @@ function App() {
         setChosen({
           id: operation.result.pack_id,
           title: pack?.title || chosen?.title || "Your pack",
+          starter: pack?.starter,
         });
         setTab("Make");
-        setNotice("Pack ready. What will you make?");
+        setNotice("Context pack ready. Let's see what it could become.");
         if (autoCreate.current) {
           autoCreate.current = false;
           sessionStorage.removeItem("lectic-auto-create");
@@ -309,11 +323,20 @@ function App() {
       slug: starter.slug,
       title: starter.title,
       example: starter.example,
+      starter: starter.slug,
     });
-    setBrief(starter.example);
+    setBrief(""); setFormat("Your Idea");
+    autoCreate.current = false; sessionStorage.removeItem("lectic-auto-create");
     setResult(null);
     setTab("Make");
   }
+  useEffect(()=>{
+    if(!ready || !signed || tab !== "Make" || !chosen?.slug || chosen.id)return;
+    let cancelled=false;
+    post("/starters/"+chosen.slug+"/install",{},"starter-"+chosen.slug)
+      .then(op=>{if(!cancelled){done.current.delete(op.operation_id);setCurrent(op.operation_id);}}).catch(report);
+    return()=>{cancelled=true;};
+  },[ready,signed,tab,chosen?.slug,chosen?.id]);
   async function make() {
     setError("");
     setBusy(true);
@@ -344,17 +367,22 @@ function App() {
     setError("");
     setBusy(true);
     try {
-      const isUrl = /^https?:\/\/\S+$/.test(captureText.trim());
+      const lines = captureText.trim().split(/\s+/);
+      const values = lines.every(line=>/^https?:\/\/\S+$/.test(line)) ? lines : [captureText.trim()];
+      if(values.length>config.maxSources)throw new Error("Add up to "+config.maxSources+" links at a time.");
+      for(const value of values){
+      const isUrl = /^https?:\/\/\S+$/.test(value);
       await post("/captures", {
         kind: isUrl ? "url" : "note",
         title: isUrl
-          ? new URL(captureText.trim()).hostname
-          : captureText.slice(0, 70),
-        text: isUrl ? "" : captureText,
-        url: isUrl ? captureText.trim() : "",
+          ? new URL(value).hostname
+          : value.slice(0, 70),
+        text: isUrl ? "" : value,
+        url: isUrl ? value : "",
       });
+      }
       setCaptureText("");
-      setNotice("Saved to Inbox");
+      setNotice("Saved. Select your ready sources below to create a context pack.");
       await refresh();
     } catch (e) {
       report(e);
@@ -483,17 +511,12 @@ function App() {
           {signed ? (
             <>
               <button
-                className={tab === "Make" ? "active" : ""}
-                onClick={() => setTab("Make")}
-              >
-                Make
-              </button>
-              <button
                 className={tab === "Library" ? "active" : ""}
                 onClick={() => setTab("Library")}
               >
-                Library
+                Sources & packs
               </button>
+              {chosen && <button className={tab === "Make" ? "active" : ""} onClick={()=>setTab("Make")}>Use pack</button>}
               <button onClick={showShares}>Sharing</button>
               {!config.dev && <button
                 aria-label="Sign out"
@@ -568,174 +591,24 @@ function App() {
         )}
         {tab === "Make" && !(token && preview) && (
           <>
-            <section className="intro">
-              <p className="eyebrow">Your sources. New possibilities.</p>
-              <h1>
-                {chosen
-                  ? "What will you make?"
-                  : "Start with something useful."}
-              </h1>
-              <p>
-                {chosen
-                  ? "One pack. Many possibilities."
-                  : "Pick a pack. Make it yours."}
-              </p>
-            </section>
-            <div
-              className="flow"
-              aria-label="Sources become a pack, then new work"
-            >
-              <span>
-                ▧ <i>Sources</i>
-              </span>
-              <b>→</b>
-              <span>
-                ▱ <i>Pack</i>
-              </span>
-              <b>→</b>
-              <span>
-                ✦ <i>Your creation</i>
-              </span>
-              <b>↗</b>
-              <span>
-                ◎ <i>Share & reuse</i>
-              </span>
-            </div>
-            {!chosen ? (
-              <div className="starter-grid">
-                {starters.map((s) => (
-                  <button
-                    className={"starter " + s.color}
-                    key={s.slug}
-                    onClick={() => choose(s)}
-                  >
-                    <Icon name={s.icon} />
-                    <h2>{s.title}</h2>
-                    <p>{s.description}</p>
-                    <span className="card-action">
-                      Make something <b>↗</b>
-                    </span>
-                    <small>{s.label}</small>
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <section className="workbench">
-                <aside>
-                  <div className="pack-spine">
-                    <Icon name="pack" />
-                    <p>Your pack</p>
-                    <h2>{chosen.title}</h2>
-                    <small>Reusable source-backed knowledge</small>
-                  </div>
-                  <button
-                    className="text-button"
-                    onClick={() => {
-                      setChosen(null);
-                      sessionStorage.removeItem("lectic-selection");
-                      setResult(null);
-                    }}
-                  >
-                    Choose another pack
-                  </button>
-                  {chosen.id && (
-                    <>
-                      <button
-                        className="text-button"
-                        onClick={() => sharePack(chosen.id!)}
-                      >
-                        Share pack ↗
-                      </button>
-                      <button
-                        className="text-button"
-                        onClick={() =>
-                          download(
-                            "/packs/" + chosen.id + "/download",
-                            "knowledge.lectic",
-                          )
-                        }
-                      >
-                        Download .lectic ↓
-                      </button>
-                      <button
-                        className="text-button"
-                        onClick={async () => {
-                          try {
-                            setSource(await api("/packs/" + chosen.id));
-                          } catch (e) {
-                            report(e);
-                          }
-                        }}
-                      >
-                        Inspect sources
-                      </button>
-                    </>
-                  )}
-                </aside>
-                <div className="compose">
-                  <div
-                    className="formats"
-                    role="group"
-                    aria-label="What to make"
-                  >
-                    {[
-                      "Plan",
-                      "Checklist",
-                      "Lesson",
-                      "Review",
-                      "Proposal",
-                      "Your Idea",
-                    ].map((f) => (
-                      <button
-                        key={f}
-                        className={format === f ? "selected" : ""}
-                        onClick={() => setFormat(f)}
-                      >
-                        {f}
-                      </button>
-                    ))}
-                  </div>
-                  <label htmlFor="brief">
-                    {format === "Review"
-                      ? "Paste the work you want reviewed"
-                      : "Give it a little direction"}
-                  </label>
-                  <textarea
-                    id="brief"
-                    value={brief}
-                    onChange={(e) => setBrief(e.target.value)}
-                    maxLength={12000}
-                    placeholder={
-                      chosen.example ||
-                      "Who is this for, and what do you want to achieve?"
-                    }
-                    rows={5}
-                  />
-                  {signed ? (
-                    <button
-                      className="primary"
-                      disabled={busy || brief.trim().length < 5}
-                      onClick={make}
-                    >
-                      {busy
-                        ? "Creating…"
-                        : "Create " + format.toLowerCase() + " ✦"}
-                    </button>
-                  ) : (
-                    <SignIn login={login} />
-                  )}
-                  <small>AI-created work, with sources you can inspect.</small>
-                </div>
-              </section>
-            )}
+            {chosen && <PackWorkbench key={chosen.id || chosen.slug} pack={chosen} api={api} post={post}
+              busy={busy} signed={signed} format={format} brief={brief}
+              select={(f,b)=>{setFormat(f);setBrief(b);setResult(null);}}
+              changeBrief={setBrief} create={make} back={()=>{setTab("Library");setResult(null);}}
+              share={()=>chosen.id && sharePack(chosen.id)}
+              inspect={()=>api("/packs/"+chosen.id).then(setSource).catch(report)}
+              download={()=>download("/packs/"+chosen.id+"/download","context.lectic")}
+              exportContext={()=>download("/packs/"+chosen.id+"/context","lectic-context.txt")}
+              signIn={<SignIn login={login}/>}/>}
             {result && (
-              <article className="result" id="saved-result">
+              <article className="result" id="saved-result" tabIndex={-1} aria-label="Your creation">
                 <div className="result-heading">
                   <div>
                     <p className="eyebrow">Made with your pack</p>
                     <h2>{result.title}</h2>
                   </div>
                   <div className="actions">
+                    {["Agent skill", "Prompt", "MCP server"].includes(result.format) && <button className="primary" onClick={()=>download("/results/"+result.id+"/bundle","lectic-"+result.format.toLowerCase().replaceAll(" ","-")+".zip")}>Download {result.format === "MCP server" ? "server" : result.format === "Agent skill" ? "skill" : "prompt + context"} ↓</button>}
                     <button
                       onClick={async () => {
                         try {
@@ -769,7 +642,7 @@ function App() {
                   <section key={i}>
                     <h3>{s.title}</h3>
                     <p className="provenance">{provenance[s.status] || "Check sources"}</p>
-                    <div className="prose">{s.content}</div>
+                    <ResultText text={s.content}/>
                     <details>
                       <summary>
                         {s.unit_ids.length
@@ -836,12 +709,21 @@ function App() {
             )}
           </>
         )}
-        {tab === "Library" && (
+        {tab === "Library" && !(token && preview) && (
           <>
-            <section className="intro">
-              <p className="eyebrow">Keep the good stuff</p>
-              <h1>Your library.</h1>
+            <section className="intro collect-intro">
+              <p className="eyebrow">Your sources. Distilled into context.</p>
+              <h1>A lot to take in.<br/>One pack to build on.</h1>
+              <p>Bring links, files and notes together. Lectic distills them into a context pack you can use anywhere.</p>
             </section>
+            <div className="distill-visual" aria-label="Many sources become one context pack, then many possibilities">
+              <div className="input-stack"><span>▧ Video</span><span>≡ Notes</span><span>↗ Links</span><span>▤ PDFs & files</span></div>
+              <span className="flow-arrow" aria-hidden="true">→</span>
+              <div className="distilled-pack"><b aria-hidden="true">▱</b><strong>Your context pack</strong><small>The useful knowledge, together.</small></div>
+              <span className="flow-arrow" aria-hidden="true">→</span>
+              <div className="output-stack"><span>Make something</span><span>Solve a problem</span><span>Learn something</span><span>Your next idea ↗</span></div>
+            </div>
+            {!signed ? <SignIn login={login}/> : <>
             <section
               className="capture-zone"
               onDragOver={(e) => e.preventDefault()}
@@ -852,21 +734,21 @@ function App() {
             >
               <Icon name="upload" />
               <div>
-                <h2>Drop your sources here</h2>
+                <h2>Start with your sources</h2>
                 <p>Links · notes · PDFs · images · audio · video</p>
                 <div className="capture-input">
                   <textarea
                     aria-label="A link or note"
                     value={captureText}
                     onChange={(e) => setCaptureText(e.target.value)}
-                    placeholder="Paste a link or a note"
+                    placeholder="Paste links (one per line), or write a note…"
                     rows={2}
                   />
                   <button
                     onClick={saveText}
                     disabled={busy || !captureText.trim()}
                   >
-                    Save →
+                    Add sources →
                   </button>
                 </div>
                 <button
@@ -887,9 +769,9 @@ function App() {
             />
             <div className="section-heading">
               <h2>
-                Inbox <span>{library.sources.length}</span>
+                Your sources <span>{library.sources.length}</span>
               </h2>
-              <p>Select ready sources to make a pack</p>
+              <p>Select what belongs together</p>
             </div>
             <div className="source-grid">
               {library.sources.map((s) => (
@@ -986,13 +868,14 @@ function App() {
                   }
                   onClick={assemble}
                 >
-                  Create pack ✦
+                  Distill into a context pack ✦
                 </button>
               </div>
             )}
-            <h2 className="section-heading">Your packs</h2>
+            </>}
+            <h2 className="section-heading">Your context packs</h2>
             <div className="pack-grid">
-              {library.packs.map((p) => (
+              {library.packs.filter(p=>!p.starter).map((p) => (
                 <article className="library-pack" key={p.id}>
                   <Icon name="pack" />
                   <h3>{p.title}</h3>
@@ -1006,14 +889,22 @@ function App() {
                         setResult(null);
                       }}
                     >
-                      Make something →
+                      See what this could become →
                     </button>
                     <button onClick={() => sharePack(p.id)}>Share ↗</button>
                   </div>
                 </article>
               ))}
             </div>
-            <h2 className="section-heading">Saved creations</h2>
+            {!library.packs.some(p=>!p.starter) && <p className="empty">Your packs will appear here after you add and distill your sources.</p>}
+            <details className="examples">
+              <summary>Want to try it first? Open an example</summary>
+              <p>These are sample sources written by Lectic, so you can see how a context pack works.</p>
+              <div className="starter-grid">{starters.map(s=><button className={"starter "+s.color} key={s.slug} onClick={()=>choose(s)}>
+                <small>Example · Lectic-authored</small><Icon name={s.icon}/><h3>{s.title}</h3><p>{s.description}</p><span>Explore this example →</span>
+              </button>)}</div>
+            </details>
+            {library.results.length>0 && <h2 className="section-heading">Saved creations</h2>}
             <div className="result-list">
               {library.results.map((r) => (
                 <button
@@ -1107,7 +998,7 @@ function App() {
           ))}
       </main>
       <footer>
-        <span>Collect → Create → Share → Create again</span>
+        <span>Collect → Distill → Use anywhere → Share</span>
         <small>Lectic · Invited pilot</small>
       </footer>
       {share && (
@@ -1200,12 +1091,12 @@ function App() {
 function SignIn({ login }: { login: (provider: "google" | "apple") => void }) {
   return (
     <div className="sign-in">
-      <p>Sign in to make it yours.</p>
+      <p>Sign in to collect your sources and create context packs.</p>
       <button className="primary" onClick={() => login("google")}>
         Continue with Google
       </button>
       <button onClick={() => login("apple")}>Continue with Apple</button>
-      <small>For invited accounts. Your selected pack will be waiting.</small>
+      <small>For invited accounts. Any example you selected will be waiting.</small>
     </div>
   );
 }

@@ -139,6 +139,20 @@ def execute(settings, db, job):
         data["capture_ids"] = payload["source_ids"]
         insert(packs, dict(id=ident, owner=owner, title=payload["title"], data=data))
         outcome = {"pack_id": ident}
+    elif kind == "suggest":
+        pack = own(packs, payload["pack_id"])
+        context = payload.get("context", "")
+        saved = pack["data"].get("suggestion_sets", {})
+        cache_key = hash_json(context)
+        from .suggestions import discover, GUIDANCE_VERSION
+        if saved.get(cache_key, {}).get("guidance_version") != GUIDANCE_VERSION:
+            library = compiler.Library(project)
+            folder, collection = library.resolve(pack["data"]["collection_id"])
+            ir = compiler.validate_ir(library.run(folder, collection))
+            suggestions = discover(pack["title"], ir, ai(), context)
+            db.mutate(packs, pack["id"], owner, data={**pack["data"], "suggestions": suggestions,
+                      "suggestion_sets": {**saved, cache_key: suggestions}})
+        outcome = {"suggestions_for": pack["id"]}
     elif kind == "create":
         if db.get(results, ident, owner): return {"result_id": ident}
         pack = own(packs, payload["pack_id"])

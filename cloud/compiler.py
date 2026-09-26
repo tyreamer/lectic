@@ -86,8 +86,14 @@ def pack_snapshot(project, collection_id, destination):
 
 
 def create(project, collection_id, format, brief_text, model, limitations=None):
-    target = {"Plan": "plan", "Checklist": "do", "Lesson": "learn", "Review": "review", "Proposal": "create", "Your Idea": "create"}[format]
-    brief = {"schema_version": "1.0", "objective": brief_text, "context": "English-first Lectic pilot. Produce a useful "+format.lower()+" for the supplied brief.",
+    target = {"Plan": "plan", "Checklist": "do", "Lesson": "learn", "Review": "review", "Proposal": "create", "Your Idea": "create",
+              "Agent skill": "create", "Prompt": "create", "MCP server": "create"}[format]
+    delivery = {
+        "Agent skill": "Deliver reusable agent instructions in Markdown: when to use this skill, what input to request, the procedure, evidence rules and boundaries. The service adds SKILL.md frontmatter and bundles the pack's context separately. Do not merely explain how to write a skill.",
+        "Prompt": "Deliver a ready-to-copy reusable prompt, with clear placeholders for future user input and source rules. The service includes the distilled context with the downloadable prompt. Do not merely describe how to write a prompt.",
+        "MCP server": "Deliver a concise usage guide for this pack's MCP server. The service provides a read-only server with search_context(query), get_context(), and a context resource. Explain useful queries and boundaries grounded in this pack. Do not invent tools, generate server code or claim it is deployed.",
+    }.get(format, "Use short paragraphs and put every checklist item or numbered step on its own line.")
+    brief = {"schema_version": "1.0", "objective": brief_text, "context": "English-first Lectic pilot. Produce a useful "+format.lower()+" for the supplied brief. "+delivery,
              "constraints": ["Distinguish source-backed claims from original advice.", "Use only the chosen pack as source evidence.", *(limitations or [])],
              "work": {"label": "User brief or work to review", "text": brief_text}, "desired_result": format,
              "success_criteria": ["Deliver the actual requested work, with accurate source references."], "intent": target}

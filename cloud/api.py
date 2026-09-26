@@ -15,6 +15,7 @@ from .config import Settings, ROOT
 from .db import Database, accounts, captures, packs, results, jobs, shares, backups, events, Conflict, uid, hash_json
 from .auth import identity
 from .storage import asset_path
+from .suggestions import GUIDANCE_VERSION
 
 
 class Input(BaseModel):
@@ -38,8 +39,12 @@ class Assembly(Input):
 
 class Creation(Input):
     pack_id: UUID
-    format: Literal["Plan", "Checklist", "Lesson", "Review", "Proposal", "Your Idea"]
+    format: Literal["Plan", "Checklist", "Lesson", "Review", "Proposal", "Your Idea", "Agent skill", "Prompt", "MCP server"]
     brief: str = Field(min_length=5, max_length=12000)
+
+
+class SuggestionContext(Input):
+    context: str = Field(default="", max_length=1000)
 
 
 class Telemetry(Input):
@@ -70,7 +75,7 @@ def create_app(settings=None, auth=None):
             return JSONResponse({"detail": "Local preview only"}, 403)
         if request.method not in {"GET", "HEAD", "OPTIONS"}:
             origin = request.headers.get("origin")
-            if origin and origin != settings.origin: return JSONResponse({"detail": "Origin not allowed"}, 403)
+            if origin and not settings.allows_origin(origin): return JSONResponse({"detail": "Origin not allowed"}, 403)
             if not request.url.path.endswith("/content"):
                 chunks, size = [], 0
                 async for chunk in request.stream():
@@ -118,7 +123,8 @@ def create_app(settings=None, auth=None):
             return [{"id": r["id"], "title": r["title"], "created": r["created"],
                      **({"state": r["state"], "kind": r["data"]["kind"], "reason": r["data"].get("reason"),
                          "needs_upload": r["data"]["kind"] == "upload" and not r["data"].get("sha256")} if tab is captures else
-                        {"source_count": r["data"].get("source_count"), "format": r["data"].get("format")})} for r in db.listing(tab, owner)]
+                        {"source_count": r["data"].get("source_count"), "format": r["data"].get("format"),
+                         "starter": r["data"].get("starter")})} for r in db.listing(tab, owner)]
         return {"sources": items(captures), "packs": items(packs), "results": items(results),
                 "operations": [{k: r.get(k) for k in ("id", "kind", "status", "result", "error", "created")} for r in db.listing(jobs, owner)[:30]]}
 
@@ -203,9 +209,27 @@ def create_app(settings=None, auth=None):
         return enqueue(owner, "assemble", {"title": body.title, "source_ids": ids}, idempotency_key, 2)
 
     @app.get("/api/v1/packs/{ident}")
-    def pack(ident: UUID, owner=Depends(identity)):
+    def pack(ident: UUID, context: str | None = None, owner=Depends(identity)):
         r = owned(packs, ident, owner)
-        return {"id": r["id"], "title": r["title"], "preview": r["data"]["preview"], "source_count": r["data"]["source_count"]}
+        suggestions = r["data"].get("suggestions") if context is None else r["data"].get("suggestion_sets", {}).get(hash_json(context))
+        if suggestions and suggestions.get("guidance_version") != GUIDANCE_VERSION: suggestions = None
+        return {"id": r["id"], "title": r["title"], "preview": r["data"]["preview"], "source_count": r["data"]["source_count"],
+                "suggestions": suggestions, "starter": r["data"].get("starter")}
+
+    @app.post("/api/v1/packs/{ident}/suggestions", status_code=202)
+    def suggest(ident: UUID, body: SuggestionContext | None = None, owner=Depends(identity)):
+        r = owned(packs, ident, owner)
+        context = body.context.strip() if body else ""
+        return enqueue(owner, "suggest", {"pack_id": str(ident), "context": context},
+                       "suggest-"+str(GUIDANCE_VERSION)+"-"+str(ident)+hash_json([r["data"]["ir_hash"], context]), 0)
+
+    @app.get("/api/v1/packs/{ident}/context")
+    def portable_context(ident: UUID, owner=Depends(identity)):
+        from .bundles import context_from_pack, context_text
+        p = owned(packs, ident, owner)
+        raw = asset_path(settings, owner, p["id"], "lectic").read_bytes()
+        return Response(context_text(context_from_pack(raw,p["title"])), media_type="text/plain",
+                        headers={"Content-Disposition": 'attachment; filename="lectic-context.txt"'})
 
     @app.get("/api/v1/packs/{ident}/download")
     def download(ident: UUID, owner=Depends(identity)):
@@ -232,6 +256,16 @@ def create_app(settings=None, auth=None):
     def result_download(ident: UUID, owner=Depends(identity)):
         r = owned(results, ident, owner)
         return Response(r["data"]["markdown"], media_type="text/markdown", headers={"Content-Disposition": 'attachment; filename="lectic-result.md"'})
+
+    @app.get("/api/v1/results/{ident}/bundle")
+    def result_bundle(ident: UUID, owner=Depends(identity)):
+        from .bundles import context_from_pack, bundle
+        r = owned(results, ident, owner)
+        if r["data"].get("format") not in {"Agent skill", "Prompt", "MCP server"}: raise HTTPException(404, "No bundle for this result")
+        p = owned(packs, r["data"]["pack_id"], owner)
+        raw = asset_path(settings, owner, p["id"], "lectic").read_bytes()
+        data = bundle(r["data"], context_from_pack(raw,p["title"]), raw)
+        return Response(data, media_type="application/zip", headers={"Content-Disposition": 'attachment; filename="lectic-output.zip"'})
 
     @app.get("/api/v1/jobs/{ident}")
     def job(ident: UUID, owner=Depends(identity)):

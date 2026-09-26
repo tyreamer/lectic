@@ -90,6 +90,96 @@ def test_three_starters_install_and_restart_without_duplicate(setup, monkeypatch
     assert len(db.listing(packs, A)) == 3
 
 
+def test_loopback_origins_work_without_allowing_other_sites(setup):
+    _, _, client = setup
+    for origin in ('http://localhost:8780','http://127.0.0.1:8780'):
+        response=client.post('/api/v1/captures',json={'kind':'note','text':'Origin check'},
+            headers={'Origin':origin,'Idempotency-Key':origin})
+        assert response.status_code==202
+    for origin in ('null','https://example.com','http://localhost:3000','http://localhost.evil.test:8780'):
+        assert client.post('/api/v1/events',json={'name':'first_visit'},headers={'Origin':origin}).status_code==403
+
+
+def test_production_origin_remains_exact():
+    settings=Settings(dev=False,origin='https://pilot.example.com')
+    assert settings.allows_origin('https://pilot.example.com')
+    for origin in ('http://localhost:8780','http://127.0.0.1:8780','https://pilot.example.com.evil.test','null'):
+        assert not settings.allows_origin(origin)
+
+
+def test_suggestions_use_pack_context_are_cached_and_owned(setup,monkeypatch):
+    settings,db,client=setup
+    pack_id=run(settings,db,db.enqueue(A,'install_starter',{'slug':'debugging-starter'},'starter'),monkeypatch)['pack_id']
+    import lectic.cloud.models as models
+    seen=[]
+    class Model:
+        last_model='fixture'
+        def json(self,purpose,payload,schema):
+            seen.append(payload)
+            units=payload['knowledge']['units']
+            return {'summary':'Reproduction, isolated changes and regression checks.', 'ideas':[
+                {'title':'Diagnose a failure '+str(i),'description':'Use the saved debugging method.',
+                 'format':f,'brief':'Apply the debugging method to a new failure.', 'unit_ids':[units[0]['unit_id']]}
+                for i,f in enumerate(['Plan','Your Idea','Checklist'])]}
+    monkeypatch.setattr(models,'Model',lambda *args:Model())
+    endpoint='/api/v1/packs/'+pack_id+'/suggestions'
+    assert client.post(endpoint,headers={'x-test-user':B}).status_code==404
+    op=client.post(endpoint).json()['operation_id']
+    assert client.post(endpoint).json()['operation_id']==op
+    job=db.get(jobs,op);run(settings,db,job,monkeypatch);execute(settings,db,job)
+    pack=client.get('/api/v1/packs/'+pack_id).json()
+    assert len(seen)==1
+    assert len(pack['suggestions']['ideas'])==3
+    assert pack['starter']=='debugging-starter'
+    assert all(u['unit_id'].startswith('debug-') for u in seen[0]['knowledge']['units'])
+    assert seen[0]['person_context']==''
+    context='I am preparing to teach a beginner programming class.'
+    personal=client.post(endpoint,json={'context':context}).json()['operation_id']
+    assert personal!=op
+    run(settings,db,db.get(jobs,personal),monkeypatch)
+    assert seen[-1]['person_context']==context
+    assert len(seen)==2
+    detail='/api/v1/packs/'+pack_id
+    assert client.get(detail,params={'context':context}).json()['suggestions']['context']==context
+    assert client.get(detail,params={'context':''}).json()['suggestions']['context']==''
+    assert client.get(detail,params={'context':'different person'}).json()['suggestions'] is None
+    assert client.post(endpoint,json={'context':context}).json()['operation_id']==personal
+    assert client.get(detail,params={'context':context},headers={'x-test-user':B}).status_code==404
+    assert client.post(endpoint,json={'context':'x'*1001}).status_code==422
+
+
+def test_tool_bundles_only_contain_the_selected_pack(setup,monkeypatch):
+    import io
+    from zipfile import ZipFile
+    settings,db,client=setup
+    pack_id=run(settings,db,db.enqueue(A,'install_starter',{'slug':'debugging-starter'},'starter'),monkeypatch)['pack_id']
+    text_path='/api/v1/packs/'+pack_id+'/context'
+    assert client.get(text_path,headers={'x-test-user':B}).status_code==404
+    portable=client.get(text_path)
+    assert portable.status_code==200
+    assert portable.headers['content-type'].startswith('text/plain')
+    assert 'Based on what you know about me' in portable.text
+    assert 'Source:' in portable.text and 'Evidence status:' in portable.text
+    assert 'person_context' not in portable.text
+    for format,required in [('Agent skill','SKILL.md'),('Prompt','prompt.md'),('MCP server','server.py')]:
+        ident=uid()
+        data={'pack_id':pack_id,'format':format,'markdown':'Reusable instructions',
+              'outcome':{'sections':[{'title':'Instructions','content':'Reproduce before making changes.'}]}}
+        with db.transaction() as c:c.execute(results.insert().values(id=ident,owner=A,title=format,data=data))
+        path='/api/v1/results/'+ident+'/bundle'
+        assert client.get(path,headers={'x-test-user':B}).status_code==404
+        response=client.get(path);assert response.status_code==200
+        with ZipFile(io.BytesIO(response.content)) as archive:
+            assert required in archive.namelist()
+            assert 'context.lectic' in archive.namelist()
+            if format=='MCP server':
+                compile(archive.read('server.py'),'server.py','exec')
+                context=json.loads(archive.read('context.json'))
+                assert all(u['unit_id'].startswith('debug-') for u in context['units'])
+            if format=='Agent skill':assert archive.read('SKILL.md').startswith(b'---\nname:')
+            if format=='Prompt':assert b'Context to use with this prompt' in archive.read('prompt.md')
+
+
 def test_tenant_boundaries_all_private_endpoints(setup, monkeypatch):
     settings, db, client = setup
     job = db.enqueue(A, 'install_starter', {'slug':'debugging-starter'}, 'starter')
