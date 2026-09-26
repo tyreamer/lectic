@@ -7,21 +7,28 @@ Turn sources into a reusable knowledge pack. Make something useful, share the pa
 [![Python: 3.10+](https://img.shields.io/badge/python-3.10%2B-3776ab)](https://github.com/tyreamer/lectic/blob/main/docs/DEVELOPING.md)
 [![License: MIT](https://img.shields.io/badge/license-MIT-34d399)](https://github.com/tyreamer/lectic/blob/main/LICENSE)
 
-Start in the AI chat you already use. Lectic distills your sources into context you can reuse across tasks, conversations and people. The library helps you inspect and share that knowledge.
+**Try in your AI → keep your packs in GitHub → reuse or share.** Lectic distills your sources into context you can reuse across tasks, conversations and people. The public home is this repository and its GitHub Pages guide. Your saved pack library belongs in your own private GitHub repository; local Lectic keeps a working copy.
 
 The connected agent helps you spot useful next steps: how a pack fits your current goal, which saved knowledge could help with new work, and who might benefit from a particular pack. It recommends one starting use with up to two alternatives, carries your chosen direction forward, and keeps quick saves brief. Personal context stays separate from source evidence; sharing suggestions never send anything automatically. See the [agent guidance](prompts/proactive-guidance.md).
 
-With Lectic connected, send your sources and ask:
+Start with your own sources. No GitHub account is needed to try:
 
-> Save these sources in Lectic and distill them into a reusable context pack. Based on what you know about me and what I'm working on, suggest three useful ways to use it. Help me choose one and make something useful.
+> Help me turn these sources into reusable context. Based on what you know about me, suggest one useful way to apply it, plus two alternatives. Help me choose and make something useful. Tell me if you cannot read any source.
+
+When it is worth keeping, ask your assistant to save it as a Lectic pack in your private GitHub library. It can help you sign in or create an account then. [First-time guide](docs/FIRST_RUN.md) · [GitHub setup and sync](docs/GITHUB.md).
 
 Already have a pack? Attach its readable context export in ChatGPT, Claude or Gemini and ask:
 
 > Based on what you know about me, how could I use this context? Help me pick a useful starting point.
 
-Saving and compiling through chat requires a connection; a prompt alone does not install or connect Lectic. Codex and Claude Code can perform local setup. Hosted assistants need a reachable Lectic connection where supported, or a readable pack file. See [setup](#how-to-set-it-up) and [remote connections](docs/CLOUD.md).
+Building a validated pack needs Lectic tools; without them, the first result is a draft in your chat. Codex and Claude Code can perform setup and save to GitHub. Other chats can reuse a readable export; direct building and saving depend on the tools available in that app. A private GitHub URL does not grant access by itself.
 
-## Web pilot — available for local review
+**GitHub sync status:** development preview; core upload, restore and update operations passed a live GitHub check using two isolated homes and an authored teaching pack. Prepared packs and readable exports sync every five minutes while local Lectic is running. Offline work stays local; conflicting revisions are preserved for review. This does not sync original media or unfinished captures. Web/mobile build-and-save flows and guided conflict resolution are not ready for a general release. No personal library was uploaded; the isolated private verification repository is archived.
+
+<details>
+<summary>Earlier hosted pilot — experimental, outside the default GitHub route</summary>
+
+The current direction is the GitHub route above. The earlier hosted-account app is retained for development review; it is not a required Lectic account or the public entry point.
 
 Bring links, files and notes together, then distill them into a **context pack**: reusable knowledge with its source evidence. Open the pack for a recommended starting use and up to two alternatives, with a short reason to start there. Add what you are working on to get suggestions for your situation, or describe your own idea. Creations use real model calls and include expandable source references.
 
@@ -38,6 +45,8 @@ Personal chat connections are now implemented for local verification: **Connect 
 Public Instagram/X retrieval is best effort. An incomplete post stays **Needs content** with **Add screenshots or video**; a caption or thumbnail never stands in for the complete post. Uploaded media uses automatic transcripts/OCR and sampled video frames, with those derivations labeled separately.
 
 Download a starter: [Customer Discovery](docs/packs/customer-discovery.lectic) · [Code Debugging](docs/packs/debugging-starter.lectic) · [Startup Principles](docs/packs/startup-principles.lectic).
+
+</details>
 
 ---
 
@@ -149,9 +158,9 @@ If all quotes match their sources, Lectic prints `verified` and exits with code 
 
 ## Where your files are kept
 
-All of your saved files, notes, and collections are stored in a folder called `.lectic` in your user directory (for example, `C:\Users\YourName\.lectic` on Windows or `/Users/yourname/.lectic` on macOS). Lectic does not send your files to a cloud server. Your data stays on your computer.
+Local Lectic keeps its working copy in `.lectic` in your user directory (for example, `C:\Users\YourName\.lectic` on Windows or `/Users/yourname/.lectic` on macOS). Before you connect GitHub, work is saved only there. After you connect your private repository, prepared packs and their source text sync to GitHub while Lectic is running. Original media, unfinished captures and account credentials remain local. Your AI provider still processes whatever content you give it.
 
-If you want to use Lectic with ChatGPT on the web or on your phone, you can run `lectic share` to create a temporary, password-protected web address. Anyone who has that address can read your saved files, so keep that address private.
+To reuse a pack in a web or phone chat, attach its readable export. For compatible chats that need to operate the local Lectic tools directly, `lectic share` offers an optional live connection while your computer is on. Its secret URL grants read/write access to that home; it is not a link for sharing an individual pack. See [the optional live-tool route](docs/CLOUD.md).
 
 ---
 

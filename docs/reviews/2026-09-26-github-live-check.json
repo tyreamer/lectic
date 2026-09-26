@@ -1,0 +1,19 @@
+{
+  "repository": "tyreamer/lectic-sync-verification-20260926-225644",
+  "checks": [
+    "create private dedicated repository through existing sign-in",
+    "first prepared pack upload",
+    "private readable export includes knowledge and quotations",
+    "unchanged repeat sync",
+    "restore pack into independent empty home",
+    "publish edited knowledge from second home",
+    "pull changed knowledge into first home",
+    "second home saves its later revision",
+    "both-sided edits preserved and reported",
+    "disconnect preserves local library"
+  ],
+  "started_at": "2026-09-26T22:56:44.799731+00:00",
+  "status": "passed",
+  "test_repository_archived": true,
+  "finished_at": "2026-09-26T22:57:04.363672+00:00"
+}

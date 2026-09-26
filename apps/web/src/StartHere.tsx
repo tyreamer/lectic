@@ -2,10 +2,11 @@ import { useState } from "react";
 import { Glyph } from "./Icon";
 
 const prompts = {
-  sources: "Save these sources in Lectic and distill them into a reusable context pack. Based on what you know about me and what I'm working on, suggest three useful ways to use it. Help me choose one and make something useful.",
+  sources: "Help me turn these sources into reusable context. Based on what you know about me, suggest one useful way to apply it, plus two alternatives. Help me choose and make something useful. Tell me if you cannot read any source.",
   pack: "Read this context pack. Based on what you know about me and what I'm working on, suggest three useful ways I could use it. If you need more context about me, ask one short question. Then help me put it to work.",
 };
 const setup = "Set up Lectic for me: https://github.com/tyreamer/lectic";
+const keep = "Keep this as a Lectic pack in my private GitHub library. Help me connect GitHub and check that it actually saved.";
 
 export default function StartHere({openLibrary,openConnections}:{openLibrary:()=>void;openConnections:()=>void}) {
   const [route,setRoute] = useState<"sources"|"pack">("sources");
@@ -18,13 +19,13 @@ export default function StartHere({openLibrary,openConnections}:{openLibrary:()=
     <section className="intro chat-intro">
       <p className="eyebrow">Your AI. Your sources. Reusable context.</p>
       <h1>Start in the chat<br/>you already use.</h1>
-      <p>Turn your sources into knowledge you can keep using. Bring the pack to another chat, another AI, or another person.</p>
-      <button className="primary" onClick={openConnections}>Connect my AI <Glyph name="right"/></button>
+      <p>Try your sources on a real task. When the context is worth keeping, save a pack in your GitHub.</p>
+      <p className="fine">No GitHub account needed to try. No separate Lectic account.</p>
     </section>
     <div className="chat-flow" aria-label="Sources become reusable context, then useful work">
       <span><Glyph name="note"/> Your sources</span><Glyph name="right"/>
-      <span><Glyph name="pack"/> A context pack</span><Glyph name="right"/>
-      <span><Glyph name="sparkle"/> Something useful</span>
+      <span><Glyph name="sparkle"/> Something useful</span><Glyph name="right"/>
+      <span><Glyph name="pack"/> Keep it in GitHub</span>
     </div>
     <section className="chat-prompt" aria-labelledby="chat-start-title">
       <h2 id="chat-start-title">Give your AI a starting point</h2>
@@ -32,24 +33,23 @@ export default function StartHere({openLibrary,openConnections}:{openLibrary:()=
         <button className={route==="sources"?"selected":""} aria-pressed={route==="sources"} onClick={()=>{setRoute("sources");setCopied("");}}>Start with my sources</button>
         <button className={route==="pack"?"selected":""} aria-pressed={route==="pack"} onClick={()=>{setRoute("pack");setCopied("");}}>I have a pack</button>
       </div>
-      <p className="prompt-context">{route==="sources" ? "With Lectic connected, paste this alongside your links, notes or files." : "Attach the readable context file in ChatGPT, Claude or Gemini, then ask this."}</p>
+      <p className="prompt-context">{route==="sources" ? "Paste this in your AI chat with two or three sources you care about." : "Attach the readable context file in ChatGPT, Claude or Gemini, then ask this."}</p>
       <blockquote>{prompts[route]}</blockquote>
       <button className="primary" onClick={()=>copy(prompts[route])}>Copy prompt <Glyph name="share"/></button>
       <span className="copy-status" role="status">{copied}</span>
       {route==="pack" && <small>A readable .txt context export works without a Lectic connection. Use the library to download it.</small>}
+      {route==="sources" && <small>Without Lectic tools, this first result is a draft in your chat. Your AI will help you set up Lectic when you want a saved pack.</small>}
     </section>
     <details className="connect-guide">
-      <summary>First time? Connect Lectic to your AI</summary>
-      <p>Saving and building packs from chat requires a Lectic connection. A prompt alone does not connect your account.</p>
-      <h3>Using ChatGPT, Claude or Gemini?</h3>
-      <p>Open “Connect AI” to connect your personal library. The hosted pilot must be activated, and your AI account must support custom connections.</p>
-      <button onClick={openConnections}>Connect my AI <Glyph name="right"/></button>
-      <h3>Using Codex or Claude Code?</h3>
-      <p>These assistants can set up Lectic on your computer. Paste this, then restart the assistant when setup finishes.</p>
+      <summary>Worth keeping? Save it in your GitHub</summary>
+      <p>Your own private repository holds your packs. Local Lectic syncs its working copy while running. Create a GitHub account at this step if you need one.</p>
+      <blockquote>{keep}</blockquote><button onClick={()=>copy(keep)}>Copy save request</button>
+      <h3>Let your assistant handle setup</h3>
+      <p>Codex and Claude Code can set up Lectic and GitHub access. You complete GitHub sign-in yourself. A restart may be needed once.</p>
       <blockquote>{setup}</blockquote><button onClick={()=>copy(setup)}>Copy setup request</button>
-      <h3>Already have a pack?</h3>
-      <p>Attach a readable context file to your chat. Choose “I have a pack” above for a starting question.</p>
+      <p>Other AI apps need tools that can run Lectic and write to your private repository. A prompt or repository link alone does not grant that access. You can always reuse a readable export as an attachment.</p>
+      <small>Development preview: GitHub round-trip checks pass. Web/mobile saving and conflict resolution still need work.</small>
     </details>
-    <div className="library-entry"><div><h2>Your library is here when you need it.</h2><p>Add sources, inspect a pack, or download and share it.</p></div><button onClick={openLibrary}>Open my library <Glyph name="right"/></button></div>
+    <details className="connect-guide"><summary>Development preview</summary><p>The earlier hosted app is available here for inspection. It is separate from your GitHub pack library.</p><button onClick={openLibrary}>Preview library</button><button onClick={openConnections}>Experimental chat connection</button></details>
   </>;
 }

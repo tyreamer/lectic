@@ -1,5 +1,7 @@
 # Knowledge packs
 
+For your own saved library, use [private GitHub pack sync](GITHUB.md). Try with your sources first; connect GitHub when you want to keep the packs. The publishing commands below remain for explicitly sharing selected packs.
+
 A pack is one file, `<name>.lectic`, that carries a collection's compiled expertise to someone else. They install it and every assistant they have connected can apply it, from any project, with no re-upload and no shared project files.
 
 ```bash

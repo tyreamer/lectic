@@ -333,7 +333,8 @@ def retrieve_source(source, members, manifest, home, retriever=None):
 
 
 @home_transaction
-def install_pack(project, location, name=None, retriever=None, pin=False, collection_id=None, _raw=None, origin_location=None):
+def install_pack(project, location, name=None, retriever=None, pin=False, collection_id=None, _raw=None, origin_location=None,
+                 require_complete=False):
     project = Path(project).resolve(); home = storage_root(project); library = Library(project)
     manifest, members = open_pack(fetch(location) if _raw is None else _raw)
     target_cid = collection_id
@@ -406,6 +407,7 @@ def install_pack(project, location, name=None, retriever=None, pin=False, collec
             checkpoints = [read(run / f'units/{sid}.json') for sid in sorted(docs)]
             write(run / 'reconciliation.json', {'schema_version': VERSION, 'checkpoint_hash': fingerprint(checkpoints)})
         installed_ir = assemble(run)
+        require(not require_complete or complete, 'This pack cannot be restored completely; the existing library was preserved')
         if complete:
             require(fingerprint(installed_ir) == manifest['ir_hash'], 'Pack checkpoints do not reconstruct its declared knowledge')
             if 'sources/derivations.json' in members:

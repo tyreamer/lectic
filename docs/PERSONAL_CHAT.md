@@ -1,5 +1,7 @@
 # Your personal Lectic, in your AI chat
 
+**Direction update:** this hosted-account implementation is experimental. The default route is now [try in your AI, then keep packs in your private GitHub repository](GITHUB.md). A hosted Lectic account is not required for that route.
+
 **Implementation status:** available in the local pilot code. Hosted activation and live ChatGPT, Claude and Gemini checks are still pending. This guide does not announce a public service.
 
 ## For a pilot participant, after activation

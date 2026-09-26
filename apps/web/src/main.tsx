@@ -510,7 +510,7 @@ function App() {
         </span>
         <nav>
           <button className={tab === "Start" ? "active" : ""} onClick={()=>setTab("Start")}>Start here</button>
-          <button className={tab === "Connections" ? "active" : ""} onClick={()=>setTab("Connections")}>Connect AI</button>
+          {config.chatEnabled && <button className={tab === "Connections" ? "active" : ""} onClick={()=>setTab("Connections")}>Connect AI</button>}
           {signed ? (
             <>
               <button

@@ -74,6 +74,9 @@ L = lambda d: {'type': 'array', 'items': {'type': 'string'}, 'description': d}
 PROJECT = S('Working folder the user is in; defaults to the server\'s configured project.')
 
 TOOLS = [
+    tool('lectic_github', 'Check or sync the user\'s private GitHub pack library. Trying Lectic needs no GitHub account. Connect/create a repository only when the user asks to keep packs there; explain that prepared packs and source text will upload privately. Credentials come from their existing GitHub sign-in, never chat. Never publish the personal repository.',
+         {'project': PROJECT, 'action': S('Operation.', enum=['status', 'connect', 'sync', 'disconnect']),
+          'repository': S('User-selected OWNER/REPO for connect.'), 'create': B('Create a new private repository in the signed-in user\'s account, only when requested.')}),
     tool('lectic_starter', 'Try Lectic offline: install its authored debugging starter, save a sample review and a second result reusing the same knowledge. Prewritten teaching examples, not live AI output. Use for an explicit request to try Lectic.', {'project': PROJECT}),
     tool('lectic_home', 'Where this project\'s Lectic knowledge lives (user home, LECTIC_HOME or a legacy project folder) and why.',
          {'project': PROJECT}),
@@ -234,8 +237,11 @@ class Server:
         require(isinstance(args, dict), 'Tool arguments must be an object')
         try:
             from store import LocalStore
-            with LocalStore(storage_root(self.resolve_project(args.get('project')))).transaction('knowledge', reentrant=True):
+            if name == 'lectic_github':
                 value = handler(**args)
+            else:
+                with LocalStore(storage_root(self.resolve_project(args.get('project')))).transaction('knowledge', reentrant=True):
+                    value = handler(**args)
             text = value if isinstance(value, str) else json.dumps(value, ensure_ascii=False, indent=2)
             return {'content': [{'type': 'text', 'text': text}], 'isError': False}
         except (Invalid, ValueError, OSError, KeyError, TypeError) as exc:
@@ -245,7 +251,18 @@ class Server:
         return Path(project).resolve() if project else self.project
 
     def tool_home(self, project=None):
-        return describe(self.resolve_project(project))
+        from github_sync import status
+        project = self.resolve_project(project)
+        return {**describe(project), 'github': status(project)}
+
+    def tool_github(self, project=None, action='status', repository='', create=False):
+        import github_sync
+        project = self.resolve_project(project)
+        if action == 'connect':
+            github_sync.connect(project, repository, create=create)
+            return github_sync.sync(project)
+        require(action in ('status', 'sync', 'disconnect'), 'Unknown GitHub operation')
+        return getattr(github_sync, action)(project)
 
     def tool_starter(self, project=None):
         from starter import try_starter
@@ -508,6 +525,15 @@ class Server:
 
 
 def serve(project='.'):
+    from github_sync import start_background
+    stop = start_background(project)
+    try:
+        return serve_stdio(project)
+    finally:
+        stop.set()
+
+
+def serve_stdio(project='.'):
     server = Server(project)
     stdin, stdout = sys.stdin.buffer, sys.stdout.buffer
     for line in stdin:
@@ -692,6 +718,13 @@ def serve_http(project='.', host='127.0.0.1', port=8787, token=None, allowed_ori
     httpd.lock = threading.Lock()
     httpd.session_id = secrets.token_hex(16)
     httpd.allowed_origins = {o.lower() for o in allowed_origins}
+    from github_sync import start_background
+    stop_sync = start_background(project)
+    close = httpd.server_close
+    def close_with_sync():
+        stop_sync.set()
+        close()
+    httpd.server_close = close_with_sync
     base = f'http://{host}:{httpd.server_address[1]}'
     if announce: announce(connect_url(base, token))
     return httpd

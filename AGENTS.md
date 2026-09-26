@@ -78,6 +78,8 @@ If it reports that `cloudflared` is missing, install it with their approval (`wi
 
 ## If they are moving to a new machine, or want a backup
 
+For the default GitHub pack library route, see the next section. These commands remain available for a complete local-home backup:
+
 ```
 <python> -m lectic.cli backup              # one archive file with everything
 <python> -m lectic.cli restore <file>      # merge it in on the other machine
@@ -86,6 +88,14 @@ If it reports that `cloudflared` is missing, install it with their approval (`wi
 ```
 
 Merging only ever adds. Report what the command says: collections added, ones already present, and any it kept apart because they exist on both sides and differ — do not describe that as a failure, and never suggest deleting one side to "fix" it. Repeating any of these is safe.
+
+## If they want to keep their packs in GitHub
+
+Let them try with their own sources and get a useful result before requiring GitHub. When they ask to keep packs, help them sign in to GitHub themselves (or create an account then). Never ask for passwords or tokens in chat. Explain that prepared packs and their source text will sync to their own private repository; this does not publish them.
+
+With an existing GitHub CLI sign-in, use `lectic_github` or `<python> -m lectic.cli github connect OWNER/lectic-packs --create` for an explicitly requested new private repository. Omit `--create` for their existing dedicated repository. Then check `lectic_github(action="status")` or `github status`. Report local-only, retry, pending and conflict states accurately. The local server checks every five minutes while running. See [GitHub setup and limits](docs/GITHUB.md).
+
+Do not tell a plain chat that a prompt saved to GitHub or compiled a verified pack. A read-only GitHub connector cannot write packs. Offer the readable context file for reuse where tools are unavailable. The hosted-account pilot is not required for this route.
 
 ## If they asked you to install a knowledge pack
 

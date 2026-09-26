@@ -11,6 +11,8 @@
     lectic install TARGET   add a playbook to your AI (from a link, file, or name)
     lectic update NAME      get the latest updates for an installed playbook
     lectic publish NAME     share your playbook with your team or community
+    lectic github ...       connect a private GitHub repository when ready to keep packs
+    lectic sync             sync prepared packs with your GitHub library
     lectic verify [NAME]    check that every rule in a collection links to exact source quotes
     lectic inbox [--process] view or sort dropped links and files from your drop folder
     lectic backup [--out F] back up all your playbooks and sources in one file
@@ -270,6 +272,10 @@ def status(argv):
     info = describe(Path.cwd())
     print(f'Python      {sys.version.split()[0]}  ({sys.executable})')
     print(f'Knowledge   {info["home"]}  [{info["mode"]}]')
+    from github_sync import status as github_status
+    github = github_status(Path.cwd())
+    print(f'GitHub      {github["repository"] or "not connected"} [{github["phase"]}]')
+    print(f'            {github["message"]}')
     try:
         from inbox import ensure_inbox_folder, scan_inbox
         inbox_info = scan_inbox(Path.cwd())
@@ -791,12 +797,37 @@ def try_example(argv):
     return 0
 
 
+def github_cmd(argv):
+    from github_sync import connect as connect_github, disconnect, status as github_status, sync
+    action = argv[0] if argv else 'status'
+    if action == 'connect':
+        if len(argv) < 2:
+            raise ValueError('Name your private repository: lectic github connect OWNER/lectic-packs [--create]')
+        connect_github(Path.cwd(), argv[1], create='--create' in argv)
+        result = sync(Path.cwd())
+    elif action == 'disconnect':
+        result = disconnect(Path.cwd())
+    elif action == 'status':
+        result = github_status(Path.cwd())
+    else:
+        raise ValueError('Choose github connect, status, or disconnect')
+    print(json.dumps(result, indent=2))
+    return 1 if result['phase'] in ('retry_pending', 'needs_attention') else 0
+
+
+def sync_cmd(argv):
+    from github_sync import sync
+    result = sync(Path.cwd())
+    print(json.dumps(result, indent=2))
+    return 1 if result['phase'] in ('retry_pending', 'needs_attention') else 0
+
+
 def main(argv=None):
     argv = list(sys.argv[1:] if argv is None else argv)
     command = argv[0] if argv else 'status'
     handlers = {'setup': setup, 'try': try_example, 'identity': identity, 'share': share, 'connect': connect,
                 'pack': pack, 'install': install, 'update': update, 'publish': publish, 'verify': verify,
-                'search': search, 'inspect': inspect_cmd, 'inbox': inbox_cmd,
+                'search': search, 'inspect': inspect_cmd, 'inbox': inbox_cmd, 'github': github_cmd, 'sync': sync_cmd,
                 'backup': backup, 'push': push, 'pull': pull, 'restore': restore,
                 'status': status, 'serve': serve, 'ec': ec}
     if command in {'-h', '--help', 'help'} or command not in handlers:

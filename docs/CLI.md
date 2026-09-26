@@ -1,5 +1,9 @@
 # Internal command reference
 
+## GitHub pack library
+
+After the user asks to keep packs, `lectic github connect OWNER/lectic-packs --create` creates their private repository and syncs. Omit `--create` for an existing dedicated repository. `lectic sync` retries now; `lectic github status` reports synced, pending and conflicting work; `lectic github disconnect` preserves both copies and stops sync. Assistants can use `lectic_github` instead. See [setup, privacy, background behavior and limits](GITHUB.md).
+
 For a returning user's saved library, run `python scripts/ec.py library --project PROJECT`. It is read-only. The `guide` coordinator prepares, saves, shows and selects private next-use suggestions grounded in that library. See [guided use](GUIDED-USE.md#implementation-and-persistence) for the exact workflow. These commands are operated by the assistant; users can ask what is saved and what they could do with it.
 
 These commands are for the assistant, contributors, and advanced debugging. Normal users install the skill and talk to it; see [README](../README.md). Run from a user's project and resolve the installed scripts by absolute path. Relative input/output/metadata paths resolve against `--project` for the coordinator.

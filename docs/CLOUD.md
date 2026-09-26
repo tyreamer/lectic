@@ -1,5 +1,7 @@
 # Reach your knowledge from anywhere
 
+**Optional live-tool route:** for the default pack library, start with [GitHub setup and sync](GITHUB.md). GitHub hosts your saved packs; local Lectic syncs a working copy. The links below expose a running Lectic tool service for compatible chats. They are not required to host packs in GitHub or reuse a readable export.
+
 Lectic keeps one home per user. `lectic setup` connects the assistants on the same machine to it. This guide is for everything else: ChatGPT, Claude on the web, Gemini, your phone, or a second computer.
 
 **Invited hosted pilot:** the new [personal chat connection](PERSONAL_CHAT.md) uses sign-in, consent and revocable OAuth access to each user's own library. It is implemented locally and awaits hosted activation. The instructions below describe the existing self-hosted connection, whose secret URL grants access to one running home; do not confuse it with a personal pilot account or a pack-sharing link.

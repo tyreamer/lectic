@@ -1,5 +1,7 @@
 # Lectic as an MCP server
 
+`lectic_github` manages the optional private GitHub pack library: `status`, `connect` (with a user-selected repository), `sync`, and `disconnect`. Connecting authorizes automatic prepared-pack and source-text sync while the server runs. Let the user try first; never create a repository, upload their library or publish it merely to demonstrate Lectic. See [GitHub setup and limits](GITHUB.md).
+
 `scripts/lectic_mcp.py` exposes the compiler over the Model Context Protocol (JSON-RPC over stdio). Any MCP client can then operate Lectic through tools: Claude Code, Codex and others reach the same Lectic home without an installed skill and without touching its files directly. Reasoning still belongs to the client; the server owns storage, identity, validation and provenance.
 
 It requires Python 3.10+ and the package runtime dependencies (`cryptography`, plus `tomli` on Python 3.10). Install Lectic as a package before launching the server.

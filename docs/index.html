@@ -38,7 +38,7 @@
           <a class="button primary" href="#start">Start in my AI chat</a>
           <a class="button secondary" href="#example">See a real example <span aria-hidden="true">↓</span></a>
         </div>
-        <p class="fine">Free and open source. Collect through a connected assistant, or bring a readable pack to ChatGPT, Claude or Gemini.</p>
+        <p class="fine">Try in your AI. Keep your packs in GitHub. No GitHub account needed to try.</p>
       </div>
 
       <aside class="paper" aria-label="Example quote and answer">
@@ -59,8 +59,8 @@
     <section id="how" class="steps" aria-label="How Lectic works">
       <article>
         <span class="number">01</span>
-        <h2>Give your AI the sources.</h2>
-        <p>In your connected assistant, say: “Save these in Lectic.” Send the links, notes or files you want to keep using.</p>
+        <h2>Try your own sources.</h2>
+        <p>Bring a few notes, articles or transcripts to your AI. Ask how they could help with something you are doing.</p>
       </article>
       <article>
         <span class="number">02</span>
@@ -69,8 +69,8 @@
       </article>
       <article>
         <span class="number">03</span>
-        <h2>Use it again. Pass it on.</h2>
-        <p>Bring the pack to your next task or share it with someone else. They bring their own goal to the same knowledge.</p>
+        <h2>Keep it in your GitHub.</h2>
+        <p>Save a pack in your private repository when it is worth keeping. Reuse it for another task, or share a selected pack.</p>
       </article>
     </section>
 
@@ -148,8 +148,8 @@
     </section>
 
     <section id="pilot" class="section start">
-      <div><p class="eyebrow">The supporting library</p><h2>Your chat is where you work.<br>Your pack is what you keep.</h2><p>The library helps you inspect, download and share context. It starts empty; only material you choose to add belongs there.</p><div class="actions"><a class="button primary" href="PILOT.md">Local pilot status <span aria-hidden="true">→</span></a><a href="registry.html">Browse optional examples</a></div></div>
-      <aside class="start-aside"><h3>Use it here. Take it with you.</h3><p>Create inside Lectic, or download a readable context file for ChatGPT or Claude: “Based on what you know about me, how could I use this?”</p><p>Share the pack. Someone else finds their own starting point.</p><p class="fine">Available for local review. Hosted sign-in and phone distribution are not live yet. The three optional examples are Lectic-authored teaching material.</p><details><summary>Social links &amp; media</summary><p>The pilot attempts public retrieval. If a post is blocked or incomplete, the link stays saved and you can add screenshots or video. Automatic transcripts, OCR, and sampled video frames are labeled. Social import reliability has not yet been measured from the hosting environment.</p></details></aside>
+      <div><p class="eyebrow">Your private pack library</p><h2>Your chat is where you work.<br>GitHub is where you keep it.</h2><p>Your own repository holds your saved packs. Local Lectic syncs a working copy while running. No separate Lectic account.</p><div class="actions"><a class="button primary" href="GITHUB.md">GitHub setup and status <span aria-hidden="true">→</span></a><a href="registry.html">Browse optional examples</a></div></div>
+      <aside class="start-aside"><h3>Try first. Keep what helps.</h3><p>Start with your own sources. Connect GitHub when you want to keep the pack; create an account then if needed.</p><p>Take its readable file to another AI, or share a selected pack with someone else.</p><p class="fine">Development preview: GitHub round-trip checks pass. Web/mobile saving and conflict resolution still need work. Examples are optional and never added automatically.</p></aside>
     </section>
 
     <!-- START / ONBOARDING -->
@@ -157,20 +157,22 @@
       <div>
         <p class="eyebrow">Start in your AI chat</p>
         <h2>Send your sources.<br>Ask for a useful next step.</h2>
-        <p>With Lectic connected, paste this alongside your sources:</p>
+        <p>Paste this in your AI with two or three sources you care about:</p>
         <div class="copy-box">
-          <code id="start-prompt">Save these sources in Lectic and distill them into a reusable context pack. Based on what you know about me and what I'm working on, suggest three useful ways to use it. Help me choose one and make something useful.</code>
+          <code id="start-prompt">Help me turn these sources into reusable context. Based on what you know about me, suggest one useful way to apply it, plus two alternatives. Help me choose and make something useful. Tell me if you cannot read any source.</code>
           <button data-copy="start-prompt" aria-label="Copy starting prompt">Copy</button>
         </div>
-        <details><summary>First time? Connect Lectic</summary>
+        <p class="fine">Without Lectic tools, the first result is a draft in your chat. Nothing is saved to GitHub until you connect it and sync.</p>
+        <details><summary>Worth keeping? Save it in GitHub</summary>
+        <div class="copy-box"><code id="keep-prompt">Keep this as a Lectic pack in my private GitHub library. Help me connect GitHub and check that it actually saved.</code><button data-copy="keep-prompt" aria-label="Copy save request">Copy</button></div>
         <p>Codex and Claude Code can set it up on your computer. Paste this request, then restart the assistant after setup finishes:</p>
         <div class="copy-box">
           <code id="setup-text">Set up Lectic for me: https://github.com/tyreamer/lectic</code>
           <button data-copy="setup-text" aria-label="Copy setup command">Copy</button>
         </div>
 
-        <p>The invited pilot adds personal sign-in connections: connect your AI, approve access, then give it your own sources. Your library starts empty. Hosted activation and real ChatGPT, Claude and Gemini connection checks are still pending.</p>
-        <a href="https://github.com/tyreamer/lectic/blob/codex/cloud-pilot/docs/PERSONAL_CHAT.md">Personal connection guide →</a>
+        <p>Complete GitHub sign-in yourself; create an account then if you need one. Your assistant handles the pack files and checks whether they synced. Other AI apps need tools with permission to run Lectic and write to your repository.</p>
+        <a href="GITHUB.md">GitHub setup and limits →</a>
         </details>
         <p class="status" id="copy-status" role="status"></p>
       </div>
@@ -179,7 +181,7 @@
         <h3>Already have a pack?</h3>
         <p>Attach its readable context export in ChatGPT, Claude or Gemini. Ask:</p>
         <blockquote>Based on what you know about me, how could I use this context? Help me pick a useful starting point.</blockquote>
-        <p class="fine">A readable context file works without connecting Lectic. Creating and saving packs through chat requires a connection.</p>
+        <p class="fine">A readable context file works as an attachment. A private GitHub link alone does not grant access to it.</p>
         <p>Examples are optional. Your library starts with your own material.</p>
       </aside>
     </section>
@@ -193,7 +195,7 @@
       <div>
         <p>Lectic checks that quotes match the text in your saved files. It does not check whether the advice in a video or article is correct. You still need to read what your AI quotes and use your own judgement.</p>
         <p>The released local edition reads text notes, transcripts (.txt, .md, .vtt, .srt), and YouTube captions. Other media is kept as attachments. The web pilot adds article/PDF extraction, automatic media processing, and creation inside Lectic.</p>
-        <p>The local edition stores files on your computer. The web pilot sends selected material to its processing provider and uses private hosted storage when deployed. Pilot hosting and sign-in are not live yet.</p>
+        <p>Once connected, prepared packs and their source text sync to your private GitHub repository. Original media and unfinished captures remain local. GitHub stores the packs; your assistant needs Lectic tools to build them. The earlier hosted app remains experimental.</p>
         <a href="https://github.com/tyreamer/lectic/blob/main/docs/DEVELOPING.md">Read the developer guide →</a>
       </div>
     </section>

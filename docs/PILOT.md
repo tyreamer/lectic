@@ -1,5 +1,7 @@
 # Lectic invited pilot
 
+**Direction update:** this document describes the earlier hosted pilot. The default experience is now [try in your AI, then keep packs in your private GitHub](GITHUB.md). The hosted-account implementation is retained for development, not required for onboarding. See the [current first-time guide](FIRST_RUN.md).
+
 The pilot turns sources into a reusable pack, creates useful work inside Lectic, and shares a fixed pack version so someone else can create something different. This branch is a **local implementation under review**, not a launched cloud service.
 
 The owner explicitly chose to keep it local on September 26, 2026 and will provide separate cloud accounts. No Supabase or Render resources were created or changed.

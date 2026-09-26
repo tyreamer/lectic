@@ -1,5 +1,7 @@
 # Lectic pilot implementation review
 
+**Subsequent direction:** GitHub is the public entry point and the home for each person's private pack library. Users try with their own AI first, then connect GitHub to keep packs. Local Lectic syncs a working copy; the hosted-account pilot below is retained as experimental work. Core sync passed a live GitHub check, but web/mobile onboarding and guided conflict resolution still block a general release. See [the current flow and limits](GITHUB.md).
+
 Reviewed locally on September 26, 2026. Branch: `codex/cloud-pilot`.
 
 **Verdict: generation and personal chat tools work locally, but the first usability pilot failed.** Participants were confused by unexplained packs and needed guidance about what to do with them. The owner clarified that the primary experience belongs in an existing AI conversation. The web page now offers a personal connection and starting prompts; the library supports inspection, downloads and sharing. The authenticated chat endpoint and consent/revocation UI are implemented, but real hosted-assistant onboarding still requires deployment evidence. The invited cloud pilot is not launch-ready.
