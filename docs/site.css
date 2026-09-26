@@ -161,6 +161,10 @@ nav a:hover {
   padding-block: 80px 90px;
 }
 
+.hero > *, .start > *, .limits > *, .example-body > *, .steps > * {
+  min-width: 0;
+}
+
 .eyebrow {
   text-transform: uppercase;
   letter-spacing: 0.16em;
@@ -169,6 +173,7 @@ nav a:hover {
   color: var(--accent);
   margin-bottom: 18px;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
 }
@@ -748,10 +753,14 @@ summary {
   }
   .nav {
     padding-block: 16px;
+    flex-wrap: wrap;
+    gap: 16px;
   }
   nav {
     gap: 16px;
     font-size: 0.85rem;
+    flex-wrap: wrap;
+    width: 100%;
   }
   nav a:first-child {
     display: none;
@@ -760,6 +769,9 @@ summary {
     grid-template-columns: 1fr;
     gap: 36px;
     padding-block: 48px;
+  }
+  .pillar-grid {
+    grid-template-columns: minmax(0, 1fr);
   }
   .paper {
     padding: 24px;

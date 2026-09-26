@@ -41,13 +41,25 @@ Local validation completed on 2026-09-25:
 
 [Artifact checksums and reports](2026-09-25-artifact-checks.json) record the tested wheel and source distribution. The starter is a real 8,477-byte artifact with three cited procedures and one method, duplicated exactly into the public site's pack directory. Browser evidence is retained locally under `output/playwright/release-candidate/`.
 
-All six platform CI jobs passed on runtime commit `d4422fdca550045be8962b42cf168cbd9ab34847`: Linux, macOS and Windows, each on Python 3.10 and 3.12. [CI run](https://github.com/tyreamer/lectic/actions/runs/36186223755). The final requirement audit passes for an alpha release candidate. No version tag, PyPI publication, merge to main or live site deployment has been performed by this task. The release remains an alpha: the useful starter is demonstrable, while comparative quality and retention still require user-study evidence.
+At the prepublication audit, all six platform CI jobs passed on runtime commit `d4422fdca550045be8962b42cf168cbd9ab34847`: Linux, macOS and Windows, each on Python 3.10 and 3.12. [CI run](https://github.com/tyreamer/lectic/actions/runs/36186223755). The requirement audit passed for an alpha release candidate. Publication had not yet been performed at that point; its completion is recorded below. The release remains an alpha: the useful starter is demonstrable, while comparative quality and retention still require user-study evidence.
 
 
 Final audit decision: **ready to review and release as 0.3.1 alpha**. [Pull request #1](https://github.com/tyreamer/lectic/pull/1) contains the complete change. Subsequent evidence-only commits do not change the tested runtime. The wheel and source archive recorded above were rebuilt after the final method-readiness fix and each passed the installed-package gate.
 
 The final method audit also confirms that packs exclude methods reviewed against earlier knowledge. Partial installs retain readable source material but do not present imported methods as ready until their evidence is reconciled and reviewed.
 
-Release operations still to perform intentionally: review/merge the PR, publish the 0.3.1 tag through the existing protected PyPI workflow, and verify the live package/site after deployment. The task prepared and verified the release; it did not publish it. No original user knowledge, assistant configuration or signing credential was used for these tests.
+The preparation phase left review/merge, publication and live verification for the release phase. Those operations are now complete, as recorded below. No original user knowledge, assistant configuration or signing credential was used for these tests.
 
 The next product evidence should come from real users completing a first task, a fresh-session second task and an update task with their own material. Compare outcome quality and total effort with the same assistant and sources without Lectic. Keep the alpha label until those results justify stronger claims.
+
+## Release completed — September 25, 2026 (America/New_York)
+
+- [PR #1](https://github.com/tyreamer/lectic/pull/1) merged into main as `5898a7018826404d86804b839815f87aa9a26ca9`.
+- Tag `v0.3.1` points to `da69de8501e38a044f7438ac89bac25c3a81a022`, including the final release README. All six [platform checks](https://github.com/tyreamer/lectic/actions/runs/36204104524) passed at that revision.
+- The [publishing workflow](https://github.com/tyreamer/lectic/actions/runs/36204113511) passed the complete suite and the installed wheel/source-distribution gates, then published to [PyPI](https://pypi.org/project/lectic/0.3.1/) through Trusted Publishing.
+- The [GitHub release](https://github.com/tyreamer/lectic/releases/tag/v0.3.1) contains the same wheel and source archive. Their downloaded bytes match the CI artifacts and PyPI checksums.
+- A fresh virtual environment installed `lectic==0.3.1` from PyPI outside the checkout. All seven release checks and `pip check` passed, including first use, fresh-process reuse, real HTTP, signed transfer, same-source updates, preserved history, and additive backup/restore.
+- The [public website](https://tyreamer.github.io/lectic/) and [HTML pitch entry](https://tyreamer.github.io/lectic/launch_site.html) are deployed through GitHub Pages. The pitch entry opens `index.html` both locally and online. The live starter's 8,477 bytes match the bundled pack and catalog checksum.
+- A concurrent website redesign was preserved and reviewed before completion. Follow-up copy corrections remove unsupported timing, signing, privacy and effectiveness claims. Responsive checks cover the landing page and catalog at 320px; copy controls, example switching and live download verification pass. Versioned CSS URLs keep the revised pages and styling together for returning visitors.
+
+[Publication verification data](2026-09-25-publication-checks.json) records the actual published artifacts separately from the earlier local candidate builds. Later documentation and presentation updates do not change the tagged runtime or the immutable PyPI artifacts.

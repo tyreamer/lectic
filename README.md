@@ -2,7 +2,7 @@
 
 # Lectic
 
-### Save what you trust. Your AI learns the method, not just the words.
+### Save what you trust. Your AI applies the method.
 
 [![Tests](https://github.com/tyreamer/lectic/actions/workflows/tests.yml/badge.svg)](https://github.com/tyreamer/lectic/actions/workflows/tests.yml)
 [![PyPI](https://img.shields.io/pypi/v/lectic?color=38bdf8)](https://pypi.org/project/lectic/)
@@ -11,9 +11,9 @@
 [![Signatures: Ed25519](https://img.shields.io/badge/signatures-Ed25519-a78bfa)](https://github.com/tyreamer/lectic/blob/main/docs/PACKS.md)
 [![Catalog](https://img.shields.io/badge/starter-shelf-38bdf8)](https://tyreamer.github.io/lectic/registry.html)
 
-**[Quickstart](#quickstart-in-10-seconds)** · **[How it Works](#how-it-works)** · **[Daily Flow](#talk-naturally-to-your-assistant)** · **[Core Superpowers](#the-5-superpowers)** · **[Packs & Teams](#portable-packs--team-distribution)** · **[Status](#release--quality-status)**
+**[Quickstart](#quickstart)** · **[How it Works](#the-solution)** · **[Daily Flow](#talk-naturally-to-your-assistant)** · **[Core Superpowers](#the-5-superpowers)** · **[Packs & Teams](#portable-packs--team-distribution)** · **[Status](#release--quality-status)**
 
-Works with **Claude Code** · **OpenAI Codex** · **ChatGPT** · **Claude Desktop** · **Cursor** · any MCP client
+Automatic setup for **Claude Code** and **OpenAI Codex**. Other compatible MCP clients need manual configuration; hosted chat needs a running HTTPS connector.
 
 </div>
 
@@ -21,48 +21,48 @@ Works with **Claude Code** · **OpenAI Codex** · **ChatGPT** · **Claude Deskto
 
 ### The Problem
 
-Every chat with an AI assistant starts from zero.
+Useful source material can get scattered across separate chats and projects.
 
 You watch a brilliant 40-minute engineering talk, find a definitive architecture decision record (ADR), or study a debugging postmortem. You paste it into Claude or ChatGPT, get an insightful answer, and close the tab.
 
-**Tomorrow, the AI forgets everything.** You're back to re-pasting excerpts, re-prompting context, or settling for generic chatbot fluff.
+**Tomorrow, you want to use that lesson again.** Finding the original passages and explaining how to apply them can mean repeating work.
 
 ### The Solution
 
-**Lectic fixes this.** Save the videos, articles, and transcripts you trust once. Lectic compiles them into portable, cryptographically signed `.lectic` knowledge packs—anchoring every decision rule, reviewer method, and checklist directly back to the author's exact words.
+**Lectic keeps the useful material together.** Save links, notes, and transcripts once. Your connected assistant extracts knowledge and applies reusable methods with source passages attached. Export a collection as a portable `.lectic` pack; configure a signing identity to add Ed25519 verification.
 
-Save it once; your AI applies the methods across Claude Code, Codex, ChatGPT, and your team forever.
+Save it once, then ask your connected assistant to apply the method to the next task. Lectic stores the knowledge; your assistant supplies the reasoning. General article links are saved as references, not downloaded automatically.
 
 ---
 
-## Quickstart in 10 Seconds
+## Quickstart
 
 ### 1. Ask your assistant to set it up (Zero-command install)
 Paste this into **Claude Code** or **OpenAI Codex**:
 
 > Set up Lectic for me: https://github.com/tyreamer/lectic
 
-It reads [AGENTS.md](AGENTS.md) and handles everything: installs the package, sets up your Ed25519 signing identity, hooks up MCP tools, and verifies the connection. **Restart your assistant once** after setup.
+It reads [AGENTS.md](AGENTS.md), installs the package, configures available local assistants, and checks the connection. **Restart your assistant once** after setup. Signing identity is an optional, separate step when you want to share signed packs.
 
 ### 2. Try the instant offline starter
 Say to your assistant:
 
 > Try Lectic with its offline debugging starter.
 
-The bundled teaching pack produces a source-backed review of a sample debugging plan and a reusable checklist citing real procedures—**running 100% offline without API keys or downloads**.
+The bundled teaching pack saves a review of a sample debugging plan and a second checklist using the same three cited procedures. These are **prewritten examples from a fictional transcript**, not live AI output or proof of effectiveness. The trial itself runs offline without model API keys or source downloads; installation and your assistant may need a network connection.
 
 Then try your own work:
 > Use my Debugging Starter to review this plan: [paste your plan]
 
-### 3. Or install via terminal in 30 seconds
+### 3. Or install via terminal
 
 ```bash
-pip install --upgrade lectic
-lectic setup --yes
-lectic try
+python -m pip install --upgrade lectic
+python -m lectic.cli setup --yes
+python -m lectic.cli try
 ```
 
-Run `lectic status` anytime to see your knowledge folder, inbox, and connection health.
+Use Python 3.10 or newer. Run `python -m lectic.cli status` anytime to see your knowledge folder, inbox, and connection health. The module form works even when the `lectic` command is not on PATH.
 
 ---
 
@@ -73,11 +73,10 @@ Open any connected assistant and speak in plain English:
 - **Save without friction:**
   > Save this for later: https://www.youtube.com/watch?v=…
   
-  *(Goes straight to **Inbox**—no mandatory categorization, no API costs.)*
+  *(Goes straight to **Inbox**. Saving does not download the page, extract knowledge, or start a model API call; your assistant's own usage may have a cost.)*
 
 - **Zero-Daemon Drop Folder:**
-  Drag browser tabs from Chrome, Edge, or Safari, or drop notes directly into your `Documents/Lectic Inbox` folder. No background server or daemon needed. When you next chat with your AI, it surfaces what you dropped:
-  > *"I noticed you dropped a link to an engineering talk into your Lectic folder. Would you like me to add it to your 'Architecture' collection?"*
+  Drop web shortcuts or notes into the Lectic Inbox folder reported by status. No separate folder watcher is required. Items appear when your connected assistant checks the library or inbox. Select items to sort; failed imports retain the original for a safe retry.
 
 - **Apply compiled methods:**
   > Use my Debugging Starter to review this pull request architecture.
@@ -85,28 +84,28 @@ Open any connected assistant and speak in plain English:
 - **Share with teammates:**
   > I want to share my Engineering Standards with the team.
   
-  *(Assistant creates a signed pack and gives a 1-sentence prompt for your teammate: `"Install this Lectic pack: [link]"`.)*
+  *(Configure a signing identity, export a pack, and choose where to share it. A recipient who already has Lectic can say: `"Install this Lectic pack: [link]"`.)*
 
-**Want to use it in ChatGPT on the web or your phone?** Run `lectic share` to generate a secure link for ChatGPT Actions or an iPhone Share Sheet Shortcut ([cloud & phone guide](docs/CLOUD.md)).
+**Want to use it in hosted chat or your phone?** See the [cloud & phone guide](docs/CLOUD.md). `python -m lectic.cli share` provides an HTTPS connector while its server keeps running. Quick tunnels change address after restart. **Anyone with the link can read and change your knowledge; keep it private.** A chat attachment alone does not install Lectic tools.
 
 ---
 
 ## The 5 Superpowers
 
 ### 1. Zero-Daemon Drop Inbox
-No localhost server listening on a port to fail when your laptop sleeps. Drag tabs from Chrome/Edge (`.url`), Safari (`.webloc`), or drop text notes (`.txt`, `.md`) and transcripts (`.vtt`, `.srt`) directly into `Documents/Lectic Inbox`. Syncs between phone and computer effortlessly via iCloud or OneDrive.
+Drop Chrome/Edge shortcuts (`.url`), Safari shortcuts (`.webloc`), text notes (`.txt`, `.md`) and transcripts (`.vtt`, `.srt`) into the folder reported by status. A connected assistant checks the folder on demand. Syncing that folder through another service requires your own configuration; hosted connectors still need a running server.
 
 ### 2. Portable Knowledge Packs (`.lectic`)
 Export any collection into a single, self-contained file (`lectic pack "Engineering Standards" --team`). Heuristics, decision rules, capability maps, and source citations travel together in one verifiable package.
 
 ### 3. Cryptographic Ed25519 Signatures
-Packs are signed using asymmetric Ed25519 keypairs. Recipients verify author provenance and tamper-proof integrity without sharing private secrets.
+New signed packs use Ed25519. A valid signature establishes possession of the embedded key and detects changes to signed content. Check the publisher's fingerprint through a trusted channel to establish identity. Unsigned packs remain supported; the bundled starter is unsigned. Legacy HMAC signatures are labeled unverified.
 
-### 4. The Evidence Guarantee (`lectic verify`)
-AI should show its work. Every unit of knowledge in Lectic is anchored to an exact substring in the source transcript. `lectic verify` checks evidence integrity with a deterministic exit code (0 = verified, 1 = broken), ready for CI pipelines.
+### 4. Evidence Checks (`lectic verify`)
+AI should show its work. `lectic verify` checks evidence excerpts, links, and source hashes, with a deterministic exit code (0 = verified, 1 = issues). This checks traceability, not whether a source is true or an interpretation is correct.
 
 ### 5. Team Distribution & 1-Command Onboarding
-A lead engineer compiles team standards once. Team members run `lectic install <url> --as engineering --pin` and immediately work inside the team's conventions across Claude Code, Codex, and ChatGPT. When standards evolve, teammates update with one command: `lectic update engineering`.
+A lead engineer compiles team standards once. Teammates with Lectic installed or connected can install the pack and ask their assistant to apply it. Installation reports unavailable sources and partial verification explicitly. Pinning records a version; nothing auto-updates. Use `python -m lectic.cli update engineering` to request an update while preserving previous knowledge history.
 
 ---
 
@@ -116,65 +115,64 @@ A lead engineer compiles team standards once. Team members run `lectic install <
 | --- | --- |
 | **Pasted text & notes** | Saved immediately; processed when useful for an authorized task |
 | **Transcripts (.txt, .md, .vtt, .srt)** | Parsed with timestamps and segmented for exact evidence citations |
-| **Browser drag-and-drop (.url, .webloc)** | Saved to `Documents/Lectic Inbox` without needing background daemons |
+| **Browser shortcuts (.url, .webloc)** | Drop into the Inbox folder reported by status; checked on demand |
 | **YouTube links** | Captured instantly; available English captions fetched via optional `yt-dlp` |
-| **Codex, Claude Code, Cursor** | Native Model Context Protocol (MCP) stdio connection |
-| **ChatGPT & Mobile (iPhone / Android)** | Secure authenticated streaming HTTP connector (`lectic share`) |
+| **Other web links** | Saved as references; no general article downloader |
+| **PDF, images, audio, video** | Preserved as attachments; no built-in OCR or transcription |
+| **Codex and Claude Code** | Automatic local MCP setup; restart once |
+| **Other compatible MCP clients** | Manual configuration; see the installation guide |
+| **Hosted chat and phones** | Running HTTPS connector required; anyone holding its private link can access the library |
 
 ---
 
 ## Portable Packs & Team Distribution
 
-Share a collection with your engineering team, course students, or peers with complete evidence guarantees:
+Share a collection with your engineering team, course students, or peers, with its evidence attached:
 
 ```bash
 # Set your author signing identity
-lectic identity set "Alex Rivera" --contact alex@platform.org
+python -m lectic.cli identity set "Alex Rivera" --contact alex@platform.org
 
 # Export a team pack (bundles full sources and Claude/Codex/ChatGPT install instructions)
-lectic pack "Engineering Standards" --team --version 2.1.0
+python -m lectic.cli pack "Engineering Standards" --team --version 2.1.0 --out ./engineering-standards.lectic
 
 # Publish to team storage (GitHub Releases, S3, R2, or HTTP PUT)
-lectic publish "Engineering Standards" --to https://github.com/org/repo
+python -m lectic.cli publish ./engineering-standards.lectic --to https://github.com/org/repo
 ```
 
 Recipients install with predictable naming and version pinning:
 ```bash
-lectic install https://github.com/org/repo/releases/download/v2.1.0/standards.lectic --as standards --pin
+python -m lectic.cli install <download-url-from-publish> --as standards --pin
 ```
 
 When standards evolve, team members update in place:
 ```bash
-lectic update standards
-# -> Updated standards from 2.0.0 to 2.1.0 (3 new conventions added, 1 modified)
+python -m lectic.cli update standards
 ```
 
 ---
 
-## The Evidence Guarantee
+Normal packs contain excerpts and source links. `--include-sources` bundles full originals you may redistribute; `--team` includes them by default, with `--exclude-sources` as an explicit override. Links-only installs can be partial if sources are inaccessible. Publishing rebuilds current collection content and verifies the recipient download; existing GitHub assets are preserved. Presigned PUT uploads also require a `--download-url`.
 
-Unlike generic vector databases or RAG pipelines that summarize blindly, Lectic deterministically tracks every claim back to the author's exact words:
+## Evidence You Can Inspect
+
+Check the stored evidence before relying on a collection:
 
 ```bash
-lectic verify "Engineering Standards"
+python -m lectic.cli verify "Engineering Standards"
 ```
-```text
-Verification: Engineering Standards
-  Overall: verified (exit 0)
-  Units:   38 verified, 0 broken citations
-  Sources: 4 of 4 sources verified against content hashes
-```
-
-Run `lectic verify` in GitHub Actions or pre-commit hooks to guarantee your AI tools never act on broken or hallucinated heuristics.
+The report identifies verified, partial, or broken evidence. You can use its exit code in CI; it cannot guarantee freedom from hallucinations or judge whether a method is appropriate for a task.
 
 ---
 
 ## Release & Quality Status
 
-The source tree is currently preparing **0.3.1**. [Release notes](docs/RELEASE-0.3.1.md) detail recent reliability enhancements, Ed25519 signing, and offline starter integration.
+**0.3.1 is published as an alpha.** [Release notes](docs/RELEASE-0.3.1.md) detail the reliability improvements, Ed25519 signing, and offline starter. Get the [GitHub release](https://github.com/tyreamer/lectic/releases/tag/v0.3.1), [PyPI package](https://pypi.org/project/lectic/0.3.1/), or visit the [website and HTML pitch](https://tyreamer.github.io/lectic/).
 
 - **Deterministic Traceability:** Lectic checks that citations and stored artifacts match their sources via content hashes. That establishes strict provenance—it does not replace human domain judgement.
-- **Local-First & Zero Vendor Lock-in:** Your knowledge lives in `~/.lectic`. Back up everything with `lectic backup`, restore anywhere with `lectic restore`.
+- **Local storage:** New installations use `~/.lectic`, or `LECTIC_HOME` if configured. Existing legacy libraries are preserved. Knowledge backups merge additively; signing keys, cookies, and connector credentials are excluded and need separate private storage. A hosted connector stores knowledge on its host; your assistant's provider may receive material used in a task.
 - **Open-Source Alpha:** Community feedback, issues, and contributions are welcome!
+
+The real starter catalog currently contains one authored teaching pack. The test suite and installed-package checks establish workflow and evidence integrity. A completed comparative user study has not yet established improved task quality, retention, or willingness to pay. See the [evaluation protocol](docs/EVALUATION.md) and [original project review](docs/reviews/2026-09-25-project-review.md).
 
 For contributors: [development guide](docs/DEVELOPING.md) · [architecture](DESIGN.md) · [MCP tools](docs/MCP.md) · [MIT license](LICENSE).

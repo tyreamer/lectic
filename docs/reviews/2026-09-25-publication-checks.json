@@ -1,0 +1,49 @@
+{
+  "version": "0.3.1",
+  "artifacts": [
+    {
+      "file": "lectic-0.3.1-py3-none-any.whl",
+      "sha256": "488ab7ff7c5bfe4977e60ef217f062b63d2fc8c526c45e55db47813eeca16304",
+      "bytes": 338475,
+      "pypi_matches_ci": true,
+      "github_download_matches_pypi_and_ci": true
+    },
+    {
+      "file": "lectic-0.3.1.tar.gz",
+      "sha256": "bef591a25a915a17417973aa71f00f927f8a9348260d86dc1a34b06c38edcc36",
+      "bytes": 335897,
+      "pypi_matches_ci": true,
+      "github_download_matches_pypi_and_ci": true
+    }
+  ],
+  "website": {
+    "url": "https://tyreamer.github.io/lectic/",
+    "version_visible": true,
+    "pitch_redirect": "index.html",
+    "starter_bytes": 8477,
+    "starter_sha256": "cde86e2df2540512fba27c5dec2b0ed12cee9c8049a4572ef35b075db2b4631f",
+    "starter_matches_package": true
+  },
+  "installed_package": {
+    "source": "https://pypi.org/simple",
+    "isolated_virtual_environment": true,
+    "outside_checkout": true,
+    "python": "3.10.9",
+    "checks": [
+      "packaged resources present",
+      "catalog schema, actual pack bytes, checksum and declared contents",
+      "offline starter produces two validated results and reuses three units",
+      "fresh interpreter and different project reuse the same saved results",
+      "real HTTP handshake, home lookup and starter reuse",
+      "public signature verification, same-source interpretation update and preserved history",
+      "knowledge backup/restore and repeated additive merge"
+    ],
+    "status": "passed",
+    "dependency_check": "No broken requirements found."
+  },
+  "verified_at_utc": "2026-09-26T00:25:10.648759+00:00",
+  "release_commit": "da69de8501e38a044f7438ac89bac25c3a81a022",
+  "tag": "v0.3.1",
+  "platform_ci": "https://github.com/tyreamer/lectic/actions/runs/36204104524",
+  "publication_ci": "https://github.com/tyreamer/lectic/actions/runs/36204113511"
+}
