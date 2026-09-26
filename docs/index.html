@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
-  <title>Lectic — Save videos and notes for your AI</title>
-  <meta name="description" content="Save YouTube videos, transcripts, and notes on your computer so your AI assistant can search them and quote them with exact timestamps.">
+  <title>Lectic — Reusable context for your AI</title>
+  <meta name="description" content="Start in your AI chat. Distill your sources into reusable context, make something useful, and share the pack so someone else can use it differently.">
   <link rel="stylesheet" href="site.css">
   <link rel="stylesheet" href="demo.css?v=visual-2">
   <script src="site.js" defer></script>
@@ -19,8 +19,8 @@
     <nav aria-label="Main navigation">
       <a href="#how">How it works</a>
       <a href="#example">Example</a>
-      <a href="#start">Setup</a>
-      <a href="registry.html" style="color:var(--accent);font-weight:600;">Starter packs ✦</a>
+      <a href="#start">Start here</a>
+      <a href="registry.html" style="color:var(--accent);font-weight:600;">Optional examples</a>
       <a href="https://github.com/tyreamer/lectic" target="_blank" rel="noreferrer">GitHub ↗</a>
     </nav>
   </header>
@@ -29,16 +29,16 @@
     <!-- HERO -->
     <section class="hero">
       <div>
-        <p class="eyebrow">Local files on your computer</p>
-        <h1>Save videos and notes so your AI can quote them.</h1>
+        <p class="eyebrow">Your AI. Your sources. Reusable context.</p>
+        <h1>Give your AI context worth keeping.</h1>
         <p class="lead">
-          Lectic saves YouTube videos, transcripts, and text notes in a folder on your computer. When you ask your AI a question, it searches those files, writes an answer based on what you saved, and shows you the exact quote and timestamp.
+          Turn your sources into knowledge you can keep using. Make something useful in your AI chat, then take the same context to another task, assistant, or person.
         </p>
         <div class="actions">
-          <a class="button primary" href="#start">Set up Lectic</a>
+          <a class="button primary" href="#start">Start in my AI chat</a>
           <a class="button secondary" href="#example">See a real example <span aria-hidden="true">↓</span></a>
         </div>
-        <p class="fine">Free and open source. Works with Claude Code, OpenAI Codex, and ChatGPT on Windows, macOS, and Linux.</p>
+        <p class="fine">Free and open source. Collect through a connected assistant, or bring a readable pack to ChatGPT, Claude or Gemini.</p>
       </div>
 
       <aside class="paper" aria-label="Example quote and answer">
@@ -59,18 +59,18 @@
     <section id="how" class="steps" aria-label="How Lectic works">
       <article>
         <span class="number">01</span>
-        <h2>Save your files.</h2>
-        <p>Drag a web link from Chrome, Edge, or Safari into the <code>Documents/Lectic Inbox</code> folder on your computer, or tell your AI: “Save this video for later.”</p>
+        <h2>Give your AI the sources.</h2>
+        <p>In your connected assistant, say: “Save these in Lectic.” Send the links, notes or files you want to keep using.</p>
       </article>
       <article>
         <span class="number">02</span>
-        <h2>Ask questions.</h2>
-        <p>Ask your AI: “What does my debugging video say about this error?” Your AI searches your saved files and quotes the exact lines in its answer.</p>
+        <h2>Make the context useful.</h2>
+        <p>“Based on what you know about me, how could I use this?” Pick a starting point and create something, with evidence you can inspect.</p>
       </article>
       <article>
         <span class="number">03</span>
-        <h2>Share with other people.</h2>
-        <p>Run <code>lectic pack</code> to put your saved notes and quotes into a single <code>.lectic</code> file. Send that file to a coworker so their AI can search the same material.</p>
+        <h2>Use it again. Pass it on.</h2>
+        <p>Bring the pack to your next task or share it with someone else. They bring their own goal to the same knowledge.</p>
       </article>
     </section>
 
@@ -148,43 +148,39 @@
     </section>
 
     <section id="pilot" class="section start">
-      <div><p class="eyebrow">The web pilot</p><h2>Your sources.<br>New possibilities.</h2><p>Distill links, files and notes into a context pack. Get useful starting ideas based on the pack and what you want to do.</p><div class="actions"><a class="button primary" href="PILOT.md">Explore the local pilot <span aria-hidden="true">→</span></a><a href="registry.html">Try an example pack</a></div></div>
+      <div><p class="eyebrow">The supporting library</p><h2>Your chat is where you work.<br>Your pack is what you keep.</h2><p>The library helps you inspect, download and share context. It starts empty; only material you choose to add belongs there.</p><div class="actions"><a class="button primary" href="PILOT.md">Local pilot status <span aria-hidden="true">→</span></a><a href="registry.html">Browse optional examples</a></div></div>
       <aside class="start-aside"><h3>Use it here. Take it with you.</h3><p>Create inside Lectic, or download a readable context file for ChatGPT or Claude: “Based on what you know about me, how could I use this?”</p><p>Share the pack. Someone else finds their own starting point.</p><p class="fine">Available for local review. Hosted sign-in and phone distribution are not live yet. The three optional examples are Lectic-authored teaching material.</p><details><summary>Social links &amp; media</summary><p>The pilot attempts public retrieval. If a post is blocked or incomplete, the link stays saved and you can add screenshots or video. Automatic transcripts, OCR, and sampled video frames are labeled. Social import reliability has not yet been measured from the hosting environment.</p></details></aside>
     </section>
 
     <!-- START / ONBOARDING -->
     <section id="start" class="section start">
       <div>
-        <p class="eyebrow">Local edition setup</p>
-        <h2>Connect Lectic to your AI.</h2>
-        <p>If you use Claude Code or OpenAI Codex, paste this into your chat. Your assistant downloads Lectic and connects to it automatically:</p>
-        
+        <p class="eyebrow">Start in your AI chat</p>
+        <h2>Send your sources.<br>Ask for a useful next step.</h2>
+        <p>With Lectic connected, paste this alongside your sources:</p>
+        <div class="copy-box">
+          <code id="start-prompt">Save these sources in Lectic and distill them into a reusable context pack. Based on what you know about me and what I'm working on, suggest three useful ways to use it. Help me choose one and make something useful.</code>
+          <button data-copy="start-prompt" aria-label="Copy starting prompt">Copy</button>
+        </div>
+        <details><summary>First time? Connect Lectic</summary>
+        <p>Codex and Claude Code can set it up on your computer. Paste this request, then restart the assistant after setup finishes:</p>
         <div class="copy-box">
           <code id="setup-text">Set up Lectic for me: https://github.com/tyreamer/lectic</code>
           <button data-copy="setup-text" aria-label="Copy setup command">Copy</button>
         </div>
 
-        <p>Restart your assistant once when it finishes, then ask it to run the sample test:</p>
-        
-        <div class="copy-box">
-          <code id="try-text">Try Lectic with its offline debugging starter.</code>
-          <button data-copy="try-text" aria-label="Copy test command">Copy</button>
-        </div>
-
+        <p>ChatGPT and Claude on the web need a private connection to a running Lectic. A personal account connection to the local web pilot is not live yet. A pasted prompt alone does not connect an assistant.</p>
+        <a href="https://github.com/tyreamer/lectic/blob/main/docs/CLOUD.md">Connection guide →</a>
+        </details>
         <p class="status" id="copy-status" role="status"></p>
       </div>
 
       <aside class="start-aside">
-        <h3>Already set up?</h3>
-        <p>Ask your assistant about a saved file:</p>
-        <blockquote>What does my debugging video say about fixing parser bugs?</blockquote>
-        
-        <h3>Terminal commands</h3>
-        <pre><code>pip install --upgrade lectic
-lectic setup --yes
-lectic try</code></pre>
-        <p class="fine">Requires Python 3.10 or newer. The sample test runs on your computer without internet access.</p>
-        <a href="https://github.com/tyreamer/lectic/blob/main/docs/CLOUD.md">How to connect ChatGPT on your phone →</a>
+        <h3>Already have a pack?</h3>
+        <p>Attach its readable context export in ChatGPT, Claude or Gemini. Ask:</p>
+        <blockquote>Based on what you know about me, how could I use this context? Help me pick a useful starting point.</blockquote>
+        <p class="fine">A readable context file works without connecting Lectic. Creating and saving packs through chat requires a connection.</p>
+        <p>Examples are optional. Your library starts with your own material.</p>
       </aside>
     </section>
 

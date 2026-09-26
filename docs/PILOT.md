@@ -8,7 +8,7 @@ The owner explicitly chose to keep it local on September 26, 2026 and will provi
 
 | Area | Behavior |
 |---|---|
-| Web app | Sources first; optional, labeled examples; pack selection preserved through OAuth. Three suggestions grounded in each pack, optionally tailored to the user's situation; open-ended creation, source disclosures, copy and Markdown download. |
+| Web app | Chat-first starting prompts; library as a supporting tool. New libraries start empty. Browsing examples adds nothing; copying one requires an explicit action. Three suggestions grounded in each chosen pack, optionally tailored to the user's situation. |
 | Portable context | Readable `.txt` download with distilled knowledge and quotations, plus a question to ask an assistant that knows the user. `.lectic` remains available. Advanced options can produce a reusable prompt, agent skill or local read-only MCP server bundle. |
 | Sources | URL/text capture and bounded uploads, Inbox by default, Saved / Processing / Ready / Needs content states, screenshot/video fallback. |
 | Compiler | Exact-quote extraction, cross-source reconciliation, coverage assessment, reusable methods, validated outcomes, separate assistant semantic review. |
@@ -36,7 +36,7 @@ npm run build
 cd ../..
 $env:LECTIC_DEV='1'
 $env:LECTIC_ORIGIN='http://127.0.0.1:8780'
-$env:LECTIC_CLOUD_DATA='D:/tmp/lectic-pilot-preview'
+$env:LECTIC_CLOUD_DATA='D:/tmp/lectic-personal-preview'
 $env:LECTIC_AI_BUDGET_MICRODOLLARS='1000000'
 # Supply OPENAI_API_KEY through the process environment; never put it in the browser.
 .venv/Scripts/python -m lectic.cloud.service
@@ -44,7 +44,11 @@ $env:LECTIC_AI_BUDGET_MICRODOLLARS='1000000'
 
 Open **http://127.0.0.1:8780** or **http://localhost:8780**. Both loopback origins work in development; production still accepts only its configured origin. Local mode uses a visibly labeled development account, SQLite and local private files. It cannot be enabled on a public origin. The current review instance uses a **$1 AI ceiling**, separate from the proposed $30 monthly pilot allowance.
 
-The home screen starts with personal sources. The three teaching packs are optional examples, not unexplained entries in the person's library. Opening a pack offers three uses based on its actual distilled knowledge. An optional situation field personalizes them; it does not change the shared pack. Suggestions are cached per pack/context, and neither suggestions nor new creations repeat ingestion. The context download contains the selected pack's knowledge and evidence, not the owner's personal goals or library. Uploading that file to another assistant is a manual action, not an account connection.
+The home screen starts with prompts for the person's existing AI chat. Collecting and building through chat requires a connected Lectic; pasting a prompt alone does not create that connection. A readable context file can be attached to ChatGPT, Claude or Gemini without connecting Lectic. The UI supports managing, inspecting, downloading and sharing packs. Direct personal connections from those hosted assistants to this account-scoped pilot are not implemented yet.
+
+The personal preview starts empty. Development checks use a separate data directory; the earlier fixtures remain preserved in `D:/tmp/lectic-pilot-preview`, not served to the person. Do not run generation or capture smoke tests against the personal preview. When changing preview data directories, the UI clears its old selection and pending operation so test packs do not reappear from browser state.
+
+The three teaching packs are optional examples. Browsing is read-only; only “Add this example to my library” installs one. Opening an owned pack offers three uses based on its actual distilled knowledge. An optional situation field personalizes them; it does not change the shared pack. Suggestions are cached per pack/context, and neither suggestions nor new creations repeat ingestion. The context download contains the selected pack's knowledge and evidence, not the owner's personal goals or library.
 
 For cloud regression checks from a hyphenated worktree path, run `../../.venv/Scripts/python.exe -m pytest . -q --rootdir=. --confcutdir=.` from `cloud/tests` so pytest does not import the checkout folder as a Python package.
 
@@ -107,4 +111,4 @@ Both companions copy files into private local storage before acknowledging a sha
 
 `python -m lectic.cloud.admin report` reports first useful-result timing, return days, fallback actions and committed model spending. “Useful” is a user action; coaching and actual task success must be observed separately. Do not count developer preview sessions as pilot participants.
 
-Deferred until after the invited pilot: desktop installers, browser extensions, ChatGPT/Claude connections, billing and public signup.
+The owner's revised direction makes assistant onboarding the first proof gate. A secure, account-scoped connection and a real save → pack → useful output flow in an existing chat must be demonstrated before describing this as a frictionless chat experience. Freeze additional library and mobile scope until that route is validated. Desktop installers, browser extensions, billing and public signup remain deferred.

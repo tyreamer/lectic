@@ -4,6 +4,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import "./style.css";
 import PackWorkbench, { ResultText } from "./PackWorkbench";
 import Icon, { Glyph } from "./Icon";
+import StartHere from "./StartHere";
 
 type Config = {
   dev: boolean;
@@ -11,6 +12,7 @@ type Config = {
   publishableKey: string;
   maxUpload: number;
   maxSources: number;
+  previewKey?: string;
 };
 type Starter = {
   slug: string;
@@ -128,7 +130,7 @@ function App() {
       results: [],
       operations: [],
     });
-  const [tab, setTab] = useState(()=>sessionStorage.getItem("lectic-operation") || new URLSearchParams(location.search).has("code") ? "Make" : "Library"),
+  const [tab, setTab] = useState(()=>sessionStorage.getItem("lectic-operation") || (new URLSearchParams(location.search).has("code") && sessionStorage.getItem("lectic-selection")) ? "Make" : "Start"),
     [chosen, setChosen] = useState<{
       id?: string;
       slug?: string;
@@ -194,6 +196,11 @@ function App() {
   useEffect(() => {
     (async () => {
       config = await api("/config");
+      if(config.dev && config.previewKey && sessionStorage.getItem("lectic-preview") !== config.previewKey) {
+        for(const key of ["lectic-selection","lectic-operation","lectic-brief","lectic-format","lectic-auto-create"])sessionStorage.removeItem(key);
+        sessionStorage.setItem("lectic-preview",config.previewKey);
+        setChosen(null);setCurrent(null);setBrief("");setTab("Start");autoCreate.current=false;
+      }
       setStarters(await api("/starters"));
       if (config.dev) setSigned(true);
       else if (config.supabaseUrl && config.publishableKey) {
@@ -215,7 +222,7 @@ function App() {
             setChosen(null); setResult(null); setSource(null); setCurrent(null);
             setBrief(""); setShare(""); setMyShares([]); setSelected([]);
             setCaptureText(""); setPackName(""); setNotice(""); setError("");
-            setTab("Library"); autoCreate.current = false; done.current.clear();
+            setTab("Start"); autoCreate.current = false; done.current.clear();
             sessionStorage.removeItem("lectic-auto-create");
           }
         });
@@ -493,13 +500,14 @@ function App() {
           {config.dev ? "Local development preview" : "Invited pilot"}
         </span>
         <nav>
+          <button className={tab === "Start" ? "active" : ""} onClick={()=>setTab("Start")}>Start here</button>
           {signed ? (
             <>
               <button
                 className={tab === "Library" ? "active" : ""}
                 onClick={() => setTab("Library")}
               >
-                Sources & packs
+                Library
               </button>
               {chosen && <button className={tab === "Make" ? "active" : ""} onClick={()=>setTab("Make")}>Use pack</button>}
               <button onClick={showShares}>Sharing</button>
@@ -519,6 +527,7 @@ function App() {
         </nav>
       </header>
       <main>
+        {tab === "Start" && !(token && preview) && <StartHere openLibrary={()=>setTab("Library")}/>}
         {error && (
           <div className="banner error" role="alert">
             {error}
@@ -697,17 +706,9 @@ function App() {
         {tab === "Library" && !(token && preview) && (
           <>
             <section className="intro collect-intro">
-              <p className="eyebrow">Your sources. Distilled into context.</p>
-              <h1>A lot to take in.<br/>One pack to build on.</h1>
-              <p>Bring links, files and notes together. Lectic distills them into a context pack you can use anywhere.</p>
+              <h1>Your library</h1>
+              <p>Sources and packs you choose to keep, use and share.</p>
             </section>
-            <div className="distill-visual" aria-label="Many sources become one context pack, then many possibilities">
-              <div className="input-stack"><span><Glyph name="video"/> Video</span><span><Glyph name="note"/> Notes</span><span><Glyph name="url"/> Links</span><span><Glyph name="file"/> PDFs & files</span></div>
-              <span className="flow-arrow" aria-hidden="true"><Glyph name="right"/></span>
-              <div className="distilled-pack"><Glyph name="pack"/><strong>Your context pack</strong><small>The useful knowledge, together.</small></div>
-              <span className="flow-arrow" aria-hidden="true"><Glyph name="right"/></span>
-              <div className="output-stack"><span><Glyph name="make"/> Make something</span><span><Glyph name="solve"/> Solve a problem</span><span><Glyph name="learn"/> Learn something</span><span><Glyph name="sparkle"/> Your next idea</span></div>
-            </div>
             {!signed ? <SignIn login={login}/> : <>
             <section
               className="capture-zone"
@@ -752,12 +753,12 @@ function App() {
               multiple
               onChange={(e) => upload(e.target.files)}
             />
-            <div className="section-heading">
+            {library.sources.length>0 && <div className="section-heading">
               <h2>
                 Your sources <span>{library.sources.length}</span>
               </h2>
               <p>Select what belongs together</p>
-            </div>
+            </div>}
             <div className="source-grid">
               {library.sources.map((s) => (
                 <article
@@ -831,9 +832,6 @@ function App() {
                 </article>
               ))}
             </div>
-            {!library.sources.length && (
-              <p className="empty">Your next pack starts here.</p>
-            )}
             {selected.length > 0 && (
               <div className="assemble-bar">
                 <strong>{selected.length} sources <Glyph name="right"/></strong>
@@ -858,12 +856,13 @@ function App() {
               </div>
             )}
             </>}
-            <h2 className="section-heading">Your context packs</h2>
+            {library.packs.length>0 && <h2 className="section-heading">Your context packs</h2>}
             <div className="pack-grid">
-              {library.packs.filter(p=>!p.starter).map((p) => (
+              {library.packs.map((p) => (
                 <article className="library-pack" key={p.id}>
                   <Icon name="pack" />
                   <h3>{p.title}</h3>
+                  {p.starter && <small>Example you added · Lectic-authored</small>}
                   <p>{p.source_count} sources</p>
                   <div className="actions">
                     <button
@@ -881,13 +880,13 @@ function App() {
                 </article>
               ))}
             </div>
-            {!library.packs.some(p=>!p.starter) && <p className="empty">Your packs will appear here after you add and distill your sources.</p>}
+            {!library.sources.length && !library.packs.length && <p className="empty">Your library starts empty. Only sources and packs you choose to add belong here.</p>}
             <details className="examples">
-              <summary>Want to try it first? Open an example</summary>
-              <p>These are sample sources written by Lectic, so you can see how a context pack works.</p>
-              <div className="starter-grid">{starters.map(s=><button className={"starter "+s.color} key={s.slug} onClick={()=>choose(s)}>
-                <small>Example · Lectic-authored</small><Icon name={s.icon}/><h3>{s.title}</h3><p>{s.description}</p><span>Explore this example <Glyph name="right"/></span>
-              </button>)}</div>
+              <summary>Need an example? Browse optional teaching packs</summary>
+              <p>Browsing adds nothing to your library. Choose a pack only if you want to try it.</p>
+              <div className="starter-grid">{starters.map(s=><article className={"starter "+s.color} key={s.slug}>
+                <small>Example · Lectic-authored</small><Icon name={s.icon}/><h3>{s.title}</h3><p>{s.description}</p><button onClick={()=>choose(s)}>Add this example to my library</button>
+              </article>)}</div>
             </details>
             {library.results.length>0 && <h2 className="section-heading">Saved creations</h2>}
             <div className="result-list">

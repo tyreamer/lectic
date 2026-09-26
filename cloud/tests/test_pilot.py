@@ -78,6 +78,19 @@ def run(settings, db, job, monkeypatch):
     return result
 
 
+def test_starting_and_browsing_examples_never_seed_a_library(setup):
+    settings,db,client=setup
+    for owner in (A,B):
+        headers={'x-test-user':owner}
+        for _ in range(2):
+            config=client.get('/api/v1/config',headers=headers).json()
+            assert len(config['previewKey'])==16 and str(settings.data) not in config['previewKey']
+            assert len(client.get('/api/v1/starters',headers=headers).json())==3
+            library=client.get('/api/v1/library',headers=headers).json()
+            assert all(library[k]==[] for k in ('sources','packs','results','operations'))
+        assert db.listing(captures,owner)==[] and db.listing(jobs,owner)==[]
+
+
 def test_three_starters_install_and_restart_without_duplicate(setup, monkeypatch):
     settings, db, client = setup
     for starter in client.get('/api/v1/starters').json():

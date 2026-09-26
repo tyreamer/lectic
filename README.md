@@ -7,7 +7,17 @@ Turn sources into a reusable knowledge pack. Make something useful, share the pa
 [![Python: 3.10+](https://img.shields.io/badge/python-3.10%2B-3776ab)](https://github.com/tyreamer/lectic/blob/main/docs/DEVELOPING.md)
 [![License: MIT](https://img.shields.io/badge/license-MIT-34d399)](https://github.com/tyreamer/lectic/blob/main/LICENSE)
 
-The released local edition works with connected AI assistants. The new web pilot creates work inside Lectic.
+Start in the AI chat you already use. Lectic distills your sources into context you can reuse across tasks, conversations and people. The library helps you inspect and share that knowledge.
+
+With Lectic connected, send your sources and ask:
+
+> Save these sources in Lectic and distill them into a reusable context pack. Based on what you know about me and what I'm working on, suggest three useful ways to use it. Help me choose one and make something useful.
+
+Already have a pack? Attach its readable context export in ChatGPT, Claude or Gemini and ask:
+
+> Based on what you know about me, how could I use this context? Help me pick a useful starting point.
+
+Saving and compiling through chat requires a connection; a prompt alone does not install or connect Lectic. Codex and Claude Code can perform local setup. Hosted assistants need a reachable Lectic connection where supported, or a readable pack file. See [setup](#how-to-set-it-up) and [remote connections](docs/CLOUD.md).
 
 ## Web pilot — available for local review
 
@@ -15,11 +25,13 @@ Bring links, files and notes together, then distill them into a **context pack**
 
 You can also download the pack as a readable context file, attach it in ChatGPT or Claude, and ask: **“Based on what you know about me, how could I use this?”** Share the pack so someone else can use the same knowledge differently. `.lectic` downloads remain available; advanced options include reusable prompts, agent skills and a local read-only MCP server bundle.
 
-Want to try an example first? **Customer Discovery Guide**, **Code Debugging Playbook**, and **Startup Principles** sit in a separate, optional examples section. All three are Lectic-authored teaching material under MIT.
+Your library starts empty. **Customer Discovery Guide**, **Code Debugging Playbook**, and **Startup Principles** are optional Lectic-authored teaching examples under MIT. Browsing does not install anything; adding an example is an explicit choice.
 
 The implementation includes a React app, FastAPI service, durable worker, account-scoped storage, cost reservations, media processing, multi-source packs, fixed-version share links, and Swift/Kotlin capture companions. The existing local compiler and `.lectic` format remain supported.
 
 **Release status:** this is a local pilot implementation, not a publicly available hosted service. Dedicated cloud accounts, configured Google/Apple sign-in, iOS signing and device checks, real hosting retrieval measurements, and the ten-person usability study remain launch gates. No cloud resources have been provisioned. See [pilot setup, evidence and limitations](docs/PILOT.md).
+
+The next onboarding priority is a secure personal connection from an existing hosted AI chat to the pilot. That connection is not implemented yet; the current starting prompts do not imply automatic connection. Additional library and mobile features should wait until this primary route proves useful.
 
 Public Instagram/X retrieval is best effort. An incomplete post stays **Needs content** with **Add screenshots or video**; a caption or thumbnail never stands in for the complete post. Uploaded media uses automatic transcripts/OCR and sampled video frames, with those derivations labeled separately.
 
@@ -29,9 +41,7 @@ Download a starter: [Customer Discovery](docs/packs/customer-discovery.lectic) �
 
 ## What Lectic does
 
-When you paste text or a video link into a chat with an AI, the AI forgets that information as soon as you close the conversation.
-
-Lectic saves your links, notes, and video transcripts into folders on your computer. When you ask your AI a question, it searches those saved files, writes an answer based on what you saved, and shows you the exact sentence and timestamp from the original source.
+A useful conversation should not force you to gather and explain the same sources again for the next task. Lectic keeps distilled knowledge and its evidence together in a reusable pack. Your assistant can apply it to a new goal, inspect the original passage, or share the same context with someone else.
 
 ---
 
@@ -45,9 +55,11 @@ If you use Claude Code or OpenAI Codex, paste this sentence into your chat:
 
 Your assistant will download Lectic and connect to it automatically. When it finishes, restart your assistant once so it can use its new tools.
 
-### 2. Try an offline test
+### 2. Start with your own sources
 
-Say this to your assistant:
+Send your assistant the sources you want to use and the starting prompt above. Ask it to create one useful result, then reuse the same pack for a different task. Your Lectic starts empty; examples are only added when you request one.
+
+For an optional offline example, say:
 
 > Try Lectic with its offline debugging starter.
 

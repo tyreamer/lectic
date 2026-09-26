@@ -112,7 +112,8 @@ def create_app(settings=None, auth=None):
     @app.get("/api/v1/config")
     def config():
         return {"supabaseUrl": settings.supabase_url, "publishableKey": settings.publishable_key,
-                "dev": settings.dev, "maxUpload": settings.max_upload, "maxSources": settings.max_sources}
+                "dev": settings.dev, "maxUpload": settings.max_upload, "maxSources": settings.max_sources,
+                **({"previewKey": hash_json(str(settings.data))[:16]} if settings.dev else {})}
 
     @app.get("/api/v1/starters")
     def catalog(): return starters()

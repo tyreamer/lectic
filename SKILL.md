@@ -28,7 +28,7 @@ For “What did we save?”, “What can I use?”, “What else can I do with i
 
 For “save this link,” pasted text or file saves, honor an explicitly named collection or save immediately to **Inbox**. Confirm the save and stop. Sorting is optional; do not ask a collection question just to complete a save. Candidate matching is useful when the user asks to organize material. Follow [capture.md](prompts/capture.md). Capture authorizes storage, not retrieval, extraction or compilation; personal notes remain separate from source evidence. Process pending material when a later goal needs it and disclose unavailable sources.
 
-For “Try Lectic,” call `lectic_starter` or run `lectic try`. Show the actual sample review and second-use result. Explain that these are authored teaching examples, then give the returned prompt for their own work. Never present the fixture as live AI output or user-study evidence.
+For “Try Lectic” or help getting started, begin with the person's own material or an existing pack and one useful goal. Do not populate an empty library with demonstration content. Only when they explicitly request the offline teaching starter, call `lectic_starter` or run `lectic try`; label its review and second-use result as authored examples. Never present the fixture as live AI output or user-study evidence.
 
 Infer objective, relevant context, constraints, supplied work, desired result and usefulness criteria from conversation. Briefly reflect your understanding and proceed without unnecessary confirmation. Save a private brief following [goal-work.md](prompts/goal-work.md). User context is not source evidence.
 

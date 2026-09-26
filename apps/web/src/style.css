@@ -968,6 +968,33 @@ input.visually-hidden {
 .use-with-ai li {margin:12px 0;}
 .use-with-ai blockquote {margin:20px 0;padding:18px;border-left:3px solid #a7bb97;background:#ffffff80;font-size:14px;line-height:1.6;}
 .copy-status {margin-left:12px;font-size:13px;}
+.chat-intro {max-width:760px;padding-top:44px;}
+.chat-flow {display:flex;align-items:center;gap:20px;flex-wrap:wrap;margin:12px 0 32px;color:#607565;}
+.chat-flow span {display:inline-flex;align-items:center;gap:9px;}
+.chat-flow span .glyph {font-size:23px;}
+.chat-prompt {max-width:840px;border:1px solid #d7e0d0;border-radius:18px;background:#f0f4e9;padding:28px;}
+.chat-prompt h2 {margin:0 0 20px;}
+.chat-prompt .formats {margin-bottom:18px;}
+.chat-prompt blockquote,.connect-guide blockquote {margin:16px 0 24px;padding:18px;border-left:3px solid #a7bb97;background:#ffffff99;line-height:1.65;font-size:17px;}
+.chat-prompt small {display:block;margin-top:16px;color:#607565;}
+.prompt-context {font-size:14px;color:#607565;}
+.connect-guide {max-width:840px;margin:26px 0;padding:20px 0;border-bottom:1px solid #dce2d7;}
+.connect-guide summary {cursor:pointer;font-weight:600;}
+.connect-guide h3 {margin:24px 0 8px;font-size:16px;}
+.connect-guide p {font-size:14px;line-height:1.6;}
+.library-entry {display:flex;align-items:center;gap:24px;justify-content:space-between;max-width:840px;margin:28px 0;}
+.library-entry h2 {font-size:19px;margin:0 0 8px;}
+.library-entry p {font-size:14px;color:#607565;margin:0;}
+.examples .starter>button {margin-top:auto;font-size:12px;}
+@media(max-width:740px){
+ .chat-intro {padding-top:30px;}
+ .chat-flow {gap:10px;font-size:11px;}
+ .chat-flow span {gap:5px;}
+ .chat-flow span .glyph {font-size:17px;}
+ .chat-prompt {padding:20px;}
+ .chat-prompt blockquote {font-size:15px;padding:14px;}
+ .library-entry {align-items:flex-start;flex-direction:column;}
+}
 .idea-compose .section-heading {margin-top:0;}
 .prose p {white-space:pre-wrap;margin:0 0 16px;}
 .prose pre {white-space:pre-wrap;overflow-wrap:anywhere;background:#f1f3ed;padding:18px;border-radius:12px;font-size:13px;}

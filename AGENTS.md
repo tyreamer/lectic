@@ -97,4 +97,6 @@ Report exactly what it says: `verified`, or `partial` with the sources and reaso
 
 ## Ground rules
 
+For project development, keep the person's preview library separate from test data. Do not run capture, starter-install or generation smoke tests against the personal preview. Use temporary homes or a separate `LECTIC_CLOUD_DATA` directory for test records. A new person's library starts empty; examples are added only by explicit choice.
+
 Lectic stores knowledge in one home per user, never inside their project, and never inside the installed package. Do not create a `.expertise-compiler` folder in a project, hand-edit an assistant's MCP config, or install anything beyond `lectic` and optionally `yt-dlp` without asking. If you are already connected to Lectic's tools, use them rather than running scripts: `lectic_home`, `lectic_library`, `lectic_work`, `lectic_capture_save`, and the rest are documented in `docs/MCP.md`.

@@ -2,7 +2,9 @@
 
 Reviewed locally on September 26, 2026. Branch: `codex/cloud-pilot`.
 
-**Verdict: generation works locally, but the first usability pilot failed.** Participants were confused by unexplained prebuilt packs and needed guidance about what to do with a pack. The owner's feedback supersedes the earlier assumption that a brief starter screen was understandable. The revised flow starts with personal sources, makes examples optional, and offers pack-specific suggestions in everyday language. Its usability still needs a fresh test. The invited cloud pilot is not launch-ready.
+**Verdict: generation works locally, but the first usability pilot failed.** Participants were confused by unexplained packs and needed guidance about what to do with them. The owner clarified that the primary experience belongs in an existing AI conversation. The web page now starts with chat prompts; the library supports inspection, downloads and sharing. Direct account-scoped hosted-assistant onboarding remains the main delivery gap. The invited cloud pilot is not launch-ready.
+
+The preview also contained developer-created sources, packs and results. That was a testing mistake, not personal content. Those records are preserved separately, and the served personal preview is now empty. Browsing teaching examples is read-only; adding one is explicit. The old screenshot also showed the prior font symbols: the current bundle uses inline SVGs. Reloading the starting page loads those assets.
 
 The owner requested local work and will supply different cloud accounts. No Supabase or Render resources were provisioned or changed. Work is isolated from the original checkout in `D:/Projects/lectic-pilot-worktree`.
 
@@ -10,7 +12,7 @@ The owner requested local work and will supply different cloud accounts. No Supa
 
 **Partly. The implementation is ahead of the value evidence.** Generated results and reusable packs establish technical capability; the failed pilot shows they do not establish an understandable product. Account isolation, durable processing and spending controls are necessary when hosting other people's work. Building two native companions and broad social/media acquisition before observing unaided use adds complexity that has not yet earned its place.
 
-Freeze feature scope. Start observing people using the current web flow now, then run the full ten-person acceptance study once authentication is configured. Keep one clear starting action and put advanced choices behind it. Ask whether someone understands what to do, gets useful work, shares it and voluntarily comes back. Simplify the flow wherever those observations expose friction. Local preview observations do not replace the hosted sign-in or phone acceptance gates below.
+Freeze additional library and mobile scope. Prove one assistant route: connect, provide sources, create a useful result and reuse the same pack in a second task. A copyable prompt explains the interaction, but it cannot remove an unimplemented connection step. Existing local assistant setup and readable-file handoff are available; a secure personal connection from hosted chat to the pilot needs dedicated implementation and deployment evidence.
 
 ## What is good
 
@@ -19,7 +21,7 @@ Freeze feature scope. Start observing people using the current web flow now, the
 - **Source inspection is part of the result.** Generated records pass the compiler's structure and evidence-link checks, followed by a separate assistant semantic review. Source statements, interpretations, adaptations and original advice have visible labels. References expand to the exact saved passage, with timestamps or page/frame labels where available.
 - **Recovery preserves work.** Source capture and uploads precede processing. Failed retrieval keeps the original link and offers supplied content. Jobs, paid-call caching, upload retry keys, account leases and committed checkpoints survive local service restart. Uncertain paid calls retain their reservation instead of being silently repeated.
 - **Privacy and spending have enforceable boundaries.** Ownership comes from server-validated authentication; private endpoints filter by owner. Share snapshots contain one pack. Cost reservations are transactional and global to the monthly application allowance. New paid work stops at the configured cap while existing work remains readable and downloadable.
-- **The revised first step is visible.** Personal sources lead to a context pack. Examples and technical formats are behind disclosures. Each pack offers three concrete starting ideas, a custom request and a readable context download with a question to ask ChatGPT or Claude. Sign-in preserves the selected pack; a reload preserves the active operation. This is an implemented response to feedback, not yet evidence of unaided success.
+- **The revised first step belongs in chat.** The starting page supplies prompts for sources or an existing pack, with connection requirements behind a disclosure. The library starts empty. Owned packs offer three concrete starting ideas, a custom request and a readable context download. This is an implemented response to feedback, not yet evidence of unaided success.
 
 ## What is weak or unproven
 
@@ -36,7 +38,7 @@ Freeze feature scope. Start observing people using the current web flow now, the
 | Check | Local result | What it does not prove |
 |---|---|---|
 | Existing compiler suite | 280 tests passed; 25 registry/pack/release regression tests also rerun after catalog changes | Hosted or phone behavior |
-| Cloud acceptance tests | 34 passed, including both loopback origins, strict production origin, personalized suggestion caching, portable context and private artifact downloads | Live Supabase RLS or production auth configuration |
+| Cloud acceptance tests | 35 passed, including empty-library/read-only example browsing, both loopback origins, strict production origin, personalized suggestion caching, portable context and private artifact downloads | Live Supabase RLS or production auth configuration |
 | Account isolation | Two injected identities cannot read or mutate each other's captures, jobs, packs, files, results, shares or backups; forged owner/path fields rejected | A deployed identity provider integration |
 | Job and cost handling | Idempotency, interrupted upload, quota, cancellation after worker loss, account serialization, priority, backlog fairness, atomic reservations and uncertain calls checked | All possible host/process failure timings |
 | Sharing and backups | Fixed-pack recipient copy, revocation, retained independent copy, home restoration and seven-backup retention checked | Full hosted disaster recovery |
@@ -48,6 +50,7 @@ Freeze feature scope. Start observing people using the current web flow now, the
 | Published-reader compatibility | A media-derived `.lectic` export installed as **verified** with published `lectic==0.3.1`; automatic source labels remained identifiable | Every historic reader version |
 | Web build/browser | TypeScript/Vite production build passed; real result, references, copy and Markdown download checked; 390 px viewport had 390 px document width; browser reported no console errors | Broad accessibility or cross-browser certification |
 | Guidance revision | Real pack-based suggestions changed for a student's campus food-waste project; choosing an idea produced a validated interview guide. Browser context-file download and question copy passed at `localhost:8780`; desktop and 390 px layouts inspected | Unaided understanding, usefulness or reuse by pilot participants |
+| Chat-first revision | Empty personal preview verified before/after browsing examples; both starting prompts copy; desktop/mobile layouts checked; five existing MCP workflow tests pass after guidance changes | A live personal connection from ChatGPT, Claude or Gemini to this pilot |
 | Advanced exports | Selected-pack skill/prompt/server bundles checked; exported MCP server initialized, listed tools, searched context and returned its resource through the actual stdio SDK | Automatic assistant installation, hosted deployment or quality across all generated skills/prompts |
 | Distribution preparation | Python wheel built and inspected for API/compiler/web assets/three packs; Android debug build and lint passed (0 errors, 12 warnings); Render YAML validated against its published schema | Signed mobile distribution, iOS compilation or a working container deployment |
 
@@ -55,10 +58,12 @@ Generated content was inspected as development evidence. It still requires human
 
 ## Best path forward
 
-1. **Retest understanding locally before expanding scope.** Ask people to bring a few sources, describe what the resulting pack contains, choose a suggested use and take the context into their existing assistant. Do not explain it first. Check whether guidance feels relevant to their own work. Keep technical formats optional. Then, when dedicated accounts arrive, confirm charges and exercise deployed auth, storage and measured social retrieval before promoting acquisition.
+1. **Make one existing-chat route work end to end.** Prioritize secure account connection over another screen. Ask people to bring their own sources, produce something useful with grounded context, then reuse the pack for a second task without gathering everything again. A readable-file route can test reuse now; it is not proof of direct chat capture or account connection. Dedicated cloud accounts are still required for that hosted proof.
 2. **Finish phone validation before distribution.** Compile/sign the iOS app and extension on a Mac. Install both companions on real devices. Exercise URL/text/image/video sharing, expired auth, network interruption, process termination and retries, checking that every acknowledged item remains recoverable.
 3. **Run the complete deployed acceptance suite.** Include two real accounts, exact citation inspection, different outputs from one pack, pack import/export, share revocation, worker interruption, backup restoration and the spending stop. Resolve defects before inviting nontechnical users.
 4. **Observe ten people without coaching.** Let people choose an example or their own material. Measure the three-minute useful-result target separately for the example route, and observe pack understanding and reuse for personal material. Track social fallback and voluntary return over a week; do not substitute visits or developer feedback clicks for usefulness.
-5. **Use those results to decide the next release.** First remove the largest measured friction. Keep desktop installers, browser extensions, assistant connections, billing and public signup outside this pilot until the basic value loop earns repeated use.
+5. **Use those results to decide the next release.** Measure voluntary reuse in the person's existing assistant. Keep desktop installers, browser extensions, billing and public signup outside this pilot until that value loop earns repeated use.
+
+Current connection boundaries were checked against the official [ChatGPT app documentation](https://help.openai.com/en/articles/12584461-developer-mode-and-mcp-apps-in-chatgpt), [Claude remote connector documentation](https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp), and [Gemini file upload documentation](https://support.google.com/gemini/answer/14903178). Do not treat Gemini Apps file upload and Gemini CLI tool connections as the same capability.
 
 For local review, configuration, endpoint behavior and operational limits, see [PILOT.md](PILOT.md). README and the HTML pitch page describe the current implementation and its unpassed launch gates.
