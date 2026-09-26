@@ -7,7 +7,9 @@
   <title>Lectic — Save videos and notes for your AI</title>
   <meta name="description" content="Save YouTube videos, transcripts, and notes on your computer so your AI assistant can search them and quote them with exact timestamps.">
   <link rel="stylesheet" href="site.css">
+  <link rel="stylesheet" href="demo.css?v=visual-2">
   <script src="site.js" defer></script>
+  <script src="demo.js?v=visual-2" defer></script>
 </head>
 <body>
   <a class="skip" href="#main">Skip to content</a>
@@ -105,36 +107,44 @@
     </section>
 
     <!-- INTERACTIVE DEMO -->
-    <section id="example" class="section">
-      <div class="section-title">
-        <p class="eyebrow">Sample files</p>
-        <h2>An example you can inspect.</h2>
-        <p>Lectic includes a sample debugging transcript with three quoted sentences. Choose an example below to see how your AI uses the saved text.</p>
-      </div>
-
-      <div class="example">
-        <div class="example-tabs" role="group" aria-label="Choose a sample">
-          <button class="selected" data-example="first" aria-pressed="true">Example 1: Review a plan</button>
-          <button data-example="second" aria-pressed="false">Example 2: Answer a question</button>
-        </div>
-        <div class="example-body" aria-live="polite">
-          <div>
-            <p class="eyebrow">Question asked to AI</p>
-            <blockquote id="sample-input">Change the parser and delimiter settings together, then ship after one successful file.</blockquote>
-            <p class="fine" id="reuse-note">Uses three procedures from the saved lesson.</p>
+    <section id="example" class="section collection-demo" aria-labelledby="demo-heading">
+      <div class="visual-demo-heading"><h2 id="demo-heading">Many sources. One pack.<br>Make it yours.</h2><span class="demo-badge">Interactive demo</span></div>
+      <div id="demo-content" class="visual-demo" data-stage="sources">
+        <div id="demo-canvas" class="demo-canvas">
+          <svg id="demo-wires" aria-hidden="true"></svg>
+          <div class="flow-column flow-inputs"><h3><span>01</span> Bring anything</h3>
+            <div class="source-tiles">
+              <div class="source-tile" data-source="video" style="--source-color:#fb7185"><svg aria-hidden="true"><use href="demo-icons.svg#video"/></svg><span>Videos</span></div>
+              <div class="source-tile" data-source="audio" style="--source-color:#c084fc"><svg aria-hidden="true"><use href="demo-icons.svg#audio"/></svg><span>Podcasts</span></div>
+              <div class="source-tile" data-source="pdf" style="--source-color:#fb923c"><svg aria-hidden="true"><use href="demo-icons.svg#pdf"/></svg><span>PDFs</span></div>
+              <div class="source-tile" data-source="web" style="--source-color:#38bdf8"><svg aria-hidden="true"><use href="demo-icons.svg#web"/></svg><span>Articles</span></div>
+              <div class="source-tile" data-source="notes" style="--source-color:#facc15"><svg aria-hidden="true"><use href="demo-icons.svg#notes"/></svg><span>Notes</span></div>
+              <div class="source-tile" data-source="workshop" style="--source-color:#34d399"><svg aria-hidden="true"><use href="demo-icons.svg#workshop"/></svg><span>Workshops</span></div>
+            </div>
           </div>
-          <div>
-            <p class="eyebrow">What your AI answers</p>
-            <h3 id="sample-heading">Use one controlled experiment at a time.</h3>
-            <ol id="sample-steps">
-              <li>Record the smallest failing input, expected output and actual output.</li>
-              <li>Change one suspected cause. Revert an ineffective change before testing the next hypothesis.</li>
-              <li>Keep the original reproducer and check at least one nearby boundary before shipping.</li>
-            </ol>
-            <a href="registry.html">Inspect the sample transcript and download the file →</a>
+          <div class="flow-column flow-pack"><h3><span>02</span> Make a pack</h3>
+            <div id="demo-pack-node" class="pack-node"><div class="pack-stack" aria-hidden="true"></div><svg aria-hidden="true"><use href="demo-icons.svg#pack"/></svg><strong>.lectic</strong><span id="demo-pack-name">Your collection</span><span class="pack-dots" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span></div>
+          </div>
+          <div class="flow-column flow-share"><h3><span>03</span> Pass it on</h3>
+            <div id="demo-people" class="demo-people" aria-label="People receiving the same pack"><span class="demo-person"><svg aria-hidden="true"><use href="demo-icons.svg#person"/></svg><i aria-hidden="true">.l</i></span><span class="demo-person"><svg aria-hidden="true"><use href="demo-icons.svg#person"/></svg><i aria-hidden="true">.l</i></span><span class="demo-person"><svg aria-hidden="true"><use href="demo-icons.svg#person"/></svg><i aria-hidden="true">.l</i></span></div>
+          </div>
+          <div class="flow-column flow-outputs"><h3><span>04</span> Make anything</h3>
+            <div class="output-tiles" role="group" aria-label="Choose what to make from the pack">
+              <button class="output-tile" data-output="plan" aria-pressed="false" disabled><svg aria-hidden="true"><use href="demo-icons.svg#plan"/></svg><span>A plan</span></button>
+              <button class="output-tile" data-output="checklist" aria-pressed="false" disabled><svg aria-hidden="true"><use href="demo-icons.svg#checklist"/></svg><span>A checklist</span></button>
+              <button class="output-tile" data-output="lesson" aria-pressed="false" disabled><svg aria-hidden="true"><use href="demo-icons.svg#lesson"/></svg><span>A lesson</span></button>
+              <button class="output-tile" data-output="review" aria-pressed="false" disabled><svg aria-hidden="true"><use href="demo-icons.svg#review"/></svg><span>A review</span></button>
+              <button class="output-tile" data-output="proposal" aria-pressed="false" disabled><svg aria-hidden="true"><use href="demo-icons.svg#proposal"/></svg><span>A proposal</span></button>
+              <button class="output-tile" data-output="idea" aria-pressed="false" disabled><svg aria-hidden="true"><use href="demo-icons.svg#idea"/></svg><span>Your idea</span></button>
+            </div>
           </div>
         </div>
+        <div class="demo-controls"><button id="demo-action" class="button primary" type="button">Create pack <span aria-hidden="true">→</span></button><a href="packs/customer-discovery.lectic" download>Download example <span aria-hidden="true">↗</span></a></div>
+        <div id="demo-result" class="demo-result" hidden aria-live="polite"><div class="result-paper" aria-hidden="true"><svg><use id="demo-result-icon" href="demo-icons.svg#plan"/></svg><i></i><i></i><i></i></div><div class="result-copy"><span class="result-caption">Same pack. Your next creation.</span><h4 id="demo-result-title"></h4><p id="demo-result-lines"></p><label class="demo-idea-label" id="demo-idea-label" hidden>Your idea<input id="demo-idea" placeholder="What would you make?" maxlength="80"></label></div><button id="demo-copy-prompt" class="demo-copy-prompt" type="button">Copy prompt <span aria-hidden="true">↗</span></button></div>
+        <p id="demo-status" class="demo-sr-only" role="status">Create a pack from the six example sources, then share it to explore what others can make.</p>
       </div>
+      <details class="demo-about"><summary>About this example</summary><p>This animation uses an authored Customer Discovery pack: six source excerpts, twelve cited takeaways, and one reusable method. The pictured outputs are examples of requests for a connected assistant. No uploads, AI calls, or messages are sent by this page.</p><p>Media and documents need readable text or transcripts for extraction. These samples supply them; raw PDF, audio, and video files can be saved as attachments. Recipients need Lectic installed or connected.</p><p><a href="demo/customer-discovery.json">Inspect the sources</a> · <a href="packs/customer-discovery.lectic" download>Download the verified example pack</a></p><button id="demo-verify" class="verify" type="button">Check download</button><p id="demo-verify-status" class="fine" role="status"></p></details>
+      <noscript><p>Videos, podcasts, PDFs, articles, notes, and workshops → a Lectic pack → share it → create plans, checklists, lessons, and more. Enable JavaScript to play the animation, or download the example above.</p></noscript>
     </section>
 
     <!-- START / ONBOARDING -->

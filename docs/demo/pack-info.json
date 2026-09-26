@@ -1,0 +1,13 @@
+{
+  "file": "packs/customer-discovery.lectic",
+  "name": "Customer Discovery",
+  "version": "1.0.0",
+  "sources": 6,
+  "units": 12,
+  "methods": 1,
+  "bytes": 21680,
+  "sha256": "7654667fac2799c8dad628868c1a5b7ee45fe150bf2d2973217c6470c877fdeb",
+  "signature": "unsigned authored teaching example",
+  "verification": "verified",
+  "evidence": "verified"
+}
