@@ -73,6 +73,12 @@ Your assistant reads your saved transcript, summarizes the advice, and quotes th
 
 > According to Ada in debugging-lesson.vtt at 00:09, "Change one suspected cause at a time, rerun the same input, and compare the result."
 
+You can also ask your assistant to extract [words and phrasing](docs/LANGUAGE-PATTERNS.md) from saved material:
+
+> Extract the vocabulary and recurring phrases in this interview. Show examples and keep each speaker's wording separate.
+
+The assistant preserves these observations with source passages and situation limits so you can reuse them in later writing tasks.
+
 ### 3. Share collections with coworkers
 
 You can export a collection into a single `.lectic` file to share with other people:

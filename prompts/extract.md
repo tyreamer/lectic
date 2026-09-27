@@ -6,6 +6,8 @@ Write `RUN/units/SOURCE_ID.json` with `schema_version: "1.0"`, the exact `corpus
 
 Extract reusable concepts, definitions, principles, heuristics, procedures, frameworks, examples, warnings, failure patterns, claims, and opinions where present. You need not manufacture every type. Preserve applicability conditions in `scope` and concrete branches in `statement`. Do not turn unsupported anecdotes into universal procedures.
 
+Also consider how the source uses language when it serves the goal: vocabulary, recurring phrases, register, sentence construction, transitions, hedges, and question/response habits. Requests about verbiage, word choice, phrasing, or "how they talk" call for [language-patterns.md](language-patterns.md). Extract these observations separately from the source's subject matter, opinions, narrative structure, and any persona. Broad knowledge preparation may retain useful supported language patterns; do not invent them to fill a profile.
+
 Each unit has all fields in the schema: a globally unique stable human-readable `unit_id`; `type`; `status`; `title`; `statement`; `scope`; `derivation` (empty allowed for explicit); `evidence`; `attribution`; `relations`; `schema_version`. Evidence entries contain `source_id`, `segment_id`, and an exact contiguous `quote` from normalized `text`, not `raw_text`. Use enough context to assess the interpretation. Use attribution only when the source creator or cited segment speaker supplies a name. Otherwise leave it empty.
 
 - `explicit`: directly stated, including paraphrases; an explicitly stated opinion still has type `opinion`.

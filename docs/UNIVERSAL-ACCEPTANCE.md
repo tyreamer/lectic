@@ -22,6 +22,12 @@ This tests a second domain and different outcomes using the same compiler. The s
 
 Record the inferred intent and reason from the saved brief after the run, without making the user select it. Test paraphrases and mixed requests too: “review this lesson” should not route to LEARN merely because it mentions teaching. Mark intent failures separately from extraction, method design and output-quality failures.
 
+## Language-pattern check
+
+Use the explicitly synthetic sources in `fixtures/language-patterns` in a fresh session. Ask: "Extract Ari's word choices and phrasing. Keep ordinary conversation and urgent announcements separate; exclude Blake's wording and opinions." Expect exact examples of practical clarification questions and their recurring opening, a qualified description of administrative vocabulary, and the direct urgent instruction as a separate register. Do not attribute Blake's "volcanic bananas" or word preference to Ari, infer timing from captions, or claim that Ari always uses a recurring phrase. Ask for a new announcement on an unrelated topic and check meaning preservation and appropriate use of the selected patterns. Mark this as observed assistant behavior only if actually run.
+
+Repeat with a collection previously prepared for topic knowledge only. Expect a targeted language pass if needed, with earlier knowledge and builds preserved. A wording-only method should not pull in unrelated beliefs or story structure. Export/install a pack in an isolated home and check that exact examples, speaker/situation limits, and inference labels survive; assess generated language quality separately from the storage check.
+
 ## Archive and revision checks
 
 Ask what collections exist and what is in Enterprise AI Architecture. Add a new supplied transcript, ask what changed, then request the same task again. Inspect the new source and knowledge revision and previous result's validation. Remove the new source and verify its original is retained historically and dependent knowledge is reconsidered. Replace a same-named transcript to test changes rather than additions. Archive the collection, list it, then restore or explicitly use it. No re-upload should be requested for already archived sources.

@@ -38,6 +38,8 @@ Infer the internal intent from meaning and context: CREATE, REVIEW, IMPROVE, DEC
 
 ## Operate the workflow
 
+For vocabulary, verbiage, phrasing, or "how they talk," follow [language-patterns.md](prompts/language-patterns.md). Preserve observable word choices and constructions as independently selectable knowledge, with exact examples and speaker/situation limits. Recheck older collections for this dimension; a saved topic or storytelling method is not evidence that wording was extracted.
+
 Resolve SKILL_ROOT from this file, PROJECT from the user's current working folder. Use an available Python interpreter yourself. Invoke `SKILL_ROOT/scripts/ec.py` by absolute path with PROJECT as working directory. Knowledge lives in the user's Lectic home (`ec.py home --project PROJECT` reports it: `~/.lectic`, `LECTIC_HOME`, or a project's existing `.expertise-compiler/`), shared by every project on the machine; never store it inside the installed skill and never create a new `.expertise-compiler/` folder in a project. For “Where does Lectic store my knowledge?”, report that location and mode.
 
 Preserve accessible transcript attachments as bytes in a local input folder. For pasted text, save UTF-8 and label its origin honestly. Accept .txt/.md/.vtt/.srt. For YouTube URLs, follow [capture.md](prompts/capture.md): save each exact link and private context first; authorized processing retrieves English captions using an optional local `yt-dlp` executable. Never ask users to download transcripts manually. If the dependency is missing, explain it and obtain authorization before installing software. Other linked platforms remain capture-only; never substitute metadata for missing content. See [retrieval limits](docs/YOUTUBE.md).
