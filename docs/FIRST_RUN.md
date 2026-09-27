@@ -1,23 +1,47 @@
-# Try Lectic with something you actually need
+# Make something useful with what you've saved
 
-Open the AI chat you already use. Bring two or three useful notes, articles, transcripts or files, and paste:
+Lectic brings useful ideas from your notes, articles and other material together in a **pack**. A pack keeps those ideas and references together so you can use them again or share them.
 
-> Help me turn these sources into reusable context. Based on what you know about me, suggest one useful way to apply it, plus two alternatives. Help me choose and make something useful. Tell me if you cannot read any source.
+**Lectic is still being tested.** You can try the first step in your usual AI chat. If Lectic isn't set up there, the answer is work in that chat, not a saved Lectic pack.
 
-Choose an idea. Then ask the AI to use the same context for another task. That is the point of a pack: do the reading once, keep using the knowledge.
+## 1. Bring something you care about
 
-**No account needed to try.** If Lectic is not available to your chat, this first result is a draft in the conversation. Your AI should say so, rather than claim it has saved a Lectic pack.
+Open your usual AI chat and add a few things about the same topic. For example:
 
-When you want to keep it, ask:
+- Class notes and an article you want to understand.
+- Customer feedback and notes for a project at work.
+- Tips and notes for a hobby you'd like to get better at.
 
-> Save this as a Lectic pack in my private GitHub library. Help me set that up, and confirm when it is synced.
+Attach files, paste text or add links. Then ask:
 
-Codex or Claude Code can set up Lectic and GitHub access for you. You may need to restart the assistant once. Complete GitHub sign-in yourself; create an account then if you do not have one. The assistant handles the files and reports whether the pack is saved locally or synced to GitHub.
+> Help me do something useful with these. Suggest one idea that fits what you know about me, plus two other things I could try. If you need to know what I'm working on, ask me. Tell me if you can't read anything I've added.
 
-Already have a saved pack? Attach its readable file in your next AI chat and ask:
+You don't need GitHub for this step.
 
-> Based on what you know about me, what could I do with this? Help me pick a useful starting point.
+## 2. Choose what would help you
 
-Share a selected pack when it could help someone else. They can use the same knowledge for a different result. Your private library stays yours.
+Pick an idea, or ask for something else. You could make a study guide, prepare for a conversation or plan your next steps.
 
-**Pilot note:** pack sync is a development preview with a successful live GitHub round trip. It is not in the published package yet. Web and mobile AI apps vary in what they can read, run and save; those onboarding paths are not yet verified. Your assistant must explain any missing access. See [current setup and limits](GITHUB.md).
+Then try a different use:
+
+> What else could this help me with? Help me make that too.
+
+The same material can help with more than one task.
+
+## 3. Keep it for another day
+
+When you have something worth keeping, ask:
+
+> Help me save this as a Lectic pack. Tell me what I need to do and confirm where it is saved.
+
+GitHub holds a private online copy of your packs. When saving is available, your assistant helps with setup; you sign in or create your account yourself. It should tell you whether your pack is saved on your computer or also in GitHub.
+
+**GitHub saving is still being tested and isn't in the public release.** Current setup uses Codex or Claude Code. A complete setup inside ChatGPT, Claude Desktop, Gemini or Copilot isn't ready yet. See [setup details and current limits](GITHUB.md).
+
+## 4. Use it again, or share it
+
+If you already have a pack, attach its readable file in a new AI chat and ask:
+
+> Based on what you know about me, how could this help me? Suggest a useful place to start.
+
+You can send that file to someone else, too. They can use the same ideas for something different, without access to the rest of your library.
