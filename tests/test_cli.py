@@ -4,6 +4,7 @@ import json
 import subprocess
 import sys
 import tempfile
+from types import SimpleNamespace
 import unittest
 from contextlib import redirect_stdout
 from pathlib import Path
@@ -173,6 +174,30 @@ class SetupTests(unittest.TestCase):
             self.assertIn(line, out)
         self.assertEqual(self.run_cli()[1], out)  # bare `lectic` is status
         self.assertEqual(self.run_cli('nonsense')[0], 2)
+
+    def test_try_explains_the_reusable_value_of_the_starter(self):
+        starter = SimpleNamespace(try_starter=lambda project: {
+            'first_result': 'review found one missing check',
+            'second_result': 'checklist applied to a new plan',
+            'reuse': {'reused_units': ['one', 'two', 'three']},
+            'next_prompt': 'Use my Debugging Starter to review this debugging plan: [paste your own plan]',
+        })
+        with patch.dict(sys.modules, {'starter': starter}):
+            code, out = self.run_cli('try')
+        self.assertEqual(code, 0)
+        self.assertIn('Input:', out)
+        self.assertIn('Output:', out)
+        self.assertIn('Reuse:   3 saved knowledge units were applied again', out)
+        self.assertIn('First use:', out)
+        self.assertIn('Second use:', out)
+
+    def test_missing_python_dependency_is_actionable(self):
+        missing = ModuleNotFoundError("No module named 'cryptography'", name='cryptography')
+        with patch('cli.status', side_effect=missing):
+            code, out = self.run_cli('status')
+        self.assertEqual(code, 1)
+        self.assertIn('Python package `cryptography`', out)
+        self.assertIn('python -m pip install --upgrade lectic', out)
 
 
 if __name__ == '__main__':

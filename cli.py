@@ -1,9 +1,13 @@
 """`lectic`: the only tool you need to turn what you learn into permanent AI expertise.
 
+    lectic start            first run: save something you trust and see what to do next
     lectic setup            connect your AI assistants in seconds (Claude Code, Codex, ChatGPT)
     lectic try              try a sample playbook offline to see your AI in action
     lectic identity         set your author name for playbooks you share (lectic identity set "Name" --contact email)
     lectic share            give ChatGPT, Claude, or your phone one link to your playbooks
+    lectic share-artifact NAME  write one self-contained HTML page about a collection, for people without Lectic
+    lectic refresh NAME --from PATH  save a fresh version of a collection's material from where you keep it
+    lectic diff NAME        see what changed between two saved versions of a collection
     lectic connect URL      connect your AI to a remote Lectic library
     lectic pack NAME        export a collection into one shareable playbook file (.lectic)
     lectic search [QUERY]   find ready-to-use playbooks from creators and teams
@@ -800,18 +804,145 @@ def try_example(argv):
     if '--json' in argv:
         print(json.dumps(result, indent=2))
     else:
-        print('Debugging Starter is ready. This is a prewritten teaching example; no model was called.')
-        print('Sample review: ' + result['first_result'])
-        print('Second use:    ' + result['second_result'])
-        print(f"Reused {len(result['reuse']['reused_units'])} saved knowledge units; no sources were fetched again.")
+        print('Debugging Starter is ready.')
+        print('This is a prewritten teaching example; no model was called.')
+        print('\nWhat Lectic did:')
+        print('  Input:   a short debugging lesson with three source-backed procedures')
+        print('  Output:  a review, then a repeatable debugging checklist')
+        print('  Reuse:   ' + str(len(result['reuse']['reused_units'])) + ' saved knowledge units were applied again')
+        print('\nFirst use:  ' + result['first_result'])
+        print('Second use: ' + result['second_result'])
         print('\nTry your own work with a connected assistant:\n  ' + result['next_prompt'])
+    return 0
+
+
+def positional(argv, flags_with_val=()):
+    """Bare arguments, skipping the values that belong to the listed flags."""
+    result = []
+    skip_value = False
+    for argument in argv:
+        if skip_value:
+            skip_value = False
+        elif argument in flags_with_val:
+            skip_value = True
+        elif not argument.startswith('--'):
+            result.append(argument)
+    return result
+
+
+def start_cmd(argv):
+    """The smallest first run: two questions at most, then one real thing saved and one next step."""
+    from start import start as run_start
+    sources = positional(argv, {'--name', '--goal'})
+    name = option(argv, '--name')
+    goal = option(argv, '--goal')
+    interactive = sys.stdin.isatty() and '--yes' not in argv and '--json' not in argv
+    if interactive:
+        try:
+            if not sources:
+                print("Lectic saves material you trust so your assistant can use it again later.\n")
+                answer = input('  What do you want Lectic to learn from? A file, a folder, or a YouTube link.\n'
+                               '  (press Enter to run the built-in sample instead): ').strip().strip('"')
+                if answer: sources = [answer]
+            if sources and not goal:
+                goal = input('  What do you want to use this knowledge for?\n  ').strip() or None
+        except (EOFError, KeyboardInterrupt):
+            print('\nStart cancelled.')
+            return 130
+        print()
+    result = run_start(os.getcwd(), sources, name, goal)
+    if '--json' in argv:
+        print(json.dumps(result, indent=2)); return 0
+    if result['mode'] == 'sample':
+        print('Created:   ' + result['created'] + ' called "' + result['collection'] + '"')
+        print('Learned:   ' + result['learned'])
+        print('Reuse:     ' + str(result['reused_units']) + ' saved knowledge units were applied to a second plan')
+        print('\nFirst use:  ' + result['first_result'])
+        print('Second use: ' + result['second_result'])
+    else:
+        print('Created:   ' + result['created'])
+        print('Saved in:  ' + result['location'])
+        print('Sources:   ' + ', '.join(result['sources'][:6]) + (' ...' if len(result['sources']) > 6 else ''))
+        print('Learned:   ' + result['learned'])
+    connected = [name for name, state in checked_clients().items() if state.startswith('connected')]
+    print('\nNext:      ' + ('Open ' + connected[0] if connected else 'Run `lectic setup`, restart your assistant') +
+          ' and say:\n             ' + result['next_prompt'])
+    print('Share it:  ' + result['share_command'] + '   (one HTML page anyone can open)')
+    print('           lectic pack "' + result['collection'] + '"   (a file another Lectic can install)')
+    return 0
+
+
+def share_artifact(argv):
+    """Write one static HTML page about a collection. `lectic share` is the live link; this is a file."""
+    from artifact_page import write_page
+    names = positional(argv, {'--out', '--build'})
+    name = names[0] if names else None
+    build = option(argv, '--build')
+    if not name and not build:
+        print('Usage: lectic share-artifact "Collection Name" [--out PATH] [--build BUILD_ID] [--no-quotes] [--json]')
+        return 2
+    result = write_page(os.getcwd(), name, option(argv, '--out'), build, include_quotes='--no-quotes' not in argv)
+    if '--json' in argv:
+        print(json.dumps(result, indent=2)); return 0
+    print(f"Wrote a shareable page for {result['name']}: {result['file']} ({result['bytes'] // 1024 + 1} KB)")
+    print(f"  {result['units']} knowledge units, {result['sources']} sources, {result['methods']} reusable methods")
+    print('  Includes: ' + result['contains'])
+    print('  Privacy:  ' + result['privacy'])
+    print('\nOne file, no scripts and no internet needed. Open it in any browser, email it, or host it anywhere.')
+    return 0
+
+
+def refresh_cmd(argv):
+    """Save a fresh version of a collection's material from a location you name."""
+    from refresh import refresh as run_refresh
+    names = positional(argv, {'--from'})
+    name = names[0] if names else None
+    source = option(argv, '--from')
+    if not name or not source:
+        print('Usage: lectic refresh "Collection Name" --from PATH_OR_LINK [--json]')
+        print('Lectic never guesses where your material lives, so say where to read it from.')
+        return 2
+    result = run_refresh(os.getcwd(), name, source)
+    if '--json' in argv:
+        print(json.dumps(result, indent=2)); return 0
+    print(result['message'])
+    for label, key in (('added', 'added_sources'), ('changed', 'changed_sources'), ('removed', 'removed_sources')):
+        for item in result[key]: print(f'  {label:<8} {item}')
+    if not result['unchanged']:
+        print(f"\nPrevious version {result['previous_revision']} is still saved. Compare them with:")
+        print(f"  lectic diff \"{result['collection']}\"")
+    return 0
+
+
+def diff_cmd(argv):
+    """Compare two saved versions of a collection without changing anything."""
+    from refresh import diff as run_diff
+    names = positional(argv, {'--before', '--after'})
+    name = names[0] if names else None
+    if not name:
+        print('Usage: lectic diff "Collection Name" [--before REVISION] [--after REVISION] [--json]')
+        return 2
+    changes = run_diff(os.getcwd(), name, option(argv, '--before'), option(argv, '--after'))['changes']
+    if '--json' in argv:
+        print(json.dumps(changes, indent=2)); return 0
+    print(f"{changes['before']}  ->  {changes['after']}")
+    for label, key in (('added source', 'added_sources'), ('changed source', 'changed_sources'),
+                       ('removed source', 'removed_sources')):
+        for item in changes[key]: print(f'  {label:<15} {item}')
+    if not changes['knowledge_comparison_available']:
+        print('  Knowledge was not compared: one of these versions has no saved knowledge yet.')
+    else:
+        print(f"  knowledge      +{len(changes['added_units'])} new, ~{len(changes['changed_units'])} changed, "
+              f"-{len(changes['removed_units'])} removed units")
+    print(f"  {changes['preserved_builds']} saved build(s) preserved")
     return 0
 
 
 def main(argv=None):
     argv = list(sys.argv[1:] if argv is None else argv)
     command = argv[0] if argv else 'status'
-    handlers = {'setup': setup, 'try': try_example, 'identity': identity, 'share': share, 'connect': connect,
+    handlers = {'setup': setup, 'start': start_cmd, 'try': try_example, 'identity': identity, 'share': share,
+                'share-artifact': share_artifact, 'refresh': refresh_cmd, 'diff': diff_cmd, 'connect': connect,
                 'pack': pack, 'install': install, 'update': update, 'publish': publish, 'verify': verify,
                 'search': search, 'inspect': inspect_cmd, 'inbox': inbox_cmd,
                 'backup': backup, 'push': push, 'pull': pull, 'restore': restore,
@@ -820,6 +951,11 @@ def main(argv=None):
         print(__doc__.strip()); return 0 if command in {'-h', '--help', 'help'} else 2
     try:
         return handlers[command](argv[1:])
+    except ModuleNotFoundError as exc:
+        package = exc.name or 'a required package'
+        print(f'Lectic needs the Python package `{package}` to run this command.')
+        print('Install or repair Lectic with:  python -m pip install --upgrade lectic')
+        return 1
     except (OSError, ValueError) as exc:
         print('Lectic could not finish: ' + str(exc))
         return 1

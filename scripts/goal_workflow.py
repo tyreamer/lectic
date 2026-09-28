@@ -108,7 +108,7 @@ def validate_legacy_method(folder,manifest,method,selected,run):
 @home_transaction
 def work(*, project='.', input=None, metadata=None, collection=None, name=None, action='work', brief=None,
          target=None, adopt=None, reconciled=False, reviewed=False, remove=None, before=None, after=None,
-         before_knowledge=None,after_knowledge=None):
+         before_knowledge=None,after_knowledge=None,prune_missing=False):
     project = Path(project).resolve(); library = Library(project)
     path = lambda value: (project / value).resolve() if value else None
     require(action!='remove' or remove,'Source removal needs a source name')
@@ -125,7 +125,7 @@ def work(*, project='.', input=None, metadata=None, collection=None, name=None, 
         source_input = input if input and YouTubeIngestor.accepts(input) else str(path(input)) if input else None
         folder, data = library.archive(source_input, name=name, collection=collection,
                                        metadata=path(metadata), adopt=path(adopt), add=action == 'add',
-                                       remove=remove, replace=action=='replace')
+                                       remove=remove, replace=action=='replace', prune_missing=prune_missing)
     else:
         resolved = library.resolve(collection)
         if not resolved: return {'phase':'needs_sources','message':'Give me source files or select a saved collection.'}

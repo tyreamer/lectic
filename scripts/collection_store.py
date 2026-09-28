@@ -62,8 +62,10 @@ class Library:
         write(self.path, self.index)
 
     @home_transaction
-    def archive(self, input=None, *, name=None, collection=None, metadata=None, adopt=None, add=False, remove=None, replace=False):
+    def archive(self, input=None, *, name=None, collection=None, metadata=None, adopt=None, add=False, remove=None,
+                replace=False, prune_missing=False):
         self.reload()
+        require(not prune_missing or replace, 'Pruning missing sources requires replacement input')
         existing = self.resolve(collection) if collection else None
         if existing:
             folder, data = existing
@@ -85,9 +87,10 @@ class Library:
             records = {}
             if previous:
                 _, docs, _ = validate_sources(previous)
-                for doc in docs.values():
-                    records[doc['filename']] = ((previous / doc['raw_path']).read_bytes(),
-                                               {k:doc[k] for k in ('title','creator','url','caption_type')})
+                if not prune_missing:
+                    for doc in docs.values():
+                        records[doc['filename']] = ((previous / doc['raw_path']).read_bytes(),
+                                                   {k:doc[k] for k in ('title','creator','url','caption_type')})
             if remove:
                 require(previous is not None, 'Source removal needs an existing collection')
                 for selector in remove:
@@ -244,14 +247,15 @@ class Library:
         old_names=set(old_docs); new_names=set(new_docs)
         old_units={u['unit_id']:u for u in old_ir['units']} if old_ir else {}
         new_units={u['unit_id']:u for u in new_ir['units']} if new_ir else {}
+        knowledge_comparison_available=old_ir is not None and new_ir is not None
         return {'before':old.name,'after':new.name,'added_sources':sorted(new_names-old_names),
                 'before_knowledge':fingerprint(old_ir) if old_ir else None,'after_knowledge':fingerprint(new_ir) if new_ir else None,
                 'removed_sources':sorted(old_names-new_names),
                 'changed_sources':sorted(k for k in old_names&new_names if fingerprint(old_docs[k])!=fingerprint(new_docs[k])),
-                'knowledge_comparison_available':old_ir is not None and new_ir is not None,
-                'added_units':sorted(set(new_units)-set(old_units)) if new_ir is not None else None,
-                'removed_units':sorted(set(old_units)-set(new_units)) if new_ir is not None else None,
-                'changed_units':sorted(k for k in old_units.keys()&new_units.keys() if old_units[k]!=new_units[k]) if new_ir is not None else None,
+                'knowledge_comparison_available':knowledge_comparison_available,
+                'added_units':sorted(set(new_units)-set(old_units)) if knowledge_comparison_available else None,
+                'removed_units':sorted(set(old_units)-set(new_units)) if knowledge_comparison_available else None,
+                'changed_units':sorted(k for k in old_units.keys()&new_units.keys() if old_units[k]!=new_units[k]) if knowledge_comparison_available else None,
                 'preserved_builds':len(data['builds'])}
 
     @staticmethod
