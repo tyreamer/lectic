@@ -122,7 +122,9 @@ def work(*, project='.', input=None, metadata=None, collection=None, name=None, 
         return {'phase':action+'d','summary':library.set_archived(collection,action=='archive')}
     if input or adopt or remove:
         from ingestors.youtube import YouTubeIngestor
-        source_input = input if input and YouTubeIngestor.accepts(input) else str(path(input)) if input else None
+        from ingestors.web import WebArticleIngestor
+        is_url = bool(input and (YouTubeIngestor.accepts(input) or WebArticleIngestor.accepts(input)))
+        source_input = input if is_url else str(path(input)) if input else None
         folder, data = library.archive(source_input, name=name, collection=collection,
                                        metadata=path(metadata), adopt=path(adopt), add=action == 'add',
                                        remove=remove, replace=action=='replace', prune_missing=prune_missing)

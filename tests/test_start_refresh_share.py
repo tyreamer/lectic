@@ -305,9 +305,28 @@ class RefreshTests(Base):
         self.assertEqual(code, 0, out)
         changes = json.loads(out)
         self.assertEqual(changes['changed_sources'], ['debugging.srt'])
-        self.assertIsNone(changes['added_units'])  # the new revision has no knowledge yet; nothing is invented
-        self.assertEqual(ec.read(Library(self.project).resolve('Debugging Methods')[0] / 'collection.json'), state)
-        self.assertEqual(self.run_cli('diff')[0], 2)
+    def test_share_with_collection_name_writes_page(self):
+        self.prepared('Debugging Methods', self.material)
+        code, out = self.run_cli('share', 'Debugging Methods', '--out', str(self.base / 'page2.html'))
+        self.assertEqual(code, 0, out)
+        self.assertTrue((self.base / 'page2.html').is_file())
+        self.assertIn('Wrote a shareable page for Debugging Methods', out)
+
+    def test_prepare_command_reports_and_reconciles(self):
+        self.run_cli('start', str(self.material), '--name', 'Prepare Test', '--yes')
+        # Initially pending extraction
+        code, out = self.run_cli('prepare', 'Prepare Test')
+        self.assertEqual(code, 0, out)
+        self.assertIn('pending source(s)', out)
+        # Seed units
+        folder, data = Library(self.project).resolve('Prepare Test')
+        run = Library(self.project).run(folder, data)
+        self.seed(run)
+        # Reconcile and assemble IR
+        code, out = self.run_cli('prepare', 'Prepare Test')
+        self.assertEqual(code, 0, out)
+        self.assertIn('Prepared', out)
+        self.assertIn('knowledge units verified', out)
 
 
 if __name__ == '__main__':

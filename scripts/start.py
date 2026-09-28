@@ -41,10 +41,13 @@ def suggested_name(project, source):
 @contextmanager
 def readable_input(project, source):
     """Adapters read folders and links. A beginner points at one file, so stage it into a folder."""
+    if str(source).lower().startswith(('http://', 'https://')):
+        yield str(source)
+        return
     candidate = (Path(project) / source).expanduser()
     if candidate.is_file():
         require(candidate.suffix.lower() in EXTENSIONS,
-                'Lectic reads .txt, .md, .vtt and .srt files, folders of them, or a YouTube link: ' + source)
+                'Lectic reads .txt, .md, .vtt and .srt files, folders of them, or web links: ' + source)
         with tempfile.TemporaryDirectory(prefix='lectic-start-') as staging:
             shutil.copy2(candidate, Path(staging) / candidate.name)
             yield staging

@@ -19,8 +19,16 @@ PLATFORM_NAMES = {
 }
 
 
+def _normalize_url(url):
+    url = (url or '').strip()
+    if url and '://' not in url and not url.startswith('//'):
+        return 'https://' + url
+    return url
+
+
 def _platform(url):
-    host = (urlsplit(url).hostname or '').lower()
+    norm = _normalize_url(url)
+    host = (urlsplit(norm).hostname or '').lower()
     if host.startswith('www.'):
         host = host[4:]
     for domain, label in PLATFORM_NAMES.items():
@@ -33,7 +41,7 @@ def _retriever(url):
     """The adapter that could actually fetch this link's content, or None."""
     try:
         from linked_sources import resolver_for
-        return resolver_for(url)
+        return resolver_for(_normalize_url(url))
     except Exception:
         return None
 
@@ -48,10 +56,17 @@ def describe_source(url='', text='', files=()):
     if url:
         adapter = _retriever(url)
         if adapter is not None:
-            return {'source_type': 'youtube', 'platform': 'YouTube', 'retrieval': 'captions',
-                    'content_available': True,
-                    'what_lectic_gets': 'This is a YouTube link. Processing the collection retrieves the English '
-                                        'captions, so what is said in the video becomes searchable and quotable.'}
+            if getattr(adapter, 'adapter', '') == 'youtube-captions':
+                return {'source_type': 'youtube', 'platform': 'YouTube', 'retrieval': 'captions',
+                        'content_available': True,
+                        'what_lectic_gets': 'This is a YouTube link. Processing the collection retrieves the English '
+                                            'captions, so what is said in the video becomes searchable and quotable.'}
+            if getattr(adapter, 'adapter', '') == 'web-article':
+                platform = _platform(url)
+                return {'source_type': 'web', 'platform': platform, 'retrieval': 'article_text',
+                        'content_available': True,
+                        'what_lectic_gets': f'This is a web article from {platform}. Processing the collection retrieves '
+                                            'and cleans the article text, so what is written becomes searchable and quotable.'}
         platform = _platform(url)
         return {'source_type': 'web', 'platform': platform, 'retrieval': 'reference_only',
                 'content_available': False,

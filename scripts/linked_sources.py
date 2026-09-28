@@ -9,7 +9,8 @@ from ingestors import TranscriptInput
 
 def resolver_for(url):
     from ingestors.youtube import YouTubeIngestor
-    for adapter in (YouTubeIngestor,):
+    from ingestors.web import WebArticleIngestor
+    for adapter in (YouTubeIngestor, WebArticleIngestor):
         if adapter.accepts(url):
             return adapter(url)
     return None

@@ -1,27 +1,33 @@
-"""`lectic`: the only tool you need to turn what you learn into permanent AI expertise.
+"""`lectic`: turn what you learn into permanent AI expertise.
 
-    lectic start            first run: save something you trust and see what to do next
+Daily Use & First Run:
+    lectic start [SOURCE]   save trusted material (files, folder, or link) and start
+    lectic prepare [NAME]   compile and verify knowledge from saved sources directly
     lectic setup            connect your AI assistants in seconds (Claude Code, Codex, ChatGPT)
     lectic try              try a sample playbook offline to see your AI in action
-    lectic identity         set your author name for playbooks you share (lectic identity set "Name" --contact email)
-    lectic share            give ChatGPT, Claude, or your phone one link to your playbooks
-    lectic share-artifact NAME  write one self-contained HTML page about a collection, for people without Lectic
-    lectic refresh NAME --from PATH  save a fresh version of a collection's material from where you keep it
+    lectic status           see your saved playbooks, drop folder, and connected AIs
+
+Sharing & Maintenance:
+    lectic share [NAME]     write a self-contained HTML page, or open a live tunnel (--tunnel)
+    lectic share-artifact NAME  write one self-contained HTML page about a collection
+    lectic refresh NAME --from PATH  save a fresh version of a collection's material
     lectic diff NAME        see what changed between two saved versions of a collection
-    lectic connect URL      connect your AI to a remote Lectic library
+
+Portability & Teams:
     lectic pack NAME        export a collection into one shareable playbook file (.lectic)
-    lectic search [QUERY]   find ready-to-use playbooks from creators and teams
-    lectic inspect TARGET   preview what's inside a playbook before adding it
     lectic install TARGET   add a playbook to your AI (from a link, file, or name)
-    lectic update NAME      get the latest updates for an installed playbook
-    lectic publish NAME     share your playbook with your team or community
     lectic verify [NAME]    check that every rule in a collection links to exact source quotes
     lectic inbox [--process] view or sort dropped links and files from your drop folder
     lectic backup [--out F] back up all your playbooks and sources in one file
+    lectic restore FILE     restore your playbooks from a backup file
     lectic push LINK        sync your playbooks to another computer
     lectic pull LINK        bring your playbooks from another computer here
-    lectic restore FILE     restore your playbooks from a backup file
-    lectic status           see your saved playbooks, drop folder, and connected AIs
+    lectic connect URL      connect your AI to a remote Lectic library
+    lectic identity         set your author name for playbooks you share
+    lectic search [QUERY]   find ready-to-use playbooks from creators and teams
+    lectic inspect TARGET   preview what's inside a playbook before adding it
+    lectic update NAME      get the latest updates for an installed playbook
+    lectic publish NAME     share your playbook with your team or community
     lectic serve [--http]   start the AI connector (launched automatically by your AI)
     lectic ec ...           internal developer utilities
 
@@ -399,6 +405,16 @@ Anyone with the link can read and change your knowledge. Keep it private; `lecti
 
 
 def share(argv):
+    """Write one portable HTML page about a collection, or open a live tunnel if no collection is named."""
+    tunnel_flags = {'--tunnel', '--live', '--server', '--mcp', '--new-link', '--public', '--hostname'}
+    has_tunnel_flag = any(f in argv for f in tunnel_flags)
+    names = positional(argv, {'--port', '--public', '--tunnel', '--hostname', '--out', '--build'})
+    if names and not has_tunnel_flag:
+        return share_artifact(argv)
+    return share_tunnel(argv)
+
+
+def share_tunnel(argv):
     """Serve over HTTP and open a tunnel, so hosted assistants reach this machine's knowledge."""
     from home import storage_root
     from lectic_mcp import connect_url, serve_http
@@ -872,6 +888,70 @@ def start_cmd(argv):
     return 0
 
 
+def prepare_cmd(argv):
+    """Compile and verify knowledge from a collection's sources."""
+    from goal_workflow import work
+    from collection_store import Library
+    names = positional(argv, {'--goal'})
+    name = names[0] if names else None
+    library = Library(os.getcwd())
+    if not name:
+        active = library.index.get('active_collection')
+        if active:
+            resolved = library.resolve(active)
+            if resolved:
+                name = resolved[1]['name']
+    if not name:
+        print('Usage: lectic prepare "Collection Name" [--reconcile] [--json]')
+        print('Compiles saved sources into verified knowledge units.')
+        return 2
+
+    reconciled = '--reconcile' in argv
+    result = work(project=os.getcwd(), collection=name, action='prepare', reconciled=reconciled)
+    if '--json' in argv:
+        print(json.dumps(result, indent=2)); return 0
+
+    phase = result.get('phase')
+    if phase == 'knowledge_saved':
+        summary = result.get('summary', {})
+        print(f"Prepared {result['collection']}:")
+        print(f"  {summary.get('knowledge_units', 0)} knowledge units verified across {summary.get('source_count', 0)} sources")
+        print(f"  Source revision: {result.get('source_revision')}")
+        print(f"\nNext: Share it as a standalone page:")
+        print(f"  lectic share \"{result['collection']}\"")
+        return 0
+
+    if phase == 'reconcile':
+        result2 = work(project=os.getcwd(), collection=name, action='prepare', reconciled=True)
+        if result2.get('phase') == 'knowledge_saved':
+            summary = result2.get('summary', {})
+            print(f"Prepared and reconciled {result2['collection']}:")
+            print(f"  {summary.get('knowledge_units', 0)} knowledge units verified across {summary.get('source_count', 0)} sources")
+            print(f"  Source revision: {result2.get('source_revision')}")
+            print(f"\nNext: Share it as a standalone page:")
+            print(f"  lectic share \"{result2['collection']}\"")
+            return 0
+        print(f"Collection {result['collection']} needs cross-source reconciliation.")
+        print(f"Run: lectic prepare \"{name}\" --reconcile")
+        return 0
+
+    if phase == 'extract':
+        task = result.get('agent_task', {})
+        pending = len(task.get('pending_sources', []))
+        print(f"Collection {result['collection']} has {pending} pending source(s) waiting for knowledge extraction.")
+        print(f"Open your connected assistant and say:\n  Prepare my {result['collection']} collection.")
+        return 0
+
+    if phase == 'needs_sources':
+        print(f"Collection {name} has no sources to prepare. Add sources with `lectic start` or `lectic refresh`.")
+        return 1
+
+    print(f"Prepare status for {name}: {phase}")
+    if 'message' in result:
+        print(f"  {result['message']}")
+    return 0
+
+
 def share_artifact(argv):
     """Write one static HTML page about a collection. `lectic share` is the live link; this is a file."""
     from artifact_page import write_page
@@ -941,8 +1021,9 @@ def diff_cmd(argv):
 def main(argv=None):
     argv = list(sys.argv[1:] if argv is None else argv)
     command = argv[0] if argv else 'status'
-    handlers = {'setup': setup, 'start': start_cmd, 'try': try_example, 'identity': identity, 'share': share,
-                'share-artifact': share_artifact, 'refresh': refresh_cmd, 'diff': diff_cmd, 'connect': connect,
+    handlers = {'setup': setup, 'start': start_cmd, 'prepare': prepare_cmd, 'try': try_example,
+                'identity': identity, 'share': share, 'share-artifact': share_artifact,
+                'refresh': refresh_cmd, 'diff': diff_cmd, 'connect': connect,
                 'pack': pack, 'install': install, 'update': update, 'publish': publish, 'verify': verify,
                 'search': search, 'inspect': inspect_cmd, 'inbox': inbox_cmd,
                 'backup': backup, 'push': push, 'pull': pull, 'restore': restore,

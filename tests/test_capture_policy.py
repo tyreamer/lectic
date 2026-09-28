@@ -124,12 +124,19 @@ class SourceTypeHonestyTests(PlacementBase):
         self.assertFalse(result['source']['content_available'])
         self.assertIn('Instagram links are saved as a reference only', result['confirmation'])
 
-    def test_tiktok_and_plain_web_links_are_reference_only(self):
-        for url, platform in (('https://www.tiktok.com/@a/video/1', 'TikTok'), ('https://blog.example.com/post', 'blog.example.com')):
+    def test_tiktok_and_walled_gardens_are_reference_only(self):
+        for url, platform in (('https://www.tiktok.com/@a/video/1', 'TikTok'), ('https://x.com/user/status/1', 'X')):
             source = describe_source(url=url)
             self.assertEqual(source['retrieval'], 'reference_only')
             self.assertFalse(source['content_available'])
             self.assertEqual(source['platform'], platform)
+
+    def test_web_articles_are_retrievable(self):
+        source = describe_source(url='https://blog.example.com/post')
+        self.assertEqual(source['retrieval'], 'article_text')
+        self.assertTrue(source['content_available'])
+        self.assertEqual(source['platform'], 'blog.example.com')
+        self.assertIn('retrieves and cleans the article text', source['what_lectic_gets'])
 
     def test_pasted_text_is_quotable(self):
         source = describe_source(text='the exact words')

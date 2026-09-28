@@ -306,6 +306,8 @@ class CaptureStore:
             except (ValueError,OSError) as exc: issues.append(a['filename']+': '+str(exc))
         from linked_sources import resolver_for, retrieve
         adapter=resolver_for(self.url(event)) if self.url(event) else None
+        if adapter and event.get('source_type') == 'text' and getattr(adapter, 'adapter', '') == 'web-article':
+            adapter = None
         if adapter:
             retrieval={'adapter':adapter.adapter,'adapter_version':adapter.version,'status':'unavailable',
                        'original_url':self.url(event),'canonical_url':None,'attempted_at':now(),

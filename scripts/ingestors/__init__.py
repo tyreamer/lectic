@@ -16,5 +16,10 @@ class Ingestor(Protocol):
 
 def adapter_for(location):
     from .youtube import YouTubeIngestor
+    from .web import WebArticleIngestor
     from .transcript_files import TranscriptFiles
-    return YouTubeIngestor(location) if YouTubeIngestor.accepts(location) else TranscriptFiles(location)
+    if YouTubeIngestor.accepts(location):
+        return YouTubeIngestor(location)
+    if WebArticleIngestor.accepts(location):
+        return WebArticleIngestor(location)
+    return TranscriptFiles(location)
