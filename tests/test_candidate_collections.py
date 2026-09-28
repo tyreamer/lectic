@@ -136,7 +136,7 @@ class CandidateCollectionTests(unittest.TestCase):
         self.assertEqual(len(data['candidate_collections']), 1)
         self.assertEqual(data['candidate_collections'][0]['name'], 'Cloud Architecture')
 
-    def test_mcp_tool_capture_save_without_collections_surfaces_candidates(self):
+    def test_mcp_tool_capture_save_without_collections_files_the_one_clear_match(self):
         debug_srt = ec.ROOT / 'fixtures/debugging/debugging.srt'
         self._add_collection('Database Indexing', debug_srt)
 
@@ -145,11 +145,12 @@ class CandidateCollectionTests(unittest.TestCase):
         self.assertFalse(call_res['isError'])
         data = json.loads(call_res['content'][0]['text'])
         self.assertEqual(data['phase'], 'captured')
-        self.assertIn('candidate_collections', data)
+        self.assertEqual(data['decision'], 'auto_filed')
+        self.assertEqual(data['collections'], ['Database Indexing'])
+        self.assertEqual(data['question'], '')
         self.assertEqual(len(data['candidate_collections']), 1)
         self.assertEqual(data['candidate_collections'][0]['name'], 'Database Indexing')
-        self.assertEqual(data['collections'], ['Inbox'])
-        self.assertIn('Sorting is optional', data['guidance'])
+        self.assertIn('Database Indexing', data['confirmation'])
 
 
 if __name__ == '__main__':

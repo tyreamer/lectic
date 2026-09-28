@@ -122,6 +122,20 @@ class SetupTests(unittest.TestCase):
         record.unlink()
         self.assertIn('not sharing', self.run_cli('status')[1])
 
+    def test_status_says_whether_a_hosted_chat_can_reach_this_home(self):
+        """"Why didn't my link get saved?" starts with local-only versus shared."""
+        self.assertIn('Hosted chat NOT reachable', self.run_cli('status')[1])
+        import threading
+        from lectic_mcp import serve_http
+        httpd = serve_http(self.base, port=0, announce=None)
+        threading.Thread(target=httpd.serve_forever, daemon=True).start()
+        self.addCleanup(httpd.server_close); self.addCleanup(httpd.shutdown)
+        local = f'http://127.0.0.1:{httpd.server_address[1]}'
+        self.home.mkdir(parents=True, exist_ok=True)
+        (self.home / 'share-link.json').write_text(
+            json.dumps({'link': local + '/t/secret/mcp', 'local': local, 'started_at': 'now'}), encoding='utf-8')
+        self.assertIn('Hosted chat reachable', self.run_cli('status')[1])
+
     def test_share_explains_the_missing_tunnel_and_accepts_a_public_address(self):
         code, out = self.run_cli('share', '--port', '0')
         self.assertEqual(code, 1); self.assertIn('winget install Cloudflare.cloudflared', out); self.assertIn('brew install cloudflared', out)

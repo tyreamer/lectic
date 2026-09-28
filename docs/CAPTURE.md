@@ -40,9 +40,29 @@ No filename, import date, file modification time or collection name participates
 
 The phone must still supply the original capture time and serialize a complete JSON object. The importer cannot reconstruct capture time from a delayed sync, and rejects missing/invalid timezone information. Import only downloaded files. Truncated JSON is rejected and can be retried; a syntactically valid but incomplete producer payload cannot be detected without a producer-supplied integrity manifest. The adapter does not ingest arbitrary loose text files.
 
+## Placement and source honesty
+
+A save never stalls waiting for a decision: the record is written first, then reported. `lectic_capture_save` resolves the destination itself and returns a `decision` so the assistant does not have to guess from prose.
+
+| `decision` | When | Destination | Question asked |
+| --- | --- | --- | --- |
+| `explicit` | The caller named collections | Those collections | None |
+| `auto_filed` | Exactly one candidate scored at least 0.50 and led the runner-up by 0.15 | That collection | None; the confirmation names it |
+| `needs_clarification` | Two or more plausible candidates, or one that was not clearly strong | Inbox | One, naming the candidates plus “or somewhere new” |
+| `inbox_fallback` | No candidate scored above the matching floor | Inbox | None; the confirmation says nothing fit |
+
+The response also carries a `source` object saying what Lectic will ever be able to read from the item, so a confirmation cannot imply retrieval that will not happen.
+
+| Shared thing | `retrieval` | What is actually stored |
+| --- | --- | --- |
+| YouTube link | `captions` | The link now; English captions when the collection is processed |
+| Instagram, TikTok, X, or any other web link | `reference_only` | The link, the title and the note. Never the content: no scraping, no article fetch, no OCR |
+| Pasted text | `supplied_text` | The exact text, quotable |
+| Attached file | `attached_file` | The original bytes; `.txt/.md/.vtt/.srt` become searchable when processed |
+
 ## Membership and personal context
 
-Absent a requested collection, the item belongs to Inbox. Memberships use existing stable collection IDs, not folders named after users' labels. Add keeps previous memberships; move replaces them; remove removes only the named memberships. Removing the final membership returns the capture to Inbox. Several captures can refer to one canonical source; it remains in a collection while any of those captures belongs there. Source snapshot changes never delete prior builds or originals.
+Absent a requested collection, placement follows the table above and the item belongs to Inbox unless one collection clearly matched. Memberships use existing stable collection IDs, not folders named after users' labels. Add keeps previous memberships; move replaces them; remove removes only the named memberships. Removing the final membership returns the capture to Inbox. Several captures can refer to one canonical source; it remains in a collection while any of those captures belongs there. Source snapshot changes never delete prior builds or originals.
 
 An annotation event records its own ID and timestamp, the capture ID, optional note text and collections to add. Repeating the event is idempotent. Later notes append rather than rewriting history. Notes are unstructured personal context in this pass; they are not an automatic source-authority or policy engine. The assistant must interpret qualifications when doing the user's work, and tests cannot prove every natural-language qualification will be followed.
 

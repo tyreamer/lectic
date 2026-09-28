@@ -119,13 +119,18 @@ def configured_spec(client):
         return None
 
 
+def spec_reach(spec):
+    """Whether a configured assistant talks to a Lectic on this computer or to one over a link."""
+    return 'remote link' if spec.get('url') or spec.get('type') == 'http' else 'local, this computer'
+
+
 def checked_clients():
     from client_check import check_connection
     states = {}
     for client in ('Claude Code', 'Codex'):
         spec = configured_spec(client)
-        states[client] = ('connected (configured server reachable; restart required after setup)' if check_connection(spec)[0]
-                          else 'configured, server UNREACHABLE') if spec else 'not connected'
+        states[client] = ((f'connected ({spec_reach(spec)}; restart required after setup)' if check_connection(spec)[0]
+                          else f'configured ({spec_reach(spec)}), server UNREACHABLE') if spec else 'not connected')
     return states
 
 
@@ -249,6 +254,7 @@ def setup(argv):
     from inbox import ensure_inbox_folder
     inbox_dir = ensure_inbox_folder(Path.cwd())
     print(f'  {"Drop Folder":<12} {inbox_dir}')
+    print(f'  {"Hosted chat":<12} {hosted_reach(home["home"])}')
     print(f'\nKnowledge lives in {home["home"]} and is shared by every project and assistant here.')
     if any(s.startswith('connected') for s in results.values()):
         print('\nOne step left: restart your AI assistant so it picks up the connection.')
@@ -325,6 +331,7 @@ def status(argv):
     print(f'YouTube     {"ready, " + youtube_route() if youtube_available() else "not installed"}')
     link = live_link(info['home'])
     print(f'Share link  {link + "  (live)" if link else "not sharing (run: lectic share)"}')
+    print(f'Hosted chat {hosted_reach(info["home"])}')
     ok, _ = verify_server()
     print(f'Server      {"ok" if ok else "FAILED"}')
     if not (claude_connected() or codex_connected()): print('\nRun `lectic setup` to connect an assistant.')
@@ -477,6 +484,16 @@ def live_link(home):
     except (OSError, ValueError, KeyError, urllib.error.URLError):
         return None
     return record['link']
+
+
+def hosted_reach(home):
+    """ChatGPT, Gemini and Claude on the web run on someone else's computer.
+
+    They can only reach this home through a link, never through a local process.
+    """
+    if live_link(home):
+        return 'reachable: paste the share link above into ChatGPT, Claude on the web or Gemini'
+    return 'NOT reachable: ChatGPT, Gemini and other hosted chats cannot see a local server (run: lectic share)'
 
 
 def pack(argv):

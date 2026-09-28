@@ -35,7 +35,7 @@ PROTOCOL_VERSIONS = ['2025-06-18', '2025-03-26', '2024-11-05']
 INSTRUCTIONS = '''Lectic stores the user's saved videos, notes, and transcripts in a folder on their computer so you can search them and quote them. You answer questions and review work; these tools handle saving, searching, and checking quotes.
 
 How to talk to the user:
-- When the user asks to save a link, text, or file, call lectic_capture_save immediately. If they name a collection, save it there; otherwise save it to their Inbox folder. Confirm that the item was saved.
+- When the user asks to save a link, text, or file, call lectic_capture_save immediately. The response decides where it went; follow it instead of improvising. `decision` is one of: `explicit` (they named the collection), `auto_filed` (one collection clearly matched and the item is already in it), `needs_clarification` (several fit, so ask the one short `question` verbatim and nothing else), `inbox_fallback` (nothing fit, so it is in Inbox). Say the returned `confirmation` in your own words, always naming where the item went and what Lectic can actually read from it.
 - When the user asks to try Lectic, call lectic_starter. Show the sample review and checklist, explain that these are sample examples from a saved lesson, and give one question the user can ask next about their own work.
 - When the user asks "What do I have saved?", call lectic_library. List their saved collections and tell them what questions they can ask about those files.
 - When the user asks you to review work or answer a question using their saved files, search their files, write an answer based on what you find, and quote the exact sentence and timestamp from the original source.
@@ -110,7 +110,7 @@ TOOLS = [
           'items': L('Capture IDs, titles or original values to act on.'), 'to': L('Collection names for add/move/remove/note.'),
           'query': S('Lexical filter over shared text, titles and notes.'), 'since': S('ISO timestamp with timezone, inclusive.'),
           'until': S('ISO timestamp with timezone, exclusive.'), 'note': S('Personal note text (action=note).'), 'build': S('Saved build folder (action=trace).')}),
-    tool('lectic_capture_save', 'Save something the user shared right now (a URL, pasted text, or local files) as a capture record, then import it. Cheap storage only: no retrieval, extraction or map.',
+    tool('lectic_capture_save', 'Save something the user shared right now (a URL, pasted text, or local files) as a capture record, then import it. Cheap storage only: no retrieval, extraction or map. The response carries a `decision` (explicit | auto_filed | needs_clarification | inbox_fallback), a `question` to ask only when clarification is needed, and a `source` describing what Lectic can actually read from the item.',
          {'project': PROJECT, 'url': S('Shared link, exactly as given.'), 'text': S('Shared text, verbatim.'),
           'files': L('Local file paths to attach as originals.'), 'note': S('The user\'s reason for saving, verbatim.'),
           'collections': L('Requested collection names; omitted means Inbox.'), 'title': S('Title only if actually known.')}),
@@ -172,8 +172,11 @@ TOOLS = [
 
 
 class Server:
-    def __init__(self, project='.'):
+    def __init__(self, project='.', transport='stdio'):
         self.project = Path(project).resolve()
+        # 'stdio' means a program on this computer launched us; 'http' means a shared link,
+        # which is the only way a hosted chatbot can reach this home at all.
+        self.transport = transport
         self.initialized = False
 
     # ------------------------------------------------------------ JSON-RPC
@@ -239,7 +242,14 @@ class Server:
         return Path(project).resolve() if project else self.project
 
     def tool_home(self, project=None):
-        return describe(self.resolve_project(project))
+        info = dict(describe(self.resolve_project(project)))
+        info['transport'] = self.transport
+        info['reach'] = ('You are reaching Lectic over a shared HTTP link, so this works from a hosted chat.'
+                         if self.transport == 'http' else
+                         'You are running Lectic locally on this computer over stdio. A hosted chatbot such as '
+                         'ChatGPT or Gemini cannot reach this server; the user would need to run `lectic share` '
+                         'and paste the link into that product.')
+        return info
 
     def tool_starter(self, project=None):
         from starter import try_starter
@@ -294,6 +304,7 @@ class Server:
         return capture_command(project=self.resolve_project(project), **kwargs)
 
     def tool_capture_save(self, project=None, url='', text='', files=(), note='', collections=(), title=''):
+        from capture_policy import confirmation_line, decide_placement, describe_source
         from capture_store import capture_command
         from capture_write import save_capture
         project = self.resolve_project(project)
@@ -302,22 +313,21 @@ class Server:
         from privacy import require_shareable
         for source in files or ():
             require_shareable(source, storage_root(project))
+        placement = decide_placement(project, url=url or '', text=text or '', title=title or '',
+                                     files=files or (), note=note or '', collections=collections or ())
+        source = describe_source(url=url or '', text=text or '', files=files or ())
         record = save_capture(inbox, url=url or '', text=text or '', files=list(files or ()), note=note or '',
-                              collections=list(collections or ()), title=title or '', origin='assistant-supplied')
+                              collections=list(placement['collections']), title=title or '', origin='assistant-supplied')
         report = capture_command(project=project, action='import', inbox=str(inbox))
         item = next((i for i in report['items'] if i['capture_id'] == record.stem), None)
         require(item is not None and item['saved'], 'The capture was written but its import reported a problem: ' + json.dumps(report['needs_attention']))
-        result = {'phase': 'captured', 'capture_id': item['capture_id'], 'new': item['new'], 'record': str(record),
-                  'issues': item['issues'], 'collections': list(collections or ()),
-                  'note': 'Saved only. Nothing was retrieved, extracted or built; process the collection when a use needs it.'}
-        if not collections:
-            from candidate_collections import find_candidate_collections
-            cand = find_candidate_collections(project, url=url, text=text, title=title, files=files, note=note)
-            result['collections'] = ['Inbox']
-            result['guidance'] = 'Saved to Inbox. Sorting is optional; do not ask a follow-up question just to finish this save.'
-            result['candidate_collections'] = cand['candidates']
-            result['all_collections'] = [c['name'] for c in cand['all_collections']]
-        return result
+        return {'phase': 'captured', 'capture_id': item['capture_id'], 'new': item['new'], 'record': str(record),
+                'issues': item['issues'], 'collections': list(placement['collections']),
+                'decision': placement['decision'], 'question': placement['question'],
+                'candidate_collections': placement['candidates'], 'all_collections': placement['all_collections'],
+                'source': source, 'confirmation': confirmation_line(placement, source),
+                'guidance': placement['guidance'],
+                'note': 'Saved only. Nothing was retrieved, extracted or built; process the collection when a use needs it.'}
 
     def tool_compile(self, project=None, input=None, run=None, **kwargs):
         from workflow import compile_workflow
@@ -671,7 +681,9 @@ class HttpHandler(BaseHTTPRequestHandler):
         except (Invalid, ValueError, KeyError, OSError) as exc:
             return self.send(400, {'saved': False, 'error': str(exc)})
         return self.send(200, {'saved': True, 'new': result['new'], 'capture_id': result['capture_id'],
-                               'collections': collections or ['Inbox'], 'note': result['note']})
+                               'collections': result['collections'], 'decision': result['decision'],
+                               'question': result['question'], 'source': result['source'],
+                               'confirmation': result['confirmation'], 'note': result['note']})
 
 
 def serve_http(project='.', host='127.0.0.1', port=8787, token=None, allowed_origins=(), announce=print):
@@ -679,7 +691,7 @@ def serve_http(project='.', host='127.0.0.1', port=8787, token=None, allowed_ori
     token = token or ensure_token(storage_root(project))
     httpd = ThreadingHTTPServer((host, port), HttpHandler)
     httpd.daemon_threads = True
-    httpd.mcp = Server(project)
+    httpd.mcp = Server(project, transport='http')
     # One server serves one home, fixed when it starts.
     httpd.home = storage_root(project)
     httpd.token = token

@@ -63,7 +63,7 @@ The same `Server` answers over two transports. **stdio** (`lectic serve`): one J
 | `lectic_map` | Capability Maps: discover, list, inspect, compare, select |
 | `lectic_guide` | Grounded next-use suggestions: prepare, save, show, select |
 | `lectic_capture` | Inbox: import a synced folder, list, show, memberships, notes, process, trace |
-| `lectic_capture_save` | Save a link, pasted text or files shared right now; storage only |
+| `lectic_capture_save` | Save a link, pasted text or files shared right now; storage only. Returns `decision` (`explicit` / `auto_filed` / `needs_clarification` / `inbox_fallback`), a single `question` when one is warranted, and a `source` object saying whether the item's content is retrievable (YouTube captions) or kept as a reference only (Instagram, TikTok, most web links) |
 | `lectic_collection_candidates` | Intelligent candidate collection suggestions for incoming source material |
 | `lectic_compile` | Legacy numbered-capability coordinator |
 | `lectic_pack` | One shareable `.lectic` file carrying a collection's knowledge |

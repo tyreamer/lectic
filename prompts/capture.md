@@ -12,7 +12,20 @@ Use `ec.py capture --project PROJECT --action import --inbox FOLDER` to import a
 
 For directly supplied text/URLs/files, use `scripts/capture_write.py --inbox HOME/capture-drop` (HOME from `ec.py home --project PROJECT`) with `--url`, `--text-file`, `--file`, `--note`, `--collection` and `--title` only when actually supplied, then import that folder. Preserve exact text in a UTF-8 file before passing it; do not interpolate arbitrary user text into shell commands. Set an honest origin. Never create a transcript or infer a recipe from a URL. Saving alone does not authorize extraction or a Capability Map.
 
-When content arrives without a collection, save it to Inbox immediately. If a collection was named, honor it. Do not require sorting to finish a save. Use candidate matching when the user asks to organize saved material, and show suggested destinations before moving it. For a pasted batch of links, create one capture per exact URL, including timestamp/query parameters. Save any accompanying reason as a personal note on each capture, never as `shared_text` or source evidence. Do not invent video titles or endorse promises in the user's description. Reuse the recorded captures when continuing instead of saving the same batch again.
+When a collection was named, honor it. When none was named, the save resolves its own destination and reports it as `decision`; do not second-guess it:
+
+| `decision` | What happened | What you say |
+| --- | --- | --- |
+| `explicit` | The user named the collection | Confirm the save, naming that collection. Ask nothing. |
+| `auto_filed` | One collection clearly matched and the item is already in it | Name that collection in the confirmation so a wrong guess is easy to correct. Ask nothing. |
+| `needs_clarification` | Several collections plausibly fit; the item is safe in Inbox meanwhile | Ask the returned `question` and nothing else: the candidate names plus “or somewhere new.” Then move it with `--action move`. |
+| `inbox_fallback` | Nothing saved was a plausible fit | Say it went to Inbox because no existing collection fit. Ask nothing. |
+
+One question is the ceiling, not the floor: never chain follow-ups, and never end a save without telling the user where the item landed. Saving is still cheap storage; the item is written before the question is asked, so an unanswered question loses nothing.
+
+Be honest about what was saved. A YouTube link means captions become available when the collection is processed. An Instagram, TikTok, X or ordinary web link is saved **as a reference only**: the link, the title and any note, never the content. Say so in the confirmation rather than implying the post was read. Pasted text and transcript files are stored verbatim and are fully quotable.
+
+For a pasted batch of links, create one capture per exact URL, including timestamp/query parameters. Save any accompanying reason as a personal note on each capture, never as `shared_text` or source evidence. Do not invent video titles or endorse promises in the user's description. Reuse the recorded captures when continuing instead of saving the same batch again.
 
 “Save these for later” stops after import. “Process this collection” or “Use these links to help me become an entrepreneur” authorizes deferred retrieval and preparation now, followed by the requested work. “I am going to use these later” alone is context, not authorization to process. A bare content-analysis request can follow discovery once processing is appropriate. No domain-specific routing is needed.
 
