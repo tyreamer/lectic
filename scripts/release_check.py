@@ -6,6 +6,7 @@ remote publishing, YouTube access or model API calls.
 import json
 import os
 from pathlib import Path
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -28,7 +29,7 @@ from starter import NAME, try_starter
 
 def check_release():
     report = {'version': VERSION, 'package_root': str(ROOT), 'checks': []}
-    for relative in ('SKILL.md', 'prompts/extract.md', 'schemas/pack.schema.json',
+    for relative in ('SKILL.md', 'prompts/extract.md', 'schemas/pack.schema.json', 'docs/EXAMPLES.md',
                      'fixtures/demo_capabilities.json', 'registry/index.json', 'fixtures/packs/debugging-starter.lectic'):
         require((ROOT / relative).is_file(), 'Missing packaged resource: ' + relative)
     report['checks'].append('packaged resources present')
@@ -68,6 +69,38 @@ def check_release():
             again = json.loads(probe.stdout)
             require(again['second_result'] == result['second_result'], 'Fresh-process reuse created a duplicate result')
             report['checks'].append('fresh interpreter and different project reuse the same saved results')
+
+            lifecycle = base / 'lifecycle-project'; lifecycle.mkdir()
+            material = lifecycle / 'material'; material.mkdir()
+            shutil.copy2(ROOT / 'fixtures/debugging/debugging.srt', material / 'debugging.srt')
+            lifecycle_env = dict(os.environ)
+            cli_path = ROOT / 'cli.py'
+
+            def run_cli(*arguments):
+                process = subprocess.run([sys.executable, str(cli_path), *arguments], cwd=lifecycle,
+                                         env=lifecycle_env, capture_output=True, text=True, timeout=30)
+                require(process.returncode == 0,
+                        'Packaged CLI failed (' + ' '.join(arguments) + '): ' + process.stdout + process.stderr)
+                return process.stdout
+
+            started = json.loads(run_cli('start', 'material', '--name', 'Release Lifecycle', '--goal',
+                                         'review debugging experiments', '--yes', '--json'))
+            require(started['source_count'] == 1 and started['desired_use'] == 'review debugging experiments',
+                    'Installed start command lost its source or intended use')
+            page_path = lifecycle / 'release-lifecycle.html'
+            page = json.loads(run_cli('share-artifact', 'Release Lifecycle', '--out', str(page_path), '--json'))
+            require(page_path.is_file() and page['sources'] == 1, 'Installed share-artifact did not write its page')
+            material.joinpath('debugging.srt').write_text(
+                material.joinpath('debugging.srt').read_text(encoding='utf-8') +
+                '\n99\n00:09:59,000 --> 00:10:00,000\nKeep the failed experiment in the log.\n', encoding='utf-8')
+            refreshed = json.loads(run_cli('refresh', 'Release Lifecycle', '--from', 'material', '--json'))
+            require(refreshed['changed_sources'] == ['debugging.srt'] and refreshed['rebuild_needed'],
+                    'Installed refresh did not create an honest changed-source revision')
+            compared = json.loads(run_cli('diff', 'Release Lifecycle', '--json'))
+            require(compared['changed_sources'] == ['debugging.srt'] and
+                    not compared['knowledge_comparison_available'],
+                    'Installed diff invented a knowledge comparison or lost the source change')
+            report['checks'].append('packaged CLI start, static page, refresh and diff lifecycle')
 
             httpd = serve_http(author, port=0, token='release-check-temporary-token-1234567890', announce=None)
             thread = threading.Thread(target=httpd.serve_forever, daemon=True); thread.start()
