@@ -1,6 +1,10 @@
 # Lectic
 
-Save videos and notes on your computer so your AI assistant can search them and quote them.
+Turn material you trust into reusable expertise for your AI assistant.
+
+Lectic saves your notes, transcripts, and links, then helps an assistant turn them into source-backed methods it can apply again later. It keeps the original evidence, shows where a rule came from, and lets you inspect, reuse, update, or share the result.
+
+That is different from asking an AI to summarize something once. A summary helps with one conversation. Lectic keeps the useful parts so a future conversation can use them on new work.
 
 [![Tests](https://github.com/tyreamer/lectic/actions/workflows/tests.yml/badge.svg)](https://github.com/tyreamer/lectic/actions/workflows/tests.yml)
 [![PyPI](https://img.shields.io/pypi/v/lectic?color=38bdf8)](https://pypi.org/project/lectic/)
@@ -29,27 +33,66 @@ If you use Claude Code or OpenAI Codex, paste this sentence into your chat:
 
 Your assistant will download Lectic and connect to it automatically. When it finishes, restart your assistant once so it can use its new tools.
 
-### 2. Try an offline test
+### 2. See the value offline
 
 Say this to your assistant:
 
 > Try Lectic with its offline debugging starter.
 
-Lectic creates a test collection containing three sentences from a sample debugging lesson. It reviews a sample plan using those sentences and prints the exact quotes. This test runs on your computer without downloading anything or calling an external API.
+Lectic creates a test collection from a small debugging lesson, reviews one plan, and then applies the same saved knowledge to a second plan. The output shows the input, the reusable checklist, and how many saved knowledge units were reused. This test runs on your computer without downloading anything or calling an external API.
 
-### 3. Or install it using your terminal
+### 3. Install it yourself
 
 If you prefer to install it yourself, run these commands in your terminal:
 
 ```bash
 pip install --upgrade lectic
 lectic setup --yes
-lectic try
+lectic start
 ```
 
-You can run `lectic status` at any time to see where your files are saved and which assistants are connected.
+`lectic start` asks what Lectic should learn from and what you want to use it for. Press Enter at the first question to run the offline debugging example instead. You can run `lectic status` at any time to see where your files are saved and which assistants are connected.
 
 ---
+
+## What you can give it
+
+* A YouTube link, when English captions are available
+* Notes and text files (`.txt`, `.md`)
+* Timed transcripts (`.vtt`, `.srt`)
+* Browser shortcuts (`.url`, `.webloc`)
+* Several sources combined around one task
+
+Lectic does not require you to turn everything into a special format before saving it. Capture first, then process material when you are ready to use it.
+
+## What you get back
+
+Depending on your goal, Lectic can produce a source-backed review, decision, plan, checklist, improvement, or other reusable method. Each result can retain:
+
+* The source passages that support it
+* The situations where the guidance applies
+* Disagreements and limitations that remain unresolved
+* The method an assistant can apply to new work
+* The build and source history needed to inspect or update it
+
+See the [example gallery](docs/EXAMPLES.md) for five complete journeys: learning from a tutorial, developer architecture review, student study, professional evidence comparison, and a personal debugging playbook.
+
+## Share and maintain what you build
+
+Create a static page that opens locally and can be hosted anywhere:
+
+```bash
+lectic share-artifact "Engineering Standards"
+```
+
+When the source folder changes, save a new immutable revision and inspect the difference:
+
+```bash
+lectic refresh "Engineering Standards" --from ./engineering-standards
+lectic diff "Engineering Standards"
+```
+
+Earlier source revisions and builds remain available. Lectic reports file-level changes immediately, then your connected assistant prepares updated knowledge without fabricating semantic change counts.
 
 ## How to use it every day
 

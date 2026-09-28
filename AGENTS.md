@@ -46,6 +46,7 @@ Say, in plain language:
 
 - Their knowledge lives in the folder `status` reported, shared by every project and assistant on the machine.
 - **They must restart the assistant once** — including this session, if you are Claude Code or Codex. The tools appear only in a session started after setup. This is the one step they have to do.
+- If they asked for a first result, run `lectic start` for them after that restart. Ask only what Lectic should learn from and what they want to use it for; do not expose compiler phases or artifact types.
 - Afterwards they can just talk. Give them these to try:
   > Save this for later: `<a YouTube link>`
   > What could my saved material become?
