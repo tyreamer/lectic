@@ -11,6 +11,14 @@ import urllib.request
 from ec import Invalid, require
 from . import TranscriptInput
 
+try:
+    from release_version import VERSION
+except ImportError:
+    try:
+        from ..release_version import VERSION
+    except ImportError:
+        VERSION = '0.3.2'
+
 MAX_ARTICLE_BYTES = 4 * 1024 * 1024  # 4 MB max raw download
 MAX_TEXT_CHARS = 200_000             # ~40,000 words max extracted text
 
@@ -148,7 +156,7 @@ class WebArticleIngestor:
         req = urllib.request.Request(
             self.canonical_url,
             headers={
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Lectic/0.3.1',
+                'User-Agent': f'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Lectic/{VERSION}',
                 'Accept': 'text/html,application/xhtml+xml,text/plain;q=0.9,*/*;q=0.8'
             }
         )
