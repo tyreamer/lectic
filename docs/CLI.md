@@ -17,6 +17,8 @@ Speaks MCP over stdio for Claude Code, Codex and other clients; the tools mirror
 ```text
 # First result, static sharing, and maintenance
 lectic start [PATH_OR_LINK] [--name NAME] [--goal TEXT] [--yes] [--json]
+lectic prepare NAME [--goal TEXT] [--json]
+lectic share [NAME] [--tunnel] [--out FILE] [--json]
 lectic share-artifact NAME [--out FILE] [--build BUILD_ID] [--no-quotes] [--json]
 lectic refresh NAME --from PATH_OR_LINK [--json]
 lectic diff NAME [--before REVISION] [--after REVISION] [--json]
@@ -44,7 +46,7 @@ lectic verify [NAME] [--json]
 
 `start` is the beginner entry point. It saves named source material, infers a useful collection name when possible, records the intended use in the assistant handoff, and reports exactly what happened. The CLI does not call a model or claim that saving alone derived expertise.
 
-`share-artifact` writes one dependency-free HTML file. It includes current knowledge, reusable methods, source provenance, and optional evidence excerpts, but it does not replace the installable `.lectic` pack. `refresh` requires an explicit source location, creates an immutable revision, and never guesses an old filesystem path. `diff` reports source changes and reports knowledge changes only when both revisions contain prepared knowledge.
+`prepare` runs compilation on saved sources to generate source-backed knowledge and procedures. `share` automatically exports a standalone HTML artifact when given a collection name (e.g. `lectic share NAME`), or launches a secure tunnel for remote assistants when called with `--tunnel`. `share-artifact` writes one dependency-free HTML file. It includes current knowledge, reusable methods, source provenance, and optional evidence excerpts, but it does not replace the installable `.lectic` pack. `refresh` requires an explicit source location, creates an immutable revision, and never guesses an old filesystem path. `diff` reports source changes and reports knowledge changes only when both revisions contain prepared knowledge.
 
 See the [example gallery](EXAMPLES.md), [packs](PACKS.md), and [starter catalog](registry.html).
 

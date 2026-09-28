@@ -56,7 +56,8 @@ The response also carries a `source` object saying what Lectic will ever be able
 | Shared thing | `retrieval` | What is actually stored |
 | --- | --- | --- |
 | YouTube link | `captions` | The link now; English captions when the collection is processed |
-| Instagram, TikTok, X, or any other web link | `reference_only` | The link, the title and the note. Never the content: no scraping, no article fetch, no OCR |
+| Public web article / blog | `article_text` | The link now; readable article text when the collection is processed |
+| Instagram, TikTok, X, Facebook, Threads | `reference_only` | The link, the title and the note. Saved as reference without scraping |
 | Pasted text | `supplied_text` | The exact text, quotable |
 | Attached file | `attached_file` | The original bytes; `.txt/.md/.vtt/.srt` become searchable when processed |
 

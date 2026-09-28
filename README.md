@@ -57,6 +57,7 @@ lectic start
 
 ## What you can give it
 
+* A public web article or blog link (extracts clean text without external scrapers)
 * A YouTube link, when English captions are available
 * Notes and text files (`.txt`, `.md`)
 * Timed transcripts (`.vtt`, `.srt`)
@@ -79,10 +80,14 @@ See the [example gallery](docs/EXAMPLES.md) for five complete journeys: learning
 
 ## Share and maintain what you build
 
-Create a static page that opens locally and can be hosted anywhere:
+Export a portable, standalone HTML page that opens in any browser and can be hosted anywhere:
 
 ```bash
-lectic share-artifact "Engineering Standards"
+# Export interactive HTML page for a collection
+lectic share "Engineering Standards"
+
+# Or prepare and build knowledge directly
+lectic prepare "Engineering Standards"
 ```
 
 When the source folder changes, save a new immutable revision and inspect the difference:
@@ -145,12 +150,13 @@ When your coworker asks their assistant about engineering standards, their assis
 
 | File type | What Lectic does with it |
 | --- | --- |
+| **Web articles & blogs** | Ingests clean, readable article text directly from public web pages using semantic HTML parsing without external dependencies. |
 | **YouTube links** | Saves the link and downloads English captions automatically if they are available. |
 | **Notes and text files (.txt, .md)** | Saves the text and splits it into searchable sections. |
 | **Video and audio transcripts (.vtt, .srt)** | Saves the text along with timestamps so your AI can quote exact minutes and seconds. |
 | **Browser links (.url, .webloc)** | Reads the web address when you drag a tab from your browser into your Lectic folder. |
 
-Other web pages are saved as links for your reference. Lectic does not download full article text from general websites.
+Walled gardens and social networks (such as Instagram, TikTok, Facebook, and X/Twitter) are saved as links for reference without scraping.
 
 ---
 
@@ -170,7 +176,7 @@ If all quotes match their sources, Lectic prints `verified` and exits with code 
 
 All of your saved files, notes, and collections are stored in a folder called `.lectic` in your user directory (for example, `C:\Users\YourName\.lectic` on Windows or `/Users/yourname/.lectic` on macOS). Lectic does not send your files to a cloud server. Your data stays on your computer.
 
-If you want to use Lectic with ChatGPT on the web or on your phone, you can run `lectic share` to create a temporary, password-protected web address. Anyone who has that address can read your saved files, so keep that address private.
+If you want to use Lectic with ChatGPT on the web or on your phone, you can run `lectic share --tunnel` to create a temporary, password-protected web address. Anyone who has that address can read your saved files, so keep that address private.
 
 ---
 

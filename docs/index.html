@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
-  <title>Lectic — Save videos and notes for your AI</title>
-  <meta name="description" content="Save YouTube videos, transcripts, and notes on your computer so your AI assistant can search them and quote them with exact timestamps.">
+  <title>Lectic — Turn videos, articles, and notes into AI expertise</title>
+  <meta name="description" content="Save YouTube videos, web articles, transcripts, and notes on your computer so your AI assistant can search them and quote them with exact timestamps and source passages.">
   <link rel="stylesheet" href="site.css">
   <script src="site.js" defer></script>
 </head>
@@ -28,9 +28,9 @@
     <section class="hero">
       <div>
         <p class="eyebrow">Local files on your computer</p>
-        <h1>Save videos and notes so your AI can quote them.</h1>
+        <h1>Save videos, articles, and notes so your AI can quote them.</h1>
         <p class="lead">
-          Lectic saves YouTube videos, transcripts, and text notes in a folder on your computer. When you ask your AI a question, it searches those files, writes an answer based on what you saved, and shows you the exact quote and timestamp.
+          Lectic saves web articles, YouTube videos, transcripts, and text notes in a folder on your computer. When you ask your AI a question, it searches those files, writes an answer based on what you saved, and shows you the exact quote and timestamp.
         </p>
         <div class="actions">
           <a class="button primary" href="#start">Set up Lectic</a>
@@ -58,7 +58,7 @@
       <article>
         <span class="number">01</span>
         <h2>Save your files.</h2>
-        <p>Drag a web link from Chrome, Edge, or Safari into the <code>Documents/Lectic Inbox</code> folder on your computer, or tell your AI: “Save this video for later.”</p>
+        <p>Drag a web article or link from Chrome, Edge, or Safari into the <code>Documents/Lectic Inbox</code> folder, or tell your AI: “Save this article” or “Save this video.”</p>
       </article>
       <article>
         <span class="number">02</span>
@@ -68,7 +68,7 @@
       <article>
         <span class="number">03</span>
         <h2>Share with other people.</h2>
-        <p>Run <code>lectic pack</code> to put your saved notes and quotes into a single <code>.lectic</code> file. Send that file to a coworker so their AI can search the same material.</p>
+        <p>Run <code>lectic share [NAME]</code> to export an interactive HTML page you can open anywhere, or run <code>lectic pack</code> to create a single <code>.lectic</code> file your coworkers can install.</p>
       </article>
     </section>
 
@@ -81,6 +81,16 @@
       </div>
 
       <div class="pillar-grid">
+        <div class="pillar-card">
+          <p class="eyebrow">Interactive artifacts</p>
+          <h3>The share command</h3>
+          <p>Run <code>lectic share [NAME]</code> to export your compiled knowledge, procedures, and evidence excerpts into a standalone HTML page you can open or host anywhere.</p>
+        </div>
+        <div class="pillar-card">
+          <p class="eyebrow">Clean reading</p>
+          <h3>Web article ingestion</h3>
+          <p>Pass public web articles and blogs directly into Lectic. Clean, readable text is extracted into Markdown without ads or bloat.</p>
+        </div>
         <div class="pillar-card">
           <p class="eyebrow">Shareable files</p>
           <h3>The .lectic file format</h3>
@@ -182,7 +192,7 @@ lectic setup --yes
       </div>
       <div>
         <p>Lectic checks that quotes match the text in your saved files. It does not check whether the advice in a video or article is correct. You still need to read what your AI quotes and use your own judgement.</p>
-        <p>Lectic reads text notes, transcripts (.txt, .md, .vtt, .srt), and YouTube captions. General web articles are saved as links; Lectic does not scrape full text from general websites. PDF, image, audio, and video files are kept as attachments.</p>
+        <p>Lectic extracts clean text from public web articles, downloads YouTube captions, and reads text notes and transcripts (.txt, .md, .vtt, .srt). Social networks and walled gardens (Instagram, TikTok, X) are saved as links for reference. PDF, image, audio, and video files are kept as attachments.</p>
         <p>All files stay on your computer in the <code>.lectic</code> folder. Nothing is uploaded to a cloud server unless you choose to share a file.</p>
         <a href="https://github.com/tyreamer/lectic/blob/main/docs/DEVELOPING.md">Read the developer guide →</a>
       </div>
@@ -191,7 +201,7 @@ lectic setup --yes
 
   <footer>
     <a class="brand" href="./"><span class="mark">l.</span> lectic</a>
-    <span>Save videos and notes for your AI.</span>
+    <span>Turn videos, articles, and notes into AI expertise.</span>
     <a href="https://github.com/tyreamer/lectic/releases">Releases</a>
     <a href="https://github.com/tyreamer/lectic/issues">Issues</a>
     <a href="https://github.com/tyreamer/lectic/blob/main/LICENSE">MIT License</a>
