@@ -139,6 +139,8 @@ Lectic creates a test collection from a small debugging lesson, reviews one plan
 
 Lectic is designed to be set up by your assistant. If you need a manual, self-hosted, or contributor setup, see the [installation guide](docs/INSTALLATION.md).
 
+The command-line guide covers `lectic start` for beginning a collection, `lectic share-artifact` for exporting one, and `lectic refresh` plus `lectic diff` for updating sources and reviewing what changed.
+
 ---
 
 ## What you can give it
