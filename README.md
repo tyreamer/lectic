@@ -86,6 +86,9 @@ Export a portable, standalone HTML page that opens in any browser and can be hos
 # Export interactive HTML page for a collection
 lectic share "Engineering Standards"
 
+# Or write that page to a file explicitly
+lectic share-artifact "Engineering Standards"
+
 # Or prepare and build knowledge directly
 lectic prepare "Engineering Standards"
 ```
