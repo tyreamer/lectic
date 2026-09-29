@@ -27,7 +27,8 @@ from home import storage_root
 from store import LocalStore, home_transaction
 
 ARCHIVE_VERSION = '1.0'
-SUFFIX = '.lectic-home'
+SUFFIX = '.waykit-home'
+LEGACY_SUFFIX = '.lectic-home'
 MAX_ARCHIVE_BYTES = 512 * 1024 * 1024
 MAX_MEMBER_BYTES = 64 * 1024 * 1024
 MACHINE_LOCAL = {'server.json', 'share-link.json'}
@@ -222,10 +223,10 @@ def backup(project, destination=None):
     home = storage_root(project)
     raw = archive_home(home)
     stamp = datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')
-    destination = (Path(destination) if destination else Path(project) / f'lectic-{stamp}{SUFFIX}').resolve()
+    destination = (Path(destination) if destination else Path(project) / f'waykit-{stamp}{SUFFIX}').resolve()
     if destination.is_dir() or not destination.suffix:   # a folder, named or not yet made
-        destination.mkdir(parents=True, exist_ok=True); destination = destination / f'lectic-{stamp}{SUFFIX}'
-    elif destination.suffix != SUFFIX:
+        destination.mkdir(parents=True, exist_ok=True); destination = destination / f'waykit-{stamp}{SUFFIX}'
+    elif not any(str(destination).endswith(sfx) for sfx in (SUFFIX, LEGACY_SUFFIX)):
         destination = destination.with_name(destination.name + SUFFIX)
     destination.parent.mkdir(parents=True, exist_ok=True)
     destination.write_bytes(raw)

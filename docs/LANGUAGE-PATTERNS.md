@@ -1,6 +1,6 @@
 # Words and phrasing as reusable knowledge
 
-Lectic can preserve observations about vocabulary, recurring phrases, sentence construction, and conversational habits separately from a source's ideas. Your connected assistant reads the source wording and supplies the interpretation; Lectic keeps its exact examples, scope, and history.
+WayKit can preserve observations about vocabulary, recurring phrases, sentence construction, and conversational habits separately from a source's ideas. Your connected assistant reads the source wording and supplies the interpretation; WayKit keeps its exact examples, scope, and history.
 
 Try:
 
@@ -14,6 +14,6 @@ A useful profile describes a specific construction and where it appears. For exa
 
 The extraction guide requires exact examples and separates observed patterns from inferred explanations and newly designed writing procedures. A single phrase does not establish a recurring habit. Mixed-speaker transcripts need reliable attribution or explicit uncertainty. Text alone does not establish acoustic delivery or exact timing.
 
-Language records use the existing knowledge and method schemas and can travel in a normal [knowledge pack](PACKS.md). Packs contain collection knowledge; use a dedicated collection for a profile-only pack. Include approved source text for local interviews. Recipients need Lectic connected to their assistant.
+Language records use the existing knowledge and method schemas and can travel in a normal [knowledge pack](PACKS.md). Packs contain collection knowledge; use a dedicated collection for a profile-only pack. Include approved source text for local interviews. Recipients need WayKit (or Lectic) connected to their assistant.
 
 The synthetic fixtures under `fixtures/language-patterns` test evidence preservation, independent selection, and export/import. They do not measure an assistant's extraction accuracy or prove that generated writing reproduces a person's language. See the [live acceptance protocol](UNIVERSAL-ACCEPTANCE.md).

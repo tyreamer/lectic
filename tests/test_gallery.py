@@ -28,9 +28,9 @@ class GalleryTests(unittest.TestCase):
         site = (ROOT / 'docs/index.html').read_text(encoding='utf-8')
         self.assertIn('[example gallery](docs/EXAMPLES.md)', readme)
         self.assertIn('docs/EXAMPLES.md', site)
-        for command in ('lectic start', 'lectic share-artifact', 'lectic refresh', 'lectic diff'):
-            self.assertIn(command, readme)
-            self.assertIn(command, cli)
+        for command in ('start', 'share-artifact', 'refresh', 'diff'):
+            self.assertTrue(f'waykit {command}' in readme or f'lectic {command}' in readme)
+            self.assertTrue(f'waykit {command}' in cli or f'lectic {command}' in cli)
 
 
 if __name__ == '__main__':

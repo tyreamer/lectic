@@ -17,9 +17,9 @@ import uuid
 import zipfile
 
 
-REPOSITORY = 'tyreamer/lectic'
+REPOSITORY = 'tyreamer/waykit'
 REF = 'main'
-SKILL_NAMES = {'lectic', 'expertise-compiler'}
+SKILL_NAMES = {'waykit', 'lectic', 'expertise-compiler'}
 # Same clean payload as install_skill.py; installed receipts/backups live outside it.
 PAYLOAD = ['SKILL.md', 'LICENSE', 'README.md', 'DESIGN.md', 'agents', 'scripts',
            'schemas', 'prompts', 'fixtures', 'docs']
@@ -73,8 +73,10 @@ def ordinary(path):
 
 def locations(destination, state_dir=None):
     dest = ordinary(destination)
-    require(dest.name in SKILL_NAMES, 'Skill folder must be named lectic (or legacy expertise-compiler)')
-    state = ordinary(state_dir or dest.parent.parent / 'lectic-updates' / dest.name)
+    require(dest.name in SKILL_NAMES, 'Skill folder must be named waykit, lectic (or legacy expertise-compiler)')
+    legacy_state = dest.parent.parent / 'lectic-updates' / dest.name
+    primary_state = dest.parent.parent / 'waykit-updates' / dest.name
+    state = ordinary(state_dir or (legacy_state if legacy_state.exists() else primary_state))
     require(not state.is_relative_to(dest.parent) and not dest.is_relative_to(state),
             'Update state and backups must live outside the skills directory')
     return dest, state
@@ -99,14 +101,14 @@ def installed_bytes(name, content, identity):
         text = content.decode('utf-8')
         parts = text.split('---', 2)
         require(len(parts) == 3 and not parts[0], 'Missing skill metadata')
-        parts[1], count = re.subn(r'^name: (?:lectic|expertise-compiler)[ \t]*\r?$',
+        parts[1], count = re.subn(r'^name: (?:waykit|lectic|expertise-compiler)[ \t]*\r?$',
                                  f'name: {identity}', parts[1], flags=re.M)
         require(count == 1, 'Unexpected skill identity')
         return '---'.join(parts).encode('utf-8')
     if name == 'agents/openai.yaml':
         text = content.decode('utf-8')
         text = re.sub(r'^([ \t]*default_prompt:.*)$',
-                      lambda m: re.sub(r'\$(?:lectic|expertise-compiler)(?![a-z0-9-])',
+                      lambda m: re.sub(r'\$(?:waykit|lectic|expertise-compiler)(?![a-z0-9-])',
                                        lambda _: '$' + identity, m[0]), text, flags=re.M)
         return text.encode('utf-8')
     return content
@@ -118,7 +120,7 @@ def validate_candidate(folder, identity=None):
     skill = (folder / 'SKILL.md').read_text(encoding='utf-8')
     require(skill.startswith('---\n') and '\n---' in skill[4:], 'Missing skill metadata')
     header = skill[4:].split('\n---', 1)[0]
-    require(len(re.findall(r'^name: (?:lectic|expertise-compiler)[ \t]*$', header, re.M)) == 1 and
+    require(len(re.findall(r'^name: (?:waykit|lectic|expertise-compiler)[ \t]*$', header, re.M)) == 1 and
             re.search(r'^description: \S', header, re.M), 'Unexpected skill identity or description')
     for path in folder.rglob('*'):
         if path.suffix == '.py':
@@ -135,7 +137,7 @@ def validate_candidate(folder, identity=None):
 
 
 def download(url, limit=LIMIT):
-    request = Request(url, headers={'User-Agent': 'Lectic-Skill-Updater/1', 'Accept': 'application/vnd.github+json'})
+    request = Request(url, headers={'User-Agent': 'WayKit-Skill-Updater/1 Lectic-Skill-Updater/1', 'Accept': 'application/vnd.github+json'})
     with urlopen(request, timeout=30) as response:
         require(response.geturl().startswith(('https://api.github.com/', 'https://codeload.github.com/')),
                 'Unexpected download host')
@@ -152,7 +154,7 @@ def latest_commit():
 
 def unpack(data, commit, folder, identity=None):
     """Read only the allowed payload from an immutable commit archive."""
-    prefix = f'lectic-{commit}'
+    prefix_options = (f'waykit-{commit}', f'lectic-{commit}')
     seen = set()
     with zipfile.ZipFile(io.BytesIO(data)) as archive:
         entries = archive.infolist()
@@ -160,7 +162,7 @@ def unpack(data, commit, folder, identity=None):
                 'Update archive exceeds size limit')
         for entry in entries:
             path = PurePosixPath(entry.filename)
-            require(path.parts and path.parts[0] == prefix and not path.is_absolute() and
+            require(path.parts and (path.parts[0] in prefix_options) and not path.is_absolute() and
                     '\\' not in entry.filename and ':' not in entry.filename and
                     '..' not in path.parts and not stat.S_ISLNK(entry.external_attr >> 16),
                     'Unsafe update archive path')

@@ -34,7 +34,7 @@ def publish_pack(project, target, to_url, token=None, webhook_url=None, download
         resolved = library.resolve(target)
         require(resolved is not None, f"Collection or pack file '{target}' not found")
         folder, data = resolved
-        candidate = project / (slug(data['name']) + '.lectic')
+        candidate = project / (slug(data['name']) + '.waykit')
         packed = build_pack(project, data['name'], destination=candidate, team=True, include_sources=include_sources)
         pack_path = Path(packed['pack'])
 
@@ -80,7 +80,7 @@ def publish_pack(project, target, to_url, token=None, webhook_url=None, download
         gh_headers = {
             'Authorization': f'Bearer {auth_token}',
             'Accept': 'application/vnd.github+json',
-            'User-Agent': f'lectic/{VERSION}'
+            'User-Agent': f'waykit/{VERSION} lectic/{VERSION}'
         }
 
         # Find or create release
@@ -104,7 +104,7 @@ def publish_pack(project, target, to_url, token=None, webhook_url=None, download
                     body = json.dumps({
                         'tag_name': tag,
                         'name': f'{pack_name} {tag}',
-                        'body': f'Lectic knowledge pack for {pack_name} (v{version}).\n\nInstall with:\n```bash\nlectic install https://github.com/{owner}/{repo}/releases/download/{tag}/{pack_path.name} --as {install_name}\n```'
+                        'body': f'WayKit knowledge pack for {pack_name} (v{version}).\n\nInstall with:\n```bash\nwaykit install https://github.com/{owner}/{repo}/releases/download/{tag}/{pack_path.name} --as {install_name}\n```'
                     }).encode('utf-8')
                     c_req = urllib.request.Request(create_url, data=body, headers={**gh_headers, 'Content-Type': 'application/json'}, method='POST')
                     try:
@@ -144,7 +144,7 @@ def publish_pack(project, target, to_url, token=None, webhook_url=None, download
         put_headers = {
             'Content-Type': 'application/octet-stream',
             'Content-Length': str(len(raw_bytes)),
-            'User-Agent': f'lectic/{VERSION}'
+            'User-Agent': f'waykit/{VERSION} lectic/{VERSION}'
         }
         if token:
             put_headers['Authorization'] = f'Bearer {token}'
@@ -170,7 +170,7 @@ def publish_pack(project, target, to_url, token=None, webhook_url=None, download
     webhook_sent = False
     webhook_error = None
     if webhook_url:
-        install_cmd = f"lectic install {download_url} --as {install_name}"
+        install_cmd = f"waykit install {download_url} --as {install_name}"
         text_msg = f"Published {pack_name} v{version}.\nTeam install: `{install_cmd}`"
         payload = {
             'text': text_msg,
@@ -187,7 +187,7 @@ def publish_pack(project, target, to_url, token=None, webhook_url=None, download
         w_req = urllib.request.Request(
             webhook_url,
             data=w_body,
-            headers={'Content-Type': 'application/json', 'User-Agent': f'lectic/{VERSION}'},
+            headers={'Content-Type': 'application/json', 'User-Agent': f'waykit/{VERSION} lectic/{VERSION}'},
             method='POST'
         )
         try:
@@ -196,7 +196,7 @@ def publish_pack(project, target, to_url, token=None, webhook_url=None, download
         except Exception as exc:
             webhook_error = str(exc)
 
-    install_cmd = f"lectic install {download_url} --as {install_name}"
+    install_cmd = f"waykit install {download_url} --as {install_name}"
     msg = f"Published {pack_name} v{version}. Team install: {install_cmd}"
     return {
         'phase': 'published',

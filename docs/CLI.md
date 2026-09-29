@@ -7,17 +7,19 @@ These commands are for the assistant, contributors, and advanced debugging. Norm
 ## Intelligent knowledge debugging
 
 ```text
-lectic inspect
-lectic explain "Europe Travel"
-lectic context "plan a trip to Italy"
+waykit inspect
+waykit explain "Europe Travel"
+waykit context "plan a trip to Italy"
 ```
 
-`inspect` shows the roles and useful connections Lectic inferred without asking the user to organize them. `explain` traces one knowledge area to its sources and related areas. `context` shows the small, de-duplicated set of personal preferences and reusable knowledge that would be activated for a task, plus any helpful knowledge gap. Add `--json` for the portable structured form.
+`inspect` shows the roles and useful connections WayKit inferred without asking the user to organize them. `explain` traces one knowledge area to its sources and related areas. `context` shows the small, de-duplicated set of personal preferences and reusable knowledge that would be activated for a task, plus any helpful knowledge gap. Add `--json` for the portable structured form. Legacy `lectic` aliases remain fully supported.
 
 ## MCP server
 
 ```text
-python /path/to/lectic/scripts/lectic_mcp.py --project .
+python /path/to/waykit/scripts/lectic_mcp.py --project .
+# or
+python -m waykit.cli serve
 ```
 
 Speaks MCP over stdio for Claude Code, Codex and other clients; the tools mirror the commands below. See [MCP](MCP.md).
@@ -26,47 +28,48 @@ Speaks MCP over stdio for Claude Code, Codex and other clients; the tools mirror
 
 ```text
 # First result, static sharing, and maintenance
-lectic start [PATH_OR_LINK] [--name NAME] [--goal TEXT] [--yes] [--json]
-lectic prepare NAME [--goal TEXT] [--json]
-lectic share [NAME] [--tunnel] [--out FILE] [--json]
-lectic share-artifact NAME [--out FILE] [--build BUILD_ID] [--no-quotes] [--json]
-lectic refresh NAME --from PATH_OR_LINK [--json]
-lectic diff NAME [--before REVISION] [--after REVISION] [--json]
+waykit start [PATH_OR_LINK] [--name NAME] [--goal TEXT] [--yes] [--json]
+waykit prepare NAME [--goal TEXT] [--json]
+waykit share [NAME] [--tunnel] [--out FILE] [--json]
+waykit share-artifact NAME [--out FILE] [--build BUILD_ID] [--no-quotes] [--json]
+waykit refresh NAME --from PATH_OR_LINK [--json]
+waykit diff NAME [--before REVISION] [--after REVISION] [--json]
 
 # Drop Inbox & Daily Flow
-lectic inbox [--process]
-lectic status
-lectic setup
-lectic try [--json]
+waykit inbox [--process]
+waykit status
+waykit setup
+waykit try [--json]
 
 # Packs & Team Distribution
-lectic pack "Engineering" [--team] [--version 2.1.0] [--include-sources | --exclude-sources]
-lectic install REGISTRY:NAME | FILE | URL [--as NAME] [--pin] [--inspect]
-lectic update NAME [--force]
-lectic publish NAME --to URL [--download-url GET_URL] [--include-sources] [--registry] [--token TOKEN] [--webhook URL]
+waykit pack "Engineering" [--team] [--version 2.1.0] [--include-sources | --exclude-sources]
+waykit install REGISTRY:NAME | FILE | URL [--as NAME] [--pin] [--inspect]
+waykit update NAME [--force]
+waykit publish NAME --to URL [--download-url GET_URL] [--include-sources] [--registry] [--token TOKEN] [--webhook URL]
 
 # Discovery & Marketplace
-lectic search [QUERY] [--tag TAG] [--json]
-lectic inspect REGISTRY:NAME | FILE | URL
+waykit search [QUERY] [--tag TAG] [--json]
+waykit inspect REGISTRY:NAME | FILE | URL
 
 # Identity & Evidence Verification
-lectic identity [set "Name" --contact EMAIL]
-lectic verify [NAME] [--json]
+waykit identity [set "Name" --contact EMAIL]
+waykit verify [NAME] [--json]
 ```
 
 `start` is the beginner entry point. It saves named source material, infers a useful collection name when possible, records the intended use in the assistant handoff, and reports exactly what happened. The CLI does not call a model or claim that saving alone derived expertise.
 
-`prepare` runs compilation on saved sources to generate source-backed knowledge and procedures. `share` automatically exports a standalone HTML artifact when given a collection name (e.g. `lectic share NAME`), or launches a secure tunnel for remote assistants when called with `--tunnel`. `share-artifact` writes one dependency-free HTML file. It includes current knowledge, reusable methods, source provenance, and optional evidence excerpts, but it does not replace the installable `.lectic` pack. `refresh` requires an explicit source location, creates an immutable revision, and never guesses an old filesystem path. `diff` reports source changes and reports knowledge changes only when both revisions contain prepared knowledge.
+`prepare` runs compilation on saved sources to generate source-backed knowledge and procedures. `share` automatically exports a standalone HTML artifact when given a collection name (e.g. `waykit share NAME`), or launches a secure tunnel for remote assistants when called with `--tunnel`. `share-artifact` writes one dependency-free HTML file. It includes current knowledge, reusable methods, source provenance, and optional evidence excerpts, but it does not replace the installable `.waykit` / `.lectic` pack. `refresh` requires an explicit source location, creates an immutable revision, and never guesses an old filesystem path. `diff` reports source changes and reports knowledge changes only when both revisions contain prepared knowledge.
 
 See the [example gallery](EXAMPLES.md), [packs](PACKS.md), and [starter catalog](registry.html).
 
 ## Storage location
 
 ```text
-python /path/to/lectic/scripts/ec.py home --project .
+python /path/to/waykit/scripts/ec.py home --project .
+# or: waykit status
 ```
 
-Reports the resolved Lectic home and mode (`explicit` for `LECTIC_HOME`, `project-local` for an existing populated `.expertise-compiler/`, `user` for `~/.lectic`). Write briefs and other scratch inputs under that home, never into a new `.expertise-compiler/` folder inside the project.
+Reports the resolved WayKit home and mode (`explicit` for `WAYKIT_HOME` / `LECTIC_HOME`, `project-local` for an existing populated `.expertise-compiler/`, `user` for `~/.waykit` or `~/.lectic`). Write briefs and other scratch inputs under that home, never into a new `.expertise-compiler/` folder inside the project.
 
 ## Goal coordinator
 

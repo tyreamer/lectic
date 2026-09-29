@@ -33,7 +33,7 @@ class IntelligentKnowledgeTests(unittest.TestCase):
         self.assertNotIn('React', names)
         self.assertNotIn('Photography', names)
         self.assertFalse(result['task_context']['persistent'])
-        self.assertTrue(result['portable_context'].startswith('# Lectic context'))
+        self.assertTrue(result['portable_context'].startswith(('# WayKit context', '# Lectic context')))
 
     def test_personal_knowledge_and_specialization_are_inferred(self):
         graph = knowledge_graph(self.project)

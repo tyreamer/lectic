@@ -156,7 +156,7 @@ class WebArticleIngestor:
         req = urllib.request.Request(
             self.canonical_url,
             headers={
-                'User-Agent': f'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Lectic/{VERSION}',
+                'User-Agent': f'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 WayKit/{VERSION} Lectic/{VERSION}',
                 'Accept': 'text/html,application/xhtml+xml,text/plain;q=0.9,*/*;q=0.8'
             }
         )

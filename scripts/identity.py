@@ -70,7 +70,7 @@ def save_identity(project, name, contact):
 def show_identity(project='.'):
     identity = load_identity(project)
     if not identity:
-        return 'No identity set. Run: lectic identity set "Your Name" --contact your@email.com'
+        return 'No identity set. Run: waykit identity set "Your Name" --contact your@email.com'
     return (f"Name:     {identity['name']}\nContact:  {identity['contact']}\n"
             f"Key ID:   {identity['key_id']}  (compare this fingerprint with recipients; the private key stays here)")
 
@@ -93,7 +93,7 @@ def sign_manifest(manifest, identity):
 def check_manifest_signature(manifest):
     publisher = manifest.get('publisher')
     if not publisher:
-        return 'unsigned', 'No publisher signature (set one with lectic identity)'
+        return 'unsigned', 'No publisher signature (set one with waykit identity)'
     if publisher.get('algorithm') is None:
         return 'unverified', 'Legacy HMAC signature: recipients cannot verify it. Publisher details are unverified claims.'
     if publisher.get('algorithm') != 'ed25519':

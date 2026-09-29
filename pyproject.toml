@@ -3,7 +3,7 @@ requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "lectic"
+name = "waykit"
 version = "0.3.2"
 description = "Turn the talks, courses and transcripts you trust into expertise your AI assistants can apply, with evidence, across Claude Code, Codex, ChatGPT, Claude and Gemini."
 keywords = ["mcp", "knowledge", "transcripts", "youtube", "claude-code", "codex", "chatgpt", "agent-skills", "evidence"]
@@ -21,21 +21,27 @@ classifiers = [
 youtube = ["yt-dlp"]
 
 [project.urls]
-Homepage = "https://github.com/tyreamer/lectic"
-Issues = "https://github.com/tyreamer/lectic/issues"
+Homepage = "https://github.com/tyreamer/waykit"
+Issues = "https://github.com/tyreamer/waykit/issues"
 
 [project.scripts]
-lectic = "lectic.cli:main"
+waykit = "waykit.cli:main"
+lectic = "waykit.cli:main"
 
 # The repository root is the package: scripts, prompts, schemas and fixtures travel together,
 # so ec.ROOT (the parent of scripts/) resolves the same way from a checkout or an install.
 [tool.setuptools]
-packages = ["lectic", "lectic.scripts", "lectic.scripts.ingestors"]
-package-dir = {"lectic" = "."}
+packages = [
+    "waykit",
+    "lectic",
+    "scripts",
+    "scripts.ingestors"
+]
+package-dir = {"" = "."}
 include-package-data = true
 
 [tool.setuptools.package-data]
-lectic = [
+"*" = [
     "SKILL.md", "README.md", "LICENSE", "NORTH_STAR.md", "DESIGN.md", "AGENTS.md",
     "agents/*.yaml", "prompts/*.md", "schemas/*.json", "docs/*.md", "registry/*.json",
     "fixtures/*", "fixtures/**/*",

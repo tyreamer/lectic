@@ -1,38 +1,40 @@
-"""`lectic`: turn what you learn into permanent AI expertise.
+"""`waykit` (formerly `lectic`): turn what you learn into permanent AI expertise.
 
 Daily Use & First Run:
-    lectic start [SOURCE]   save trusted material (files, folder, or link) and start
-    lectic prepare [NAME]   compile and verify knowledge from saved sources directly
-    lectic setup            connect your AI assistants in seconds (Claude Code, Codex, ChatGPT)
-    lectic try              try a sample playbook offline to see your AI in action
-    lectic status           see your saved playbooks, drop folder, and connected AIs
+    waykit start [SOURCE]   save trusted material (files, folder, or link) and start
+    waykit prepare [NAME]   compile and verify knowledge from saved sources directly
+    waykit setup            connect your AI assistants in seconds (Claude Code, Codex, ChatGPT)
+    waykit try              try a sample playbook offline to see your AI in action
+    waykit status           see your saved playbooks, drop folder, and connected AIs
 
 Sharing & Maintenance:
-    lectic share [NAME]     write a self-contained HTML page, or open a live tunnel (--tunnel)
-    lectic share-artifact NAME  write one self-contained HTML page about a collection
-    lectic refresh NAME --from PATH  save a fresh version of a collection's material
-    lectic diff NAME        see what changed between two saved versions of a collection
+    waykit share [NAME]     write a self-contained HTML page, or open a live tunnel (--tunnel)
+    waykit share-artifact NAME  write one self-contained HTML page about a collection
+    waykit refresh NAME --from PATH  save a fresh version of a collection's material
+    waykit diff NAME        see what changed between two saved versions of a collection
 
 Portability & Teams:
-    lectic pack NAME        export a collection into one shareable playbook file (.lectic)
-    lectic install TARGET   add a playbook to your AI (from a link, file, or name)
-    lectic verify [NAME]    check that every rule in a collection links to exact source quotes
-    lectic inbox [--process] view or sort dropped links and files from your drop folder
-    lectic backup [--out F] back up all your playbooks and sources in one file
-    lectic restore FILE     restore your playbooks from a backup file
-    lectic push LINK        sync your playbooks to another computer
-    lectic pull LINK        bring your playbooks from another computer here
-    lectic connect URL      connect your AI to a remote Lectic library
-    lectic identity         set your author name for playbooks you share
-    lectic search [QUERY]   find ready-to-use playbooks from creators and teams
-    lectic inspect [TARGET] show your knowledge and its useful connections, or preview a pack
-    lectic explain NAME     explain what a knowledge area knows and where it came from
-    lectic context "TASK"   show the focused knowledge Lectic would use for a task
-    lectic update NAME      get the latest updates for an installed playbook
-    lectic publish NAME     share your playbook with your team or community
-    lectic serve [--http]   start the AI connector (launched automatically by your AI)
-    lectic ec ...           internal developer utilities
+    waykit pack NAME        export a collection into one shareable playbook file (.waykit / .lectic)
+    waykit install TARGET   add a playbook to your AI (from a link, file, or name)
+    waykit verify [NAME]    check that every rule in a collection links to exact source quotes
+    waykit inbox [--process] view or sort dropped links and files from your drop folder
+    waykit backup [--out F] back up all your playbooks and sources in one file
+    waykit restore FILE     restore your playbooks from a backup file
+    waykit push LINK        sync your playbooks to another computer
+    waykit pull LINK        bring your playbooks from another computer here
+    waykit connect URL      connect your AI to a remote WayKit library
+    waykit identity         set your author name for playbooks you share
+    waykit search [QUERY]   find ready-to-use playbooks from creators and teams
+    waykit inspect [TARGET] show your knowledge and its useful connections, or preview a pack
+    waykit explain NAME     explain what a knowledge area knows and where it came from
+    waykit context "TASK"   show the focused knowledge WayKit would use for a task
+    waykit update NAME      get the latest updates for an installed playbook
+    waykit publish NAME     share your playbook with your team or community
+    waykit serve [--http]   start the AI connector (launched automatically by your AI)
+    waykit cloud ...        hosted multi-tenant service, accounts, and server management
+    waykit ec ...           internal developer utilities
 
+Legacy `lectic` commands remain fully supported aliases.
 Everything else happens naturally in conversation with your AI.
 """
 from __future__ import annotations
@@ -50,16 +52,21 @@ import time
 SCRIPTS = Path(__file__).resolve().parent / 'scripts'
 sys.path.insert(0, str(SCRIPTS))
 
-SERVER_NAME = 'lectic'
+SERVER_NAME = 'waykit'
+LEGACY_SERVER_NAME = 'lectic'
 
 
 def server_command():
     """How an assistant launches the server: this interpreter, this package, no PATH assumptions."""
     try:
-        import lectic  # noqa: F401  (installed package)
-        return [sys.executable, '-m', 'lectic.cli', 'serve']
-    except ImportError:  # running from a checkout
-        return [sys.executable, str(Path(__file__).resolve()), 'serve']
+        import waykit  # noqa: F401  (installed package)
+        return [sys.executable, '-m', 'waykit.cli', 'serve']
+    except ImportError:
+        try:
+            import lectic  # noqa: F401
+            return [sys.executable, '-m', 'lectic.cli', 'serve']
+        except ImportError:  # running from a checkout
+            return [sys.executable, str(Path(__file__).resolve()), 'serve']
 
 
 # ----------------------------------------------------------------- clients
@@ -79,13 +86,13 @@ def claude_connected():
         servers = json.loads(path.read_text(encoding='utf-8')).get('mcpServers', {})
     except (ValueError, AttributeError):
         return False
-    return SERVER_NAME in servers
+    return SERVER_NAME in servers or LEGACY_SERVER_NAME in servers
 
 
 def connect_claude(runner=None, url=None):
     """Prefer Claude Code's own CLI; fall back to its user config when the CLI is not on PATH.
 
-    With a URL, Claude Code is pointed at a Lectic running elsewhere instead of a local process.
+    With a URL, Claude Code is pointed at a WayKit running elsewhere instead of a local process.
     """
     runner = runner or subprocess.run
     command = server_command()
@@ -106,33 +113,39 @@ def connect_claude(runner=None, url=None):
     except ValueError:
         return 'failed: ~/.claude.json is not valid JSON'
     servers = config.setdefault('mcpServers', {})
-    servers[SERVER_NAME] = {'type': 'http', 'url': url} if url else {'type': 'stdio', 'command': command[0], 'args': command[1:]}
+    entry = {'type': 'http', 'url': url} if url else {'type': 'stdio', 'command': command[0], 'args': command[1:]}
+    servers[SERVER_NAME] = entry
+    servers[LEGACY_SERVER_NAME] = entry
     path.write_text(json.dumps(config, indent=2) + '\n', encoding='utf-8')
     return 'connected'
 
 
 def codex_connected():
     path = codex_config_path()
-    return path.is_file() and f'[mcp_servers.{SERVER_NAME}]' in path.read_text(encoding='utf-8')
+    if not path.is_file(): return False
+    text = path.read_text(encoding='utf-8')
+    return f'[mcp_servers.{SERVER_NAME}]' in text or f'[mcp_servers.{LEGACY_SERVER_NAME}]' in text
 
 
 def configured_spec(client):
     try:
         if client == 'Claude Code':
             data = json.loads(claude_config_path().read_text(encoding='utf-8'))
-            return data.get('mcpServers', {}).get(SERVER_NAME)
+            servers = data.get('mcpServers', {})
+            return servers.get(SERVER_NAME) or servers.get(LEGACY_SERVER_NAME)
         try:
             import tomllib
         except ImportError:
             import tomli as tomllib
         data = tomllib.loads(codex_config_path().read_text(encoding='utf-8'))
-        return data.get('mcp_servers', {}).get(SERVER_NAME)
+        servers = data.get('mcp_servers', {})
+        return servers.get(SERVER_NAME) or servers.get(LEGACY_SERVER_NAME)
     except (OSError, ValueError, AttributeError):
         return None
 
 
 def spec_reach(spec):
-    """Whether a configured assistant talks to a Lectic on this computer or to one over a link."""
+    """Whether a configured assistant talks to a WayKit on this computer or to one over a link."""
     return 'remote link' if spec.get('url') or spec.get('type') == 'http' else 'local, this computer'
 
 
@@ -146,7 +159,7 @@ def checked_clients():
     return states
 
 
-CODEX_BLOCK = re.compile(r'\n?\[mcp_servers\.' + SERVER_NAME + r'\]\n(?:(?!\[).*\n?)*')
+CODEX_BLOCK = re.compile(r'\n?\[mcp_servers\.(?:' + SERVER_NAME + r'|' + LEGACY_SERVER_NAME + r')\]\n(?:(?!\[).*\n?)*')
 
 
 def connect_codex(url=None):
@@ -163,16 +176,20 @@ def connect_codex(url=None):
         return 'failed: Codex config is not valid TOML; it was left unchanged'
     literal = lambda value: json.dumps(str(value), ensure_ascii=False)
     if url:
-        block = f'\n[mcp_servers.{SERVER_NAME}]\nurl = {literal(url)}\n'
+        block = (f'\n[mcp_servers.{SERVER_NAME}]\nurl = {literal(url)}\n\n'
+                 f'[mcp_servers.{LEGACY_SERVER_NAME}]\nurl = {literal(url)}\n')
     else:
         command = server_command()
         block = (f'\n[mcp_servers.{SERVER_NAME}]\ncommand = {literal(command[0])}\n'
+                 f'args = [{", ".join(literal(a) for a in command[1:])}]\n\n'
+                 f'[mcp_servers.{LEGACY_SERVER_NAME}]\ncommand = {literal(command[0])}\n'
                  f'args = [{", ".join(literal(a) for a in command[1:])}]\n')
-    if block.strip() in existing: return 'connected'
+    if f'[mcp_servers.{SERVER_NAME}]' in existing and f'[mcp_servers.{LEGACY_SERVER_NAME}]' in existing and block.strip() in existing:
+        return 'connected'
     kept, skip = [], False
     for line in existing.splitlines(keepends=True):
         if re.match(r'^\s*\[', line):
-            skip = bool(re.match(r'^\s*\[mcp_servers\.(?:lectic|"lectic"|\'lectic\')(?:\.|\])', line))
+            skip = bool(re.match(r'^\s*\[mcp_servers\.(?:waykit|"waykit"|\'waykit\'|lectic|"lectic"|\'lectic\')(?:\.|\])', line))
         if not skip: kept.append(line)
     updated = ''.join(kept).rstrip('\n') + block
     tomllib.loads(updated)
@@ -197,7 +214,7 @@ def youtube_route():
         _, using = network_options()
     except Exception as exc:  # a bad cookies path is a status line, not a crash
         return 'misconfigured: ' + str(exc)
-    return 'via ' + ' + '.join(using) if using else 'direct (set LECTIC_YTDLP_PROXY or LECTIC_YTDLP_COOKIES if YouTube blocks this network)'
+    return 'via ' + ' + '.join(using) if using else 'direct (set WAYKIT_YTDLP_PROXY or WAYKIT_YTDLP_COOKIES if YouTube blocks this network)'
 
 
 def youtube_available():
@@ -237,11 +254,11 @@ def offer_identity(interactive):
     default_name = git_config_value('user.name') or os.environ.get('USERNAME') or os.environ.get('USER') or ''
     default_email = git_config_value('user.email') or ''
     if not interactive:
-        return 'not set (run: lectic identity set "Name" --contact email)'
+        return 'not set (run: waykit identity set "Name" --contact email)'
     prompt = f'  Author name for playbooks you share [{default_name}]: ' if default_name else '  Author name for playbooks you share (or Enter to skip): '
     name = input(prompt).strip() or default_name
     if not name:
-        return 'skipped (run: lectic identity set any time)'
+        return 'skipped (run: waykit identity set any time)'
     email_prompt = f'  Contact / email? [{default_email}]: ' if default_email else '  Contact / email (optional): '
     email = input(email_prompt).strip() or default_email
     record = save_identity('.', name, email)
@@ -252,10 +269,10 @@ def offer_identity(interactive):
 
 def setup(argv):
     interactive = sys.stdin.isatty() and '--yes' not in argv
-    print('Connecting Lectic to the AI assistants on your computer.\n')
+    print('Connecting WayKit to the AI assistants on your computer.\n')
     ok, home = verify_server()
     if not ok:
-        print('  The Lectic service did not start correctly. Run `lectic status` for details.'); return 1
+        print('  The WayKit service did not start correctly. Run `waykit status` for details.'); return 1
     results = {'Claude Code': connect_claude(), 'Codex': connect_codex()}
     checks = checked_clients()
     results = {name: checks[name] if state == 'connected' else state for name, state in results.items()}
@@ -272,11 +289,11 @@ def setup(argv):
         print('\nOne step left: restart your AI assistant so it picks up the connection.')
         print('Then open it in any folder and just talk:\n')
         for line in ('Save this for later: https://www.youtube.com/watch?v=...',
-                     'Drop any video, note, or link into your Lectic folder',
+                     'Drop any video, note, or link into your WayKit folder',
                      'Use my Sales Training to review this call transcript.'):
             print('  ' + line)
     else:
-        print('\nNo supported assistant was found. Install Claude Code or Codex, then run `lectic setup` again,')
+        print('\nNo supported assistant was found. Install Claude Code or Codex, then run `waykit setup` again,')
         print('or connect any MCP client with:  ' + ' '.join(server_command()))
     return 0 if any(state.startswith('connected') for state in results.values()) and not any(
         state.startswith('failed') or 'UNREACHABLE' in state for state in results.values()) else 1
@@ -335,18 +352,18 @@ def status(argv):
         if ident:
             print(f'Identity    {ident["name"]} <{ident["contact"]}>  key: {ident["key_id"]}')
         else:
-            print(f'Identity    not set (run: lectic identity set "Name" --contact email)')
+            print(f'Identity    not set (run: waykit identity set "Name" --contact email)')
     except Exception:
         pass
     connections = checked_clients()
     for name, state in connections.items(): print(f'{name:<12}{state}')
     print(f'YouTube     {"ready, " + youtube_route() if youtube_available() else "not installed"}')
     link = live_link(info['home'])
-    print(f'Share link  {link + "  (live)" if link else "not sharing (run: lectic share)"}')
+    print(f'Share link  {link + "  (live)" if link else "not sharing (run: waykit share)"}')
     print(f'Hosted chat {hosted_reach(info["home"])}')
     ok, _ = verify_server()
     print(f'Server      {"ok" if ok else "FAILED"}')
-    if not (claude_connected() or codex_connected()): print('\nRun `lectic setup` to connect an assistant.')
+    if not (claude_connected() or codex_connected()): print('\nRun `waykit setup` to connect an assistant.')
     return 0 if ok and not any('UNREACHABLE' in state for state in connections.values()) else 1
 
 
@@ -366,7 +383,7 @@ def identity(argv):
         name = next((a for a in rest if not a.startswith('--') and a != option(rest, '--contact')), None)
         contact = option(rest, '--contact')
         if not name or not contact:
-            print('Usage: lectic identity set "Your Name" --contact your@email.com')
+            print('Usage: waykit identity set "Your Name" --contact your@email.com')
             return 2
         record = save_identity(os.getcwd(), name, contact)
         print('Identity saved.')
@@ -375,7 +392,7 @@ def identity(argv):
         print(f'  Key ID:  {record["key_id"]}')
         print('\nYour packs will be signed with this identity. The signing key stays on your machine.')
         return 0
-    print('Usage: lectic identity [show | set "Name" --contact email]')
+    print('Usage: waykit identity [show | set "Name" --contact email]')
     return 2
 
 
@@ -385,10 +402,10 @@ def serve(argv):
     if '--http' not in argv:
         run_server(project); return 0
     from lectic_mcp import connect_url
-    public = option(argv, '--public', os.environ.get('LECTIC_PUBLIC_URL') or None)
+    public = option(argv, '--public', os.environ.get('WAYKIT_PUBLIC_URL') or os.environ.get('LECTIC_PUBLIC_URL') or None)
     httpd = serve_http(project, option(argv, '--host', '127.0.0.1'), int(option(argv, '--port', '8787')),
-                       option(argv, '--token', os.environ.get('LECTIC_TOKEN') or None), announce=None)
-    print('Lectic link: ' + (connect_url(public, httpd.token) if public else connect_url(f'http://127.0.0.1:{httpd.server_address[1]}', httpd.token)), flush=True)
+                       option(argv, '--token', os.environ.get('WAYKIT_TOKEN') or os.environ.get('LECTIC_TOKEN') or None), announce=None)
+    print('WayKit link: ' + (connect_url(public, httpd.token) if public else connect_url(f'http://127.0.0.1:{httpd.server_address[1]}', httpd.token)), flush=True)
     try: httpd.serve_forever()
     except KeyboardInterrupt: pass
     return 0
@@ -399,10 +416,10 @@ Paste that link where the assistant lets you add a connector:
 
   ChatGPT      Settings > Apps & Connectors > Create. Authentication: none. (Developer mode may need enabling.)
   Claude       Settings > Connectors > Add custom connector.
-  Gemini CLI   gemini mcp add --transport http lectic <link>
-  Claude Code  lectic connect <link>      (also Codex)
+  Gemini CLI   gemini mcp add --transport http waykit <link>
+  Claude Code  waykit connect <link>      (also Codex)
 
-Anyone with the link can read and change your knowledge. Keep it private; `lectic share --new-link` makes a new one.
+Anyone with the link can read and change your knowledge. Keep it private; `waykit share --new-link` makes a new one.
 '''
 
 
@@ -432,10 +449,10 @@ def share_tunnel(argv):
     if not public:
         cloudflared = shutil.which('cloudflared')
         if not cloudflared:
-            print('Lectic is serving on ' + connect_url(local, httpd.token))
+            print('WayKit is serving on ' + connect_url(local, httpd.token))
             print('\nTo reach it from ChatGPT, Claude or Gemini you need a public address. Install Cloudflare Tunnel once:')
             print('  Windows: winget install Cloudflare.cloudflared      macOS: brew install cloudflared')
-            print('then run `lectic share` again. Already have a public address for this machine? `lectic share --public https://...`')
+            print('then run `waykit share` again. Already have a public address for this machine? `waykit share --public https://...`')
             httpd.shutdown(); httpd.server_close(); return 1
         name = option(argv, '--tunnel')
         args = [cloudflared, '--no-autoupdate', 'tunnel'] + (['run', '--url', local, name] if name else ['--url', local])
@@ -444,7 +461,7 @@ def share_tunnel(argv):
         if name:
             public = option(argv, '--hostname') or None
             if not public:
-                print('A named tunnel needs its hostname: lectic share --tunnel NAME --hostname https://lectic.example.com'); tunnel.terminate(); tunnel.stdout.close(); httpd.shutdown(); httpd.server_close(); return 1
+                print('A named tunnel needs its hostname: waykit share --tunnel NAME --hostname https://waykit.example.com'); tunnel.terminate(); tunnel.stdout.close(); httpd.shutdown(); httpd.server_close(); return 1
         else:
             deadline = time.time() + 45
             for line in tunnel.stdout:
@@ -454,13 +471,13 @@ def share_tunnel(argv):
             if not public:
                 print('The tunnel did not come up. Check your connection and try again.'); tunnel.terminate(); tunnel.stdout.close(); httpd.shutdown(); httpd.server_close(); return 1
     link = connect_url(public, httpd.token)
-    # Publish it where `lectic status` and any assistant can find it, rather than only on this screen.
+    # Publish it where `waykit status` and any assistant can find it, rather than only on this screen.
     record = storage_root(project) / 'share-link.json'
     record.parent.mkdir(parents=True, exist_ok=True)
     record.write_text(json.dumps({'link': link, 'local': local, 'started_at': time.strftime('%Y-%m-%dT%H:%M:%S')}), encoding='utf-8')
-    print('\nYour Lectic link:\n\n  ' + link + '\n' + HOSTED_HELP)
+    print('\nYour WayKit link:\n\n  ' + link + '\n' + HOSTED_HELP)
     if tunnel and not option(argv, '--tunnel'):
-        print('This link lasts while `lectic share` is running; a quick tunnel gets a new address each time. For a permanent one see docs/CLOUD.md.')
+        print('This link lasts while `waykit share` is running; a quick tunnel gets a new address each time. For a permanent one see docs/CLOUD.md.')
     print('\nSharing. Press Ctrl+C to stop.', flush=True)
     try:
         while True:
@@ -515,7 +532,7 @@ def hosted_reach(home):
     """
     if live_link(home):
         return 'reachable: paste the share link above into ChatGPT, Claude on the web or Gemini'
-    return 'NOT reachable: ChatGPT, Gemini and other hosted chats cannot see a local server (run: lectic share)'
+    return 'NOT reachable: ChatGPT, Gemini and other hosted chats cannot see a local server (run: waykit share)'
 
 
 def pack(argv):
@@ -938,10 +955,10 @@ def start_cmd(argv):
         print('Sources:   ' + ', '.join(result['sources'][:6]) + (' ...' if len(result['sources']) > 6 else ''))
         print('Learned:   ' + result['learned'])
     connected = [name for name, state in checked_clients().items() if state.startswith('connected')]
-    print('\nNext:      ' + ('Open ' + connected[0] if connected else 'Run `lectic setup`, restart your assistant') +
+    print('\nNext:      ' + ('Open ' + connected[0] if connected else 'Run `waykit setup`, restart your assistant') +
           ' and say:\n             ' + result['next_prompt'])
     print('Share it:  ' + result['share_command'] + '   (one HTML page anyone can open)')
-    print('           lectic pack "' + result['collection'] + '"   (a file another Lectic can install)')
+    print('           waykit pack "' + result['collection'] + '"   (a file another WayKit can install)')
     return 0
 
 
@@ -959,7 +976,7 @@ def prepare_cmd(argv):
             if resolved:
                 name = resolved[1]['name']
     if not name:
-        print('Usage: lectic prepare "Collection Name" [--reconcile] [--json]')
+        print('Usage: waykit prepare "Collection Name" [--reconcile] [--json]')
         print('Compiles saved sources into verified knowledge units.')
         return 2
 
@@ -975,7 +992,7 @@ def prepare_cmd(argv):
         print(f"  {summary.get('knowledge_units', 0)} knowledge units verified across {summary.get('source_count', 0)} sources")
         print(f"  Source revision: {result.get('source_revision')}")
         print(f"\nNext: Share it as a standalone page:")
-        print(f"  lectic share \"{result['collection']}\"")
+        print(f"  waykit share \"{result['collection']}\"")
         return 0
 
     if phase == 'reconcile':
@@ -986,10 +1003,10 @@ def prepare_cmd(argv):
             print(f"  {summary.get('knowledge_units', 0)} knowledge units verified across {summary.get('source_count', 0)} sources")
             print(f"  Source revision: {result2.get('source_revision')}")
             print(f"\nNext: Share it as a standalone page:")
-            print(f"  lectic share \"{result2['collection']}\"")
+            print(f"  waykit share \"{result2['collection']}\"")
             return 0
         print(f"Collection {result['collection']} needs cross-source reconciliation.")
-        print(f"Run: lectic prepare \"{name}\" --reconcile")
+        print(f"Run: waykit prepare \"{name}\" --reconcile")
         return 0
 
     if phase == 'extract':
@@ -1000,7 +1017,7 @@ def prepare_cmd(argv):
         return 0
 
     if phase == 'needs_sources':
-        print(f"Collection {name} has no sources to prepare. Add sources with `lectic start` or `lectic refresh`.")
+        print(f"Collection {name} has no sources to prepare. Add sources with `waykit start` or `waykit refresh`.")
         return 1
 
     print(f"Prepare status for {name}: {phase}")
@@ -1010,13 +1027,13 @@ def prepare_cmd(argv):
 
 
 def share_artifact(argv):
-    """Write one static HTML page about a collection. `lectic share` is the live link; this is a file."""
+    """Write one static HTML page about a collection. `waykit share` is the live link; this is a file."""
     from artifact_page import write_page
     names = positional(argv, {'--out', '--build'})
     name = names[0] if names else None
     build = option(argv, '--build')
     if not name and not build:
-        print('Usage: lectic share-artifact "Collection Name" [--out PATH] [--build BUILD_ID] [--no-quotes] [--json]')
+        print('Usage: waykit share-artifact "Collection Name" [--out PATH] [--build BUILD_ID] [--no-quotes] [--json]')
         return 2
     result = write_page(os.getcwd(), name, option(argv, '--out'), build, include_quotes='--no-quotes' not in argv)
     if '--json' in argv:
@@ -1036,8 +1053,8 @@ def refresh_cmd(argv):
     name = names[0] if names else None
     source = option(argv, '--from')
     if not name or not source:
-        print('Usage: lectic refresh "Collection Name" --from PATH_OR_LINK [--json]')
-        print('Lectic never guesses where your material lives, so say where to read it from.')
+        print('Usage: waykit refresh "Collection Name" --from PATH_OR_LINK [--json]')
+        print('WayKit never guesses where your material lives, so say where to read it from.')
         return 2
     result = run_refresh(os.getcwd(), name, source)
     if '--json' in argv:
@@ -1047,7 +1064,7 @@ def refresh_cmd(argv):
         for item in result[key]: print(f'  {label:<8} {item}')
     if not result['unchanged']:
         print(f"\nPrevious version {result['previous_revision']} is still saved. Compare them with:")
-        print(f"  lectic diff \"{result['collection']}\"")
+        print(f"  waykit diff \"{result['collection']}\"")
     return 0
 
 
@@ -1057,7 +1074,7 @@ def diff_cmd(argv):
     names = positional(argv, {'--before', '--after'})
     name = names[0] if names else None
     if not name:
-        print('Usage: lectic diff "Collection Name" [--before REVISION] [--after REVISION] [--json]')
+        print('Usage: waykit diff "Collection Name" [--before REVISION] [--after REVISION] [--json]')
         return 2
     changes = run_diff(os.getcwd(), name, option(argv, '--before'), option(argv, '--after'))['changes']
     if '--json' in argv:
@@ -1075,6 +1092,12 @@ def diff_cmd(argv):
     return 0
 
 
+def cloud(argv):
+    """Run WayKit Cloud service commands (serve, create-user, list-users, token, export)."""
+    from cloud_cli import cloud_cmd
+    return cloud_cmd(argv)
+
+
 def main(argv=None):
     argv = list(sys.argv[1:] if argv is None else argv)
     command = argv[0] if argv else 'status'
@@ -1084,18 +1107,18 @@ def main(argv=None):
                 'pack': pack, 'install': install, 'update': update, 'publish': publish, 'verify': verify,
                 'search': search, 'inspect': inspect_cmd, 'explain': explain_cmd, 'context': context_cmd, 'inbox': inbox_cmd,
                 'backup': backup, 'push': push, 'pull': pull, 'restore': restore,
-                'status': status, 'serve': serve, 'ec': ec}
+                'status': status, 'serve': serve, 'cloud': cloud, 'ec': ec}
     if command in {'-h', '--help', 'help'} or command not in handlers:
         print(__doc__.strip()); return 0 if command in {'-h', '--help', 'help'} else 2
     try:
         return handlers[command](argv[1:])
     except ModuleNotFoundError as exc:
         package = exc.name or 'a required package'
-        print(f'Lectic needs the Python package `{package}` to run this command.')
-        print('Install or repair Lectic with:  python -m pip install --upgrade lectic')
+        print(f'WayKit needs the Python package `{package}` to run this command.')
+        print('Install or repair WayKit with:  python -m pip install --upgrade waykit')
         return 1
     except (OSError, ValueError) as exc:
-        print('Lectic could not finish: ' + str(exc))
+        print('WayKit could not finish: ' + str(exc))
         return 1
 
 

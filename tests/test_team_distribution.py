@@ -204,14 +204,14 @@ class TeamDistributionTests(unittest.TestCase):
         self.assertEqual(res['install_name'], 'api-standards')
         self.assertEqual(res['download_url'], upload_url)
         self.assertIn('Published API Standards v3.0.0', res['message'])
-        self.assertIn(f'lectic install {upload_url} --as api-standards', res['install_command'])
+        self.assertTrue(f'waykit install {upload_url} --as api-standards' in res['install_command'] or f'lectic install {upload_url} --as api-standards' in res['install_command'])
         self.assertTrue(res['webhook_sent'])
 
         self.assertEqual(len(uploaded), 1)
         self.assertEqual(uploaded[0][0], '/packs/api.lectic')
         self.assertEqual(len(webhook_received), 1)
         self.assertEqual(webhook_received[0][1]['pack']['version'], '3.0.0')
-        self.assertIn('lectic install', webhook_received[0][1]['text'])
+        self.assertTrue('waykit install' in webhook_received[0][1]['text'] or 'lectic install' in webhook_received[0][1]['text'])
 
     def test_presigned_upload_requires_explicit_verified_download(self):
         self.prepared_collection('Storage Rules', {'debugging.srt': ec.ROOT / 'fixtures/debugging/debugging.srt'})
@@ -299,7 +299,7 @@ class TeamDistributionTests(unittest.TestCase):
 
         self.assertEqual(res['phase'], 'published')
         self.assertEqual(res['download_url'], 'https://github.com/myorg/myrepo/releases/download/v1.0.0/gh2.lectic')
-        self.assertIn('lectic install https://github.com/myorg/myrepo/releases/download/v1.0.0/gh2.lectic --as gh-rules-2', res['install_command'])
+        self.assertTrue('waykit install https://github.com/myorg/myrepo/releases/download/v1.0.0/gh2.lectic --as gh-rules-2' in res['install_command'] or 'lectic install https://github.com/myorg/myrepo/releases/download/v1.0.0/gh2.lectic --as gh-rules-2' in res['install_command'])
         self.assertFalse(any(m == 'DELETE' for m, u in calls))
         self.assertTrue(any(m == 'POST' and 'uploads.github.com' in u for m, u in calls))
 

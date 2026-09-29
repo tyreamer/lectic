@@ -27,7 +27,8 @@ from home import storage_root
 from store import LocalStore, home_transaction
 
 PACK_VERSION = '1.0'
-SUFFIX = '.lectic'
+SUFFIX = '.waykit'
+LEGACY_SUFFIX = '.lectic'
 MAX_PACK_BYTES = 256 * 1024 * 1024
 MAX_MEMBER_BYTES = 64 * 1024 * 1024
 SHARE_NOTE = ('Compiled knowledge with evidence excerpts. Source links point at the original material; citation does not '
@@ -44,11 +45,12 @@ def render_install_md(manifest, name, version, install_name, unit_count):
         '',
         f'This team pack carries {unit_count} source-linked knowledge units. ' + ('Full sources are included.' if manifest['sources_included'] else 'Source links are included; recipients must retrieve and verify the originals.'),
         '',
-        '## Quick Install (Lectic CLI)',
+        '## Quick Install (WayKit CLI)',
         '',
         '```bash',
-        'pip install lectic',
-        f'lectic install <pack-file-or-url> --as {install_name} --pin',
+        'pip install waykit',
+        f'waykit install <pack-file-or-url> --as {install_name} --pin',
+        f'# or: lectic install <pack-file-or-url> --as {install_name} --pin',
         '```',
         '',
         'Once installed, every connected assistant on your machine immediately has access to this team knowledge.',
@@ -60,29 +62,33 @@ def render_install_md(manifest, name, version, install_name, unit_count):
         '### 1. Claude Code',
         'Run setup in your terminal:',
         '```bash',
-        'lectic setup',
+        'waykit setup',
         '```',
         f'Then ask Claude in any project:',
         f'> "Use our {name} standards to review this file."',
         '',
         '### 2. Codex',
-        'Add to `~/.codex/config.toml` (or run `lectic setup`):',
+        'Add to `~/.codex/config.toml` (or run `waykit setup`):',
         '```toml',
+        '[mcp_servers.waykit]',
+        'command = "python"',
+        'args = ["-m", "waykit.cli", "serve"]',
+        '',
         '[mcp_servers.lectic]',
         'command = "python"',
-        'args = ["-m", "lectic.cli", "serve"]',
+        'args = ["-m", "waykit.cli", "serve"]',
         '```',
         f'Then ask Codex:',
         f'> "Check this PR against our {name} standards."',
         '',
         '### 3. ChatGPT',
-        '1. Run `lectic share` to get a connection link.',
+        '1. Run `waykit share` to get a connection link.',
         '2. In ChatGPT, go to **Settings > Apps & Connectors > Create** and paste the link.',
         '3. Ask ChatGPT:',
         f'> "Review this implementation using our {name} knowledge pack."',
         '',
         '---',
-        f"*Compiled with Lectic {manifest.get('lectic_version', VERSION)}*",
+        f"*Compiled with WayKit {manifest.get('waykit_version', manifest.get('lectic_version', VERSION))}*",
         ''
     ]
     return '\n'.join(lines)
@@ -150,7 +156,8 @@ def build_pack(project, collection, destination=None, include_sources=None, team
     encoded = {path: (value if isinstance(value, bytes) else value.encode('utf-8') if isinstance(value, str)
                       else (json.dumps(value, ensure_ascii=False, indent=2) + '\n').encode('utf-8')) for path, value in files.items()}
     manifest = {'schema_version': PACK_VERSION, 'pack_id': 'pack-' + '0' * 24, 'name': data['name'],
-                'created_at': datetime.now(timezone.utc).isoformat(), 'lectic_version': RELEASE_VERSION,
+                'created_at': datetime.now(timezone.utc).isoformat(),
+                'waykit_version': RELEASE_VERSION, 'lectic_version': RELEASE_VERSION,
                 'version': version,
                 'corpus_id': corpus['corpus_id'], 'ir_hash': fingerprint(ir), 'unit_count': len(ir['units']),
                 'sources_included': bool(include_sources), 'sources': sources, 'maps': maps, 'methods': methods,
@@ -192,7 +199,7 @@ def build_pack(project, collection, destination=None, include_sources=None, team
     destination = Path(destination) if destination else Path(project) / (slug(data['name']) + SUFFIX)
     destination = destination.resolve()
     if destination.is_dir(): destination = destination / (slug(data['name']) + SUFFIX)
-    if destination.suffix != SUFFIX: destination = destination.with_name(destination.name + SUFFIX)
+    if destination.suffix not in (SUFFIX, LEGACY_SUFFIX): destination = destination.with_name(destination.name + SUFFIX)
     destination.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.NamedTemporaryFile(dir=destination.parent, suffix='.tmp', delete=False) as handle:
         temp = Path(handle.name)
@@ -212,7 +219,7 @@ def build_pack(project, collection, destination=None, include_sources=None, team
         publisher_note = f"Signed by \"{p['name']}\" (key: {p['key_id']})"
     share_instructions = (
         f"Give the '{destination.name}' pack file (or a link to it) to your recipient. "
-        "Once Lectic is connected to their assistant, they can say: 'Install this pack'. Hosted assistants need a running Lectic connector."
+        "Once WayKit is connected to their assistant, they can say: 'Install this pack'. Hosted assistants need a running WayKit connector."
     )
     return {'phase': 'packed', 'pack': str(destination), 'pack_id': manifest['pack_id'], 'name': data['name'],
             'version': manifest.get('version'), 'distribution': manifest.get('distribution'), 'team': bool(team),
@@ -227,9 +234,9 @@ def build_pack(project, collection, destination=None, include_sources=None, team
 
 def render_readme(manifest, ir, files, maps, methods):
     lines = ['# ' + manifest['name'], '',
-             f"A Lectic knowledge pack: {manifest['unit_count']} evidence-backed knowledge units compiled from "
+             f"A WayKit knowledge pack: {manifest['unit_count']} evidence-backed knowledge units compiled from "
              f"{len(manifest['sources'])} source{'s' if len(manifest['sources']) != 1 else ''}. Install it and every connected assistant can apply it.", '',
-             '```', 'pip install lectic', 'lectic install <this file or its link>', '```', '']
+             '```', 'pip install waykit', 'waykit install <this file or its link>', '# or: lectic install <this file or its link>', '```', '']
     for map_id in maps:
         record = files['maps/' + map_id + '.json']
         opportunities = {o['opportunity_id']: o for o in record['draft']['opportunities']}

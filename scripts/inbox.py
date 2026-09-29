@@ -18,7 +18,7 @@ from home import storage_root
 from store import home_transaction
 
 
-README_CONTENT = """Lectic Drop Inbox
+README_CONTENT = """WayKit Drop Inbox (formerly Lectic Drop Inbox)
 =================
 Drop web shortcuts, YouTube links, notes, or transcripts here anytime.
 No server needs to be running.
@@ -29,10 +29,18 @@ the new items and ask which collection to add them to!
 
 
 def inbox_folder_path(project=None):
-    """Resolve the user-facing Lectic Inbox folder."""
-    env_dir = os.environ.get('LECTIC_INBOX_DIR')
+    """Resolve the user-facing WayKit Inbox folder."""
+    env_dir = os.environ.get('WAYKIT_INBOX_DIR') or os.environ.get('LECTIC_INBOX_DIR')
     if env_dir:
         return Path(env_dir).expanduser().resolve()
+
+    def _pick(parent):
+        p = Path(parent)
+        waykit = p / 'WayKit Inbox'
+        lectic = p / 'Lectic Inbox'
+        if waykit.exists(): return waykit.resolve()
+        if lectic.exists(): return lectic.resolve()
+        return waykit.resolve()
 
     # Check for cloud sync folders first for effortless phone-to-computer sync
     # 1. Windows OneDrive
@@ -40,19 +48,19 @@ def inbox_folder_path(project=None):
     if onedrive and Path(onedrive).is_dir():
         od_docs = Path(onedrive) / 'Documents'
         target_dir = od_docs if od_docs.is_dir() else Path(onedrive)
-        return (target_dir / 'Lectic Inbox').resolve()
+        return _pick(target_dir)
 
     # 2. macOS iCloud Drive
     icloud = Path.home() / 'Library' / 'Mobile Documents' / 'com~apple~CloudDocs'
     if icloud.is_dir():
-        return (icloud / 'Lectic Inbox').resolve()
+        return _pick(icloud)
 
     # 3. Standard Documents or Home folder
     docs = Path.home() / 'Documents'
     if docs.is_dir():
-        return (docs / 'Lectic Inbox').resolve()
+        return _pick(docs)
 
-    return (Path.home() / 'Lectic Inbox').resolve()
+    return _pick(Path.home())
 
 
 def ensure_inbox_folder(project=None):

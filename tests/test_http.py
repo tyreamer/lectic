@@ -37,7 +37,7 @@ class HttpTransportTests(unittest.TestCase):
 
     def test_secret_link_is_the_only_way_in(self):
         from release_version import VERSION
-        self.assertEqual(self.request(self.origin + '/health')[0:2], (200, {'ok': True, 'server': 'lectic', 'version': VERSION}))
+        self.assertEqual(self.request(self.origin + '/health')[0:2], (200, {'ok': True, 'server': 'waykit', 'legacy_server': 'lectic', 'version': VERSION}))
         self.assertEqual(self.request(self.origin + '/mcp', {'jsonrpc': '2.0', 'id': 1, 'method': 'ping'})[0], 401)
         self.assertEqual(self.request(self.origin + '/t/wrong-token/mcp', {'jsonrpc': '2.0', 'id': 1, 'method': 'ping'})[0], 401)
         self.assertEqual(self.request(self.origin + '/t/' + self.httpd.token + '/nope', {})[0], 404)

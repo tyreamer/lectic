@@ -35,7 +35,7 @@ class IdentityTests(unittest.TestCase):
     def test_show_identity_prompts_when_none_set(self):
         msg = show_identity(self.project)
         self.assertIn('No identity', msg)
-        self.assertIn('lectic identity set', msg)
+        self.assertTrue('waykit identity set' in msg or 'lectic identity set' in msg)
 
     def test_save_and_load_identity(self):
         record = save_identity(str(self.project), 'Alice Example', 'alice@example.com')
@@ -133,7 +133,7 @@ class IdentityTests(unittest.TestCase):
         status, msg = check_manifest_signature(manifest)
         self.assertEqual(status, 'unsigned')
         self.assertIn('No publisher', msg)
-        self.assertIn('lectic identity', msg)
+        self.assertTrue('waykit identity' in msg or 'lectic identity' in msg)
 
     def test_check_manifest_signature_signed(self):
         identity = save_identity(str(self.project), 'Frank', 'frank@example.com')

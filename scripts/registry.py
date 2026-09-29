@@ -1,4 +1,4 @@
-"""Lectic Expertise Marketplace Registry: discover, inspect, and install packs by name."""
+"""WayKit Expertise Marketplace Registry: discover, inspect, and install packs by name."""
 from datetime import datetime, timezone
 import json
 import os
@@ -11,18 +11,19 @@ from ec import ROOT, VERSION, Invalid, digest, require, safe_child, validate_sch
 from home import storage_root
 from packs import inspect_pack, slug
 
-REGISTRY_DEFAULT_URL = 'https://raw.githubusercontent.com/tyreamer/lectic/main/registry/index.json'
+REGISTRY_DEFAULT_URL = 'https://raw.githubusercontent.com/tyreamer/waykit/main/registry/index.json'
 CACHE_TTL_SECONDS = 3600
 
 
 def get_registry_url():
-    return os.environ.get('LECTIC_REGISTRY_URL') or REGISTRY_DEFAULT_URL
+    return os.environ.get('WAYKIT_REGISTRY_URL') or os.environ.get('LECTIC_REGISTRY_URL') or REGISTRY_DEFAULT_URL
 
 
 def fetch_registry(project=None, refresh=False):
     """Fetch the registry index, using local cache when fresh, falling back to bundled index if offline."""
     bundled = ROOT / 'registry/index.json'
-    if not os.environ.get('LECTIC_REGISTRY_URL') and not refresh:
+    env_url = os.environ.get('WAYKIT_REGISTRY_URL') or os.environ.get('LECTIC_REGISTRY_URL')
+    if not env_url and not refresh:
         data = json.loads(bundled.read_text(encoding='utf-8'))
         validate_schema(data, 'registry')
         return data
@@ -30,7 +31,7 @@ def fetch_registry(project=None, refresh=False):
     cache_path = home / 'registry-cache.json'
 
     # Check cache if not forcing refresh
-    if not refresh and not os.environ.get('LECTIC_REGISTRY_URL') and cache_path.is_file():
+    if not refresh and not env_url and cache_path.is_file():
         try:
             cached_data = json.loads(cache_path.read_text(encoding='utf-8'))
             cache_time = cache_path.stat().st_mtime
@@ -45,7 +46,7 @@ def fetch_registry(project=None, refresh=False):
     fetch_error = None
 
     try:
-        req = urllib.request.Request(url, headers={'User-Agent': f'lectic/{VERSION}'})
+        req = urllib.request.Request(url, headers={'User-Agent': f'waykit/{VERSION} lectic/{VERSION}'})
         with urllib.request.urlopen(req, timeout=10) as resp:
             raw = resp.read(2 * 1024 * 1024 + 1)
             require(len(raw) <= 2 * 1024 * 1024, 'Registry is too large')
@@ -126,7 +127,7 @@ def resolve_registry_pack(pack_spec, project=None):
     match = next((p for p in packs if p.get('name', '').casefold() == spec.casefold()), None)
     if not match:
         available = ', '.join(p.get('name', '') for p in packs[:8])
-        raise Invalid(f"Pack '{spec}' not found in registry. Run `lectic search` to explore available packs ({available}...)")
+        raise Invalid(f"Pack '{spec}' not found in registry. Run `waykit search` to explore available packs ({available}...)")
 
     return match
 
@@ -136,7 +137,7 @@ def inspect_registry_pack(pack_spec, project=None):
     entry = resolve_registry_pack(pack_spec, project=project)
     raw_inspect = inspect_pack(registry_pack_location(entry, project))
     raw_inspect['registry_entry'] = entry
-    raw_inspect['install_command'] = f"lectic install registry:{entry['name']} --as {entry.get('install_name', entry['name'])} --pin"
+    raw_inspect['install_command'] = f"waykit install registry:{entry['name']} --as {entry.get('install_name', entry['name'])} --pin"
     return raw_inspect
 
 
@@ -146,7 +147,7 @@ def registry_pack_location(entry, project=None):
     expected = entry.get('sha256')
     if entry.get('bundled_path'):
         candidate = safe_child(ROOT / 'fixtures/packs', entry['bundled_path'])
-        require(candidate.is_file(), 'Bundled catalog artifact is missing; reinstall Lectic')
+        require(candidate.is_file(), 'Bundled catalog artifact is missing; reinstall WayKit')
         raw = candidate.read_bytes()
         require(expected and digest(raw) == expected, 'Bundled pack checksum differs from the catalog')
         open_pack(raw)
@@ -154,7 +155,7 @@ def registry_pack_location(entry, project=None):
     raw = fetch(entry['url'])
     require(not expected or digest(raw) == expected, 'Pack checksum differs from the registry')
     open_pack(raw)
-    cache = storage_root(project or '.') / 'registry-packs' / (digest(raw) + '.lectic')
+    cache = storage_root(project or '.') / 'registry-packs' / (digest(raw) + '.waykit')
     cache.parent.mkdir(parents=True, exist_ok=True)
     if not cache.exists(): cache.write_bytes(raw)
     require(digest(cache.read_bytes()) == digest(raw), 'Cached pack was altered')
@@ -165,15 +166,15 @@ def format_search_results(packs, query=None):
     """Format registry search results for CLI display."""
     if not packs:
         msg = f"No packs found matching '{query}'." if query else "Registry is currently empty."
-        return msg + "\nRun `lectic search` to view all packs, or `lectic publish NAME --registry` to submit one."
+        return msg + "\nRun `waykit search` to view all packs, or `waykit publish NAME --registry` to submit one."
 
-    lines = [f"Lectic Registry ({len(packs)} pack{'s' if len(packs) != 1 else ''} available):\n"]
+    lines = [f"WayKit Registry ({len(packs)} pack{'s' if len(packs) != 1 else ''} available):\n"]
     for p in packs:
         ver = f"v{p.get('version', '1.0')}"
         pub = p.get('publisher', 'Unknown')
         tags = ', '.join(p.get('tags', []))
         install_as = p.get('install_name') or p.get('name')
-        cmd = f"lectic install registry:{p['name']} --as {install_as} --pin"
+        cmd = f"waykit install registry:{p['name']} --as {install_as} --pin"
 
         lines.append(f"  {p['name']}  {ver}  by {pub}")
         lines.append(f"    {p.get('description', '')}")
@@ -199,7 +200,7 @@ def format_inspect_report(info):
         method_names = ', '.join(m['title'] if isinstance(m, dict) else str(m) for m in info['methods'])
         lines.append(f"Methods:     {method_names}")
 
-    cmd = info.get('install_command') or f"lectic install {info.get('name', 'pack')}"
+    cmd = info.get('install_command') or f"waykit install {info.get('name', 'pack')}"
     lines.append(f"Install:     {cmd}")
     if info.get('readme'):
         lines.append("\n---\n")
@@ -211,14 +212,16 @@ def prepare_registry_entry(project, pack_name_or_file, download_url, tags=None, 
     """Prepare a valid JSON entry ready to be added to registry/index.json."""
     pack_path = Path(pack_name_or_file)
     if not pack_path.is_file():
-        pack_path = Path(project) / (slug(pack_name_or_file) + '.lectic')
+        candidate = Path(project) / (slug(pack_name_or_file) + '.waykit')
+        legacy_candidate = Path(project) / (slug(pack_name_or_file) + '.lectic')
+        pack_path = candidate if candidate.is_file() else (legacy_candidate if legacy_candidate.is_file() else candidate)
 
     require(pack_path.is_file(), f"Pack file not found: {pack_path}")
     from packs import open_pack
     manifest, members = open_pack(pack_path.read_bytes())
 
     from identity import check_manifest_signature
-    require(check_manifest_signature(manifest)[0] == 'signed', "Registry submission requires a signed pack. Run `lectic identity set 'Name' --contact email` and re-pack.")
+    require(check_manifest_signature(manifest)[0] == 'signed', "Registry submission requires a signed pack. Run `waykit identity set 'Name' --contact email` and re-pack.")
 
     version = manifest.get('version') or datetime.now(timezone.utc).strftime('%Y-%m-%d')
     p_name = slug(manifest['name'])
@@ -230,7 +233,7 @@ def prepare_registry_entry(project, pack_name_or_file, download_url, tags=None, 
     return {
         'name': p_name,
         'title': manifest['name'],
-        'description': f"Evidence-backed {manifest['name']} knowledge compiled with Lectic.",
+        'description': f"Evidence-backed {manifest['name']} knowledge compiled with WayKit.",
         'publisher': manifest['publisher']['name'],
         'url': download_url,
         'sha256': digest(pack_path.read_bytes()),

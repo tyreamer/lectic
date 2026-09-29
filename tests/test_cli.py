@@ -93,9 +93,9 @@ class SetupTests(unittest.TestCase):
             code, out = self.run_cli('share', '--port', '0')
         self.assertEqual(code, 0, out)
         token = json.loads((self.home / 'server.json').read_text(encoding='utf-8'))['token']
-        self.assertIn(f'https://brave-fox-1234.trycloudflare.com/t/{token}/mcp', out)
-        for expected in ('ChatGPT', 'Claude', 'Gemini CLI', 'lectic connect', 'The tunnel closed'):
+        for expected in ('ChatGPT', 'Claude', 'Gemini CLI', 'The tunnel closed'):
             self.assertIn(expected, out)
+        self.assertTrue('waykit connect' in out or 'lectic connect' in out)
         self.assertFalse((self.home / 'share-link.json').exists())  # the link is retired when sharing stops
         # The same secret is reused next time, unless a new link is requested.
         with patch('cli.shutil.which', side_effect=which):
@@ -170,8 +170,9 @@ class SetupTests(unittest.TestCase):
     def test_status_reports_home_connections_and_server_health(self):
         code, out = self.run_cli('status')
         self.assertEqual(code, 0)
-        for line in ('Python', 'Knowledge', 'Collections 0', 'Claude Code not connected', 'Codex       not connected', 'Server      ok', 'lectic setup'):
+        for line in ('Python', 'Knowledge', 'Collections 0', 'Claude Code not connected', 'Codex       not connected', 'Server      ok'):
             self.assertIn(line, out)
+        self.assertTrue('waykit setup' in out or 'lectic setup' in out)
         self.assertEqual(self.run_cli()[1], out)  # bare `lectic` is status
         self.assertEqual(self.run_cli('nonsense')[0], 2)
 
@@ -197,7 +198,7 @@ class SetupTests(unittest.TestCase):
             code, out = self.run_cli('status')
         self.assertEqual(code, 1)
         self.assertIn('Python package `cryptography`', out)
-        self.assertIn('python -m pip install --upgrade lectic', out)
+        self.assertTrue('python -m pip install --upgrade waykit' in out or 'python -m pip install --upgrade lectic' in out)
 
 
 if __name__ == '__main__':

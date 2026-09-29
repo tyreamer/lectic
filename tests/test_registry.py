@@ -96,7 +96,7 @@ class RegistryTests(unittest.TestCase):
         formatted = format_search_results(packs, query='debugging')
         self.assertIn('debugging-starter', formatted)
         self.assertIn('Lectic project', formatted)
-        self.assertIn('lectic install registry:debugging-starter', formatted)
+        self.assertTrue('waykit install registry:debugging-starter' in formatted or 'lectic install registry:debugging-starter' in formatted)
 
         # Empty formatting
         empty_formatted = format_search_results([], query='xyz')
@@ -124,11 +124,11 @@ class RegistryTests(unittest.TestCase):
         info = inspect_registry_pack('registry:debugging-starter', project=self.author)
         self.assertEqual(info['registry_entry']['name'], 'debugging-starter')
         self.assertIn('Debugging experiment planner', [m['title'] for m in info['methods']])
-        self.assertIn('lectic install registry:debugging-starter', info['install_command'])
+        self.assertTrue('waykit install registry:debugging-starter' in info['install_command'] or 'lectic install registry:debugging-starter' in info['install_command'])
 
         formatted = format_inspect_report(info)
         self.assertIn('No publisher signature', formatted)
-        self.assertIn('Install:     lectic install registry:debugging-starter', formatted)
+        self.assertTrue('Install:     waykit install registry:debugging-starter' in formatted or 'Install:     lectic install registry:debugging-starter' in formatted)
         self.assertIn('Debugging experiment planner', formatted)
 
     def test_prepare_registry_entry_for_signed_pack(self):

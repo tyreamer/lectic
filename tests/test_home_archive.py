@@ -86,7 +86,7 @@ class HomeArchiveTests(unittest.TestCase):
     def test_backup_and_restore_onto_a_bare_machine(self):
         self.prepared(self.laptop, 'Debugging Methods')
         with self.laptop: result = backup(self.laptop.project, self.base / 'archives')
-        self.assertTrue(result['file'].endswith('.lectic-home'))
+        self.assertTrue(result['file'].endswith(('.waykit-home', '.lectic-home')))
         self.assertEqual(result['collections'], ['Debugging Methods']); self.assertGreater(result['blobs'], 0)
 
         desktop = self.machine('desktop')

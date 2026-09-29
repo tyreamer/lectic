@@ -181,7 +181,7 @@ def _context_summary(using, gaps):
 
 
 def _portable_context(intent, using, task, units, gaps):
-    lines = ['# Lectic context', '', 'Task: ' + intent, '', '## Using for this task', '']
+    lines = ['# WayKit context', '', 'Task: ' + intent, '', '## Using for this task', '']
     lines += [f"- {x['name']} — {x['why']}" for x in using]
     lines += [f"- {task['label']} — {task['reason']}", '', '## Relevant knowledge', '']
     for unit in units:

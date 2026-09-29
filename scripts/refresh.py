@@ -24,7 +24,7 @@ def compare_revisions(library, collection_id, before, after):
 @home_transaction
 def refresh(project='.', collection=None, source=None):
     """Replace same-named sources from `source` and add new ones; keep everything already saved."""
-    require(source, 'Name the file, folder or link to refresh from: lectic refresh NAME --from PATH')
+    require(source, 'Name the file, folder or link to refresh from: waykit refresh NAME --from PATH')
     project = Path(project).resolve()
     library = Library(project)
     resolved = library.resolve(collection)
@@ -38,7 +38,7 @@ def refresh(project='.', collection=None, source=None):
     with readable_input(project, str(source)) as material:
         result = work(project=project, collection=data['collection_id'], input=material, action='replace',
                       prune_missing=prune_missing)
-    require(result['phase'] == 'archived', 'Lectic could not read that material: ' + str(result))
+    require(result['phase'] == 'archived', 'WayKit could not read that material: ' + str(result))
     library.reload()
     folder, data = library.resolve(data['collection_id'])
     after = data['active_revision']
@@ -81,7 +81,7 @@ def message_for(report):
               if report['carry_report_available'] else
               'The carry-forward report was unavailable, so no knowledge-change count is claimed')
     if report['rebuild_needed']:
-        next_step = ('Lectic did not re-derive knowledge; that needs your assistant. Open it and say: '
+        next_step = ('WayKit did not re-derive knowledge; that needs your assistant. Open it and say: '
                      f"Prepare my {report['collection']} collection.")
     else:
         next_step = 'The current knowledge already covers every active source; no rebuild is needed.'

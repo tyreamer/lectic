@@ -1,49 +1,53 @@
-# Lectic as an MCP server
+# WayKit (formerly Lectic) as an MCP server
 
-`scripts/lectic_mcp.py` exposes the compiler over the Model Context Protocol (JSON-RPC over stdio). Any MCP client can then operate Lectic through tools: Claude Code, Codex and others reach the same Lectic home without an installed skill and without touching its files directly. Reasoning still belongs to the client; the server owns storage, identity, validation and provenance.
+`scripts/waykit_mcp.py` and `scripts/lectic_mcp.py` expose the compiler over the Model Context Protocol (JSON-RPC over stdio). Any MCP client can then operate WayKit through tools: Claude Code, Codex and others reach the same WayKit home without an installed skill and without touching its files directly. Reasoning still belongs to the client; the server owns storage, identity, validation and provenance.
 
-It requires Python 3.10+ and the package runtime dependencies (`cryptography`, plus `tomli` on Python 3.10). Install Lectic as a package before launching the server.
+All tools are available with both the modern `waykit_*` prefix and the legacy `lectic_*` prefix (e.g. `waykit_home` and `lectic_home`).
 
-The intelligent context tools are `lectic_knowledge`, `lectic_explain`, `lectic_context`, and `lectic_import_plan`. They infer knowledge roles and relationships, compose only the evidence-backed units relevant to the current task, preserve current task details without saving them as permanent knowledge, and explain gaps without blocking the assistant. Their results are plain JSON and Markdown so every model provider can use them.
+It requires Python 3.10+ and the package runtime dependencies (`cryptography`, plus `tomli` on Python 3.10). Install WayKit as a package before launching the server.
+
+The intelligent context tools are `waykit_knowledge`, `waykit_explain`, `waykit_context`, and `waykit_import_plan` (also callable as `lectic_knowledge`, `lectic_explain`, etc.). They infer knowledge roles and relationships, compose only the evidence-backed units relevant to the current task, preserve current task details without saving them as permanent knowledge, and explain gaps without blocking the assistant. Their results are plain JSON and Markdown so every model provider can use them.
 
 ## Connect a client
 
 The short way:
 
 ```bash
-pip install lectic
-lectic setup
+pip install waykit
+waykit setup
 ```
 
-`lectic setup` registers the server with Claude Code (through `claude mcp add`, or its user config when the CLI is absent) and Codex (`~/.codex/config.toml`), runs a real handshake to prove the server starts, and offers to add YouTube support. It is safe to repeat. `lectic status` shows what is connected. The server is launched as `python -m lectic.cli serve` with the interpreter pip used, so nothing depends on PATH.
+Legacy `pip install lectic` and `lectic setup` remain supported aliases.
 
-For ChatGPT, Claude on the web, Gemini, your phone or another computer, `lectic share` serves the same server over Streamable HTTP behind one private link; see [Anywhere](CLOUD.md).
+`waykit setup` registers the server with Claude Code (through `claude mcp add`, or its user config when the CLI is absent) and Codex (`~/.codex/config.toml`), runs a real handshake to prove the server starts, and offers to add YouTube support. It is safe to repeat. `waykit status` shows what is connected. The server is launched as `python -m waykit.cli serve` with the interpreter pip used, so nothing depends on PATH.
+
+For ChatGPT, Claude on the web, Gemini, your phone or another computer, `waykit share` serves the same server over Streamable HTTP behind one private link; see [Anywhere](CLOUD.md).
 
 The manual way, from a checkout, with a Python 3.10+ interpreter path:
 
 **Claude Code** (once, from any folder):
 
 ```bash
-claude mcp add --scope user lectic -- python /path/to/lectic/scripts/lectic_mcp.py
+claude mcp add --scope user waykit -- python /path/to/waykit/scripts/lectic_mcp.py
 ```
 
 Or per project in `.mcp.json`:
 
 ```json
-{"mcpServers": {"lectic": {"command": "python", "args": ["/path/to/lectic/scripts/lectic_mcp.py"]}}}
+{"mcpServers": {"waykit": {"command": "python", "args": ["/path/to/waykit/scripts/lectic_mcp.py"]}}}
 ```
 
 **Codex** (`~/.codex/config.toml`):
 
 ```toml
-[mcp_servers.lectic]
+[mcp_servers.waykit]
 command = "python"
-args = ["/path/to/lectic/scripts/lectic_mcp.py"]
+args = ["/path/to/waykit/scripts/lectic_mcp.py"]
 ```
 
-The server treats its working directory as the user's project; every tool also accepts an explicit `project`. Set `LECTIC_HOME` in the client's environment to point all of them at one home (see [installation](INSTALLATION.md#where-knowledge-is-stored)).
+The server treats its working directory as the user's project; every tool also accepts an explicit `project`. Set `WAYKIT_HOME` (or `LECTIC_HOME`) in the client's environment to point all of them at one home (see [installation](INSTALLATION.md#where-knowledge-is-stored)).
 
-**Hosted assistants** (ChatGPT, Claude on the web, Gemini) need an HTTPS address rather than a local process: `lectic share`, or the always-on container. [Anywhere →](CLOUD.md)
+**Hosted assistants** (ChatGPT, Claude on the web, Gemini) need an HTTPS address rather than a local process: `waykit share`, or the always-on container. [Anywhere →](CLOUD.md)
 
 Check the server independently with the MCP Inspector:
 
@@ -53,32 +57,34 @@ npx @modelcontextprotocol/inspector --cli python /path/to/lectic/scripts/lectic_
 
 ## Transports
 
-The same `Server` answers over two transports. **stdio** (`lectic serve`): one JSON-RPC message per line, what `lectic setup` registers. **Streamable HTTP** (`lectic serve --http`, `lectic share`): `POST /mcp` with JSON-RPC, plain JSON responses, `202` for notifications, `405` on `GET` because the server never opens a stream to the client. The secret travels in the path (`/t/<secret>/mcp`, what hosted connectors accept without OAuth) or as `Authorization: Bearer <secret>`. A browser page from another origin cannot drive a server bound to this machine. Tool calls are serialized: the coordinators expect one writer per home. `POST /t/<secret>/capture` accepts a phone's share, and `GET`/`POST /t/<secret>/home` move a whole home to or from the server ([moving your knowledge](CLOUD.md#moving-your-knowledge)). A server serves one home, fixed when it starts. Both transports are verified against the official MCP Inspector.
+The same `Server` answers over two transports. **stdio** (`waykit serve`): one JSON-RPC message per line, what `waykit setup` registers. **Streamable HTTP** (`waykit serve --http`, `waykit share`): `POST /mcp` with JSON-RPC, plain JSON responses, `202` for notifications, `405` on `GET` because the server never opens a stream to the client. The secret travels in the path (`/t/<secret>/mcp`, what hosted connectors accept without OAuth) or as `Authorization: Bearer <secret>`. A browser page from another origin cannot drive a server bound to this machine. Tool calls are serialized: the coordinators expect one writer per home. `POST /t/<secret>/capture` accepts a phone's share, and `GET`/`POST /t/<secret>/home` move a whole home to or from the server ([moving your knowledge](CLOUD.md#moving-your-knowledge)). A server serves one home, fixed when it starts. Both transports are verified against the official MCP Inspector.
 
 ## Tools
 
+All tools are callable with `waykit_*` or legacy `lectic_*` prefix:
+
 | Tool | Purpose |
 | --- | --- |
-| `lectic_home` | Where knowledge is stored for this project and why |
-| `lectic_library` | Read-only inventory: collections, ready methods, earlier results, possible builds |
-| `lectic_work` | Goal coordinator: save, prepare, apply to a brief, export, compare, archive |
-| `lectic_map` | Capability Maps: discover, list, inspect, compare, select |
-| `lectic_guide` | Grounded next-use suggestions: prepare, save, show, select |
-| `lectic_capture` | Inbox: import a synced folder, list, show, memberships, notes, process, trace |
-| `lectic_capture_save` | Save a link, pasted text or files shared right now; storage only. Returns `decision` (`explicit` / `auto_filed` / `needs_clarification` / `inbox_fallback`), a single `question` when one is warranted, and a `source` object saying whether the item's content is retrievable (YouTube captions) or kept as a reference only (Instagram, TikTok, most web links) |
-| `lectic_collection_candidates` | Intelligent candidate collection suggestions for incoming source material |
-| `lectic_compile` | Legacy numbered-capability coordinator |
-| `lectic_pack` | One shareable `.lectic` file carrying a collection's knowledge |
-| `lectic_install` | Install or inspect a pack from a file or https link |
-| `lectic_verify` | Evidence linkage health and source verification for a collection |
-| `lectic_identity` | Local pack-signing identity management (show or set) |
-| `lectic_backup` | Write the whole home to one archive file |
-| `lectic_transfer` | push, pull or restore a home |
-| `lectic_validate_build` | Deterministic build verification |
-| `lectic_read` | Read a prompt, schema, source, knowledge file, brief or draft the workflow named |
-| `lectic_write_json` | Save a record the workflow asked for, validated against its schema |
+| `waykit_home` (`lectic_home`) | Where knowledge is stored for this project and why |
+| `waykit_library` (`lectic_library`) | Read-only inventory: collections, ready methods, earlier results, possible builds |
+| `waykit_work` (`lectic_work`) | Goal coordinator: save, prepare, apply to a brief, export, compare, archive |
+| `waykit_map` (`lectic_map`) | Capability Maps: discover, list, inspect, compare, select |
+| `waykit_guide` (`lectic_guide`) | Grounded next-use suggestions: prepare, save, show, select |
+| `waykit_capture` (`lectic_capture`) | Inbox: import a synced folder, list, show, memberships, notes, process, trace |
+| `waykit_capture_save` (`lectic_capture_save`) | Save a link, pasted text or files shared right now; storage only. Returns `decision` (`explicit` / `auto_filed` / `needs_clarification` / `inbox_fallback`), a single `question` when one is warranted, and a `source` object saying whether the item's content is retrievable (YouTube captions) or kept as a reference only (Instagram, TikTok, most web links) |
+| `waykit_collection_candidates` (`lectic_collection_candidates`) | Intelligent candidate collection suggestions for incoming source material |
+| `waykit_compile` (`lectic_compile`) | Legacy numbered-capability coordinator |
+| `waykit_pack` (`lectic_pack`) | One shareable `.waykit` / `.lectic` file carrying a collection's knowledge |
+| `waykit_install` (`lectic_install`) | Install or inspect a pack from a file or https link |
+| `waykit_verify` (`lectic_verify`) | Evidence linkage health and source verification for a collection |
+| `waykit_identity` (`lectic_identity`) | Local pack-signing identity management (show or set) |
+| `waykit_backup` (`lectic_backup`) | Write the whole home to one archive file |
+| `waykit_transfer` (`lectic_transfer`) | push, pull or restore a home |
+| `waykit_validate_build` (`lectic_validate_build`) | Deterministic build verification |
+| `waykit_read` (`lectic_read`) | Read a prompt, schema, source, knowledge file, brief or draft the workflow named |
+| `waykit_write_json` (`lectic_write_json`) | Save a record the workflow asked for, validated against its schema |
 
-Prompts and schemas are also published as resources (`lectic://prompts/NAME.md`, `lectic://schemas/NAME.schema.json`, `lectic://skill/SKILL.md`), so a client can load the reasoning contract without a checkout.
+Prompts and schemas are published as both `waykit://` and legacy `lectic://` resources (`waykit://prompts/NAME.md`, `lectic://prompts/NAME.md`, etc.), so a client can load the reasoning contract without a checkout.
 
 ## How a workflow runs over tools
 
@@ -96,7 +102,23 @@ Workflow tools return a `phase`. When the response carries `agent_task`, it is w
 | `HOME/inbox/*.json` | brief | brief schema |
 | `.../evaluation/*.json` | evaluation tasks, rubric, responses | JSON only; the evaluation harness validates the pair |
 
-Everything else is refused: published builds, knowledge history, sources, raw bytes, capture records and state, indexes, and any path outside the Lectic home. A rejection names the rule, so the client fixes the record rather than working around it. Reads are limited to the home and the installed skill.
+Everything else is refused: published builds, knowledge history, sources, raw bytes, capture records and state, indexes, and any path outside the WayKit home. A rejection names the rule, so the client fixes the record rather than working around it. Reads are limited to the home and the installed skill.
+
+## WayKit Cloud Remote MCP (Goal-Oriented Chat Tools)
+
+When connected to an authenticated WayKit Cloud instance (`waykit cloud serve`), assistants interact through high-level conversational tools (`scripts/cloud_mcp.py`):
+
+| Tool | Purpose |
+| --- | --- |
+| `save_knowledge` | Save URLs, shared text, or snippets into user collections or inbox. Pure storage; zero background extraction. |
+| `learn_from_source` | Extract principles and methods from a saved capture, text, or collection, preserving exact quotes as evidence and labeling status (`observed` vs `inferred`). |
+| `organize_knowledge` | Infer, link, unlink, or explain typed pack relationships (`specializes`, `personal_preference_relevant_to`, `related_to`). |
+| `get_relevant_context` | Assemble relevant knowledge units and identify knowledge gaps for the user's active task. |
+| `apply_knowledge` | Apply knowledge to evaluate, review, or answer a task, citing verifiable source quotes. |
+| `search_knowledge` | Search across all collections and units in the user's private library. |
+| `export_library` | Generate a portable `.waykit-home` (or `.lectic-home`) zip archive for backup or restore into local WayKit. |
+
+These tools require no compiler phase knowledge from the user or assistant and are strictly authenticated against the account associated with the bearer token or OAuth authorization code.
 
 ## What this establishes, and what it does not
 

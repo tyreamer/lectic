@@ -57,28 +57,41 @@ def describe_source(url='', text='', files=()):
         adapter = _retriever(url)
         if adapter is not None:
             if getattr(adapter, 'adapter', '') == 'youtube-captions':
+                msg = ('This is a YouTube link. Processing the collection retrieves the English '
+                       'captions, so what is said in the video becomes searchable and quotable.')
                 return {'source_type': 'youtube', 'platform': 'YouTube', 'retrieval': 'captions',
                         'content_available': True,
-                        'what_lectic_gets': 'This is a YouTube link. Processing the collection retrieves the English '
-                                            'captions, so what is said in the video becomes searchable and quotable.'}
+                        'what_waykit_gets': msg,
+                        'what_lectic_gets': msg}
             if getattr(adapter, 'adapter', '') == 'web-article':
                 platform = _platform(url)
+                msg = (f'This is a web article from {platform}. Processing the collection retrieves '
+                       'and cleans the article text, so what is written becomes searchable and quotable.')
                 return {'source_type': 'web', 'platform': platform, 'retrieval': 'article_text',
                         'content_available': True,
-                        'what_lectic_gets': f'This is a web article from {platform}. Processing the collection retrieves '
-                                            'and cleans the article text, so what is written becomes searchable and quotable.'}
+                        'what_waykit_gets': msg,
+                        'what_lectic_gets': msg}
         platform = _platform(url)
+        msg = (f'{platform} links are saved as a reference only. WayKit keeps the link, the '
+               'title and any note, and cannot read the post itself, so nothing inside it '
+               'will be searchable or quotable. Paste the words you care about to save those.')
+        legacy_msg = (f'{platform} links are saved as a reference only. Lectic keeps the link, the '
+                      'title and any note, and cannot read the post itself, so nothing inside it '
+                      'will be searchable or quotable. Paste the words you care about to save those.')
         return {'source_type': 'web', 'platform': platform, 'retrieval': 'reference_only',
                 'content_available': False,
-                'what_lectic_gets': f'{platform} links are saved as a reference only. Lectic keeps the link, the '
-                                    'title and any note, and cannot read the post itself, so nothing inside it '
-                                    'will be searchable or quotable. Paste the words you care about to save those.'}
+                'what_waykit_gets': msg,
+                'what_lectic_gets': legacy_msg}
     if (text or '').strip():
+        msg = 'Pasted text is stored verbatim and is fully searchable and quotable.'
         return {'source_type': 'text', 'platform': '', 'retrieval': 'supplied_text', 'content_available': True,
-                'what_lectic_gets': 'Pasted text is stored verbatim and is fully searchable and quotable.'}
+                'what_waykit_gets': msg,
+                'what_lectic_gets': msg}
+    msg = ('The file is stored as the original. Transcript and text files become searchable '
+           'when the collection is processed; other formats are kept but not read.')
     return {'source_type': 'file', 'platform': '', 'retrieval': 'attached_file', 'content_available': True,
-            'what_lectic_gets': 'The file is stored as the original. Transcript and text files become searchable '
-                                'when the collection is processed; other formats are kept but not read.'}
+            'what_waykit_gets': msg,
+            'what_lectic_gets': msg}
 
 
 def _or_list(names):
@@ -131,7 +144,7 @@ def decide_placement(project, *, url='', text='', title='', files=(), note='', c
 
 def confirmation_line(placement, source):
     """The sentence the assistant should actually say after a save."""
-    honesty = source['what_lectic_gets']
+    honesty = source.get('what_waykit_gets') or source.get('what_lectic_gets')
     decision = placement['decision']
     if decision == 'explicit':
         return f"Saved to {_or_list(placement['collections'])}. {honesty}"

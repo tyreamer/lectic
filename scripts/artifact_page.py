@@ -114,6 +114,7 @@ def page_data(project='.', selector=None, build=None, include_quotes=True):
                            'version': version,
                            'updated_at': datetime.fromtimestamp(record.stat().st_mtime, timezone.utc).isoformat(timespec='seconds') if record.is_file() else None,
                            'generated_at': datetime.now(timezone.utc).isoformat(timespec='seconds'),
+                           'waykit_version': RELEASE_VERSION,
                            'lectic_version': RELEASE_VERSION}}
 
 
@@ -208,9 +209,9 @@ def render_page(info):
     out += ['<h2>Use it yourself</h2>',
             '<p>This page is a read-only summary. To let your own assistant apply this knowledge, '
             'ask the person who sent it for the packaged collection, then:</p>',
-            '<pre><code>pip install lectic\n'
-            'lectic setup\n'
-            f'lectic install &quot;{e(info["pack_file"])}&quot;</code></pre>',
+            '<pre><code>pip install waykit\n'
+            'waykit setup\n'
+            f'waykit install &quot;{e(info["pack_file"])}&quot;</code></pre>',
             '<p>After installing, open any connected assistant and say: '
             f'<code>Use my {e(info["name"])} to review this.</code></p>']
 
@@ -226,7 +227,7 @@ def render_page(info):
     if p['updated_at']:
         out.append(f'<dt>Last updated</dt><dd>{e(p["updated_at"])}</dd>')
     out += [f'<dt>Page generated</dt><dd>{e(p["generated_at"])}</dd>',
-            f'<dt>Built with</dt><dd>Lectic {e(p["lectic_version"])}</dd>', '</dl>']
+            f'<dt>Built with</dt><dd>WayKit {e(p.get("waykit_version") or p["lectic_version"])}</dd>', '</dl>']
 
     quote_note = ('Quoted passages establish traceability, not agreement or truth. '
                   'Citing a source does not grant permission to redistribute it. ' if info['quotes_included'] else '')
@@ -239,7 +240,7 @@ def render_page(info):
 def write_page(project='.', selector=None, destination=None, build=None, include_quotes=True):
     from packs import slug
     info = page_data(project, selector, build, include_quotes)
-    info['pack_file'] = slug(info['name']) + '.lectic'
+    info['pack_file'] = slug(info['name']) + '.waykit'
     path = Path(destination).expanduser() if destination else Path(project) / (slug(info['name']) + '.html')
     path = path.resolve()
     if path.is_dir(): path = path / (slug(info['name']) + '.html')

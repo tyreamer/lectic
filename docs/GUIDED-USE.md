@@ -1,12 +1,12 @@
 # Know what you have and what to do with it
 
-Lectic's interface is the assistant you already use. It should make saved expertise visible and suggest useful applications without requiring you to invent a goal or choose an artifact format.
+WayKit's interface is the assistant you already use. It should make saved expertise visible and suggest useful applications without requiring you to invent a goal or choose an artifact format.
 
 In a project with saved material, say:
 
-> Show me what Lectic has saved here. Explain what I can use now, show three concrete things I could do with it, and recommend where to start. Separate existing methods from things we could build next.
+> Show me what WayKit has saved here. Explain what I can use now, show three concrete things I could do with it, and recommend where to start. Separate existing methods from things we could build next.
 
-The assistant reads actual saved state, explains what exists and gives a small set of input → output examples. It does not start processing every saved link. If the original work lives in another project, open that project or supply its location; Lectic does not search all your folders or silently combine projects.
+The assistant reads actual saved state, explains what exists and gives a small set of input → output examples. It does not start processing every saved link. If the original work lives in another project, open that project or supply its location; WayKit does not search all your folders or silently combine projects.
 
 ## What you should see
 
@@ -33,7 +33,7 @@ These examples use authored synthetic lessons in `fixtures/use-guidance/cases.js
 
 If you have actually told the assistant you make game review videos, it can suggest applying supported review criteria to your scripts. It should explain that connection and retain limits: hardware workload methods do not establish game quality or supply unperformed benchmarks.
 
-Lectic does not connect to a platform memory API. The assistant may use relevant context already exposed by its host, a user message or saved personal annotations. If no such context exists, it should still show useful general applications. It must not assume your job or endorsement from what you saved.
+WayKit does not connect to a platform memory API. The assistant may use relevant context already exposed by its host, a user message or saved personal annotations. If no such context exists, it should still show useful general applications. It must not assume your job or endorsement from what you saved.
 
 Personalized guides record the origin of used context separately from evidence. Uncertain or outdated context is tentative. Correcting it creates a new guide; it does not rewrite sources, IR or old builds. Guides are private local artifacts and are excluded from skill exports.
 
@@ -42,7 +42,7 @@ Personalized guides record the origin of used context separately from evidence. 
 `scripts/library_guide.py` provides a read-only inventory and the separate use-guide coordinator. It validates saved build/package references, labels source/knowledge revision changes, includes archived collections and earlier compilation outputs, and reports unavailable or damaged artifacts without treating them as ready. Reading the inventory does not activate collections, start extraction or rewrite old results.
 
 ```text
-LECTIC_HOME/
+WAYKIT_HOME (or LECTIC_HOME)/
   use-guides/
     drafts/BINDING_HASH.json
     guide-ID.json

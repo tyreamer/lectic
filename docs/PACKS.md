@@ -1,13 +1,13 @@
 # Knowledge packs
 
-A pack is one file, `<name>.lectic`, that carries a collection's compiled expertise to someone else. They install it and every assistant they have connected can apply it, from any project, with no re-upload and no shared project files.
+A pack is one file, `<name>.waykit` (or legacy `<name>.lectic`), that carries a collection's compiled expertise to someone else. They install it and every assistant they have connected can apply it, from any project, with no re-upload and no shared project files.
 
 ```bash
-lectic pack "FC 27"                 # -> fc-27.lectic
-lectic install fc-27.lectic         # or: lectic install https://…/fc-27.lectic
+waykit pack "FC 27"                 # -> fc-27.waykit
+waykit install fc-27.waykit         # or: waykit install https://…/fc-27.waykit
 ```
 
-Or in conversation: “Pack my FC 27 collection so I can share it” / “Install this pack: <link>”. `lectic install --inspect <file>` shows what a pack contains before installing anything.
+Or in conversation: “Pack my FC 27 collection so I can share it” / “Install this pack: <link>”. `waykit install --inspect <file>` shows what a pack contains before installing anything. Legacy `lectic pack` and `lectic install` commands remain fully supported.
 
 ## What travels
 
@@ -16,14 +16,14 @@ Or in conversation: “Pack my FC 27 collection so I can share it” / “Instal
 | Knowledge: every unit with its evidence citations, the per-source checkpoints, the author's reconciliation receipt | The compiled expertise itself, in the same records the compiler validates |
 | Evidence excerpts | The exact passages the knowledge cites, readable without the sources |
 | The latest Capability Map and built methods | What the collection can do, as readable records |
-| A rendered `README.md` | The pack explains itself to a person with no Lectic |
+| A rendered `README.md` | The pack explains itself to a person with no WayKit |
 | A manifest with a hash of every file | Checks byte integrity against the manifest; unsigned manifests do not authenticate an author |
 
 ## What does not travel: the sources
 
 By default a pack carries source **links and hashes, not source text**. Installing it retrieves each source again on the installer's own network (YouTube captions through their `yt-dlp`) and checks the bytes against the pack's hashes. The knowledge is then validated against *their* copy exactly as it was against yours. Relevant quotations are still redistributed. Source links and citations do not grant permission to share those excerpts.
 
-`lectic pack NAME --include-sources` bundles full source text. Use it for material you own or may share, such as your own transcripts and notes; local files have no link to retrieve from, so a links-only pack of them cannot be installed.
+`waykit pack NAME --include-sources` bundles full source text. Use it for material you own or may share, such as your own transcripts and notes; local files have no link to retrieve from, so a links-only pack of them cannot be installed.
 
 ## What the installer sees
 
@@ -34,14 +34,14 @@ Install reports one of two things:
 
 If no source can be obtained, nothing is installed and the reason is spelled out. A pack that was altered, or that contains unsafe paths, is refused before anything is read from it.
 
-Installing the same pack twice keeps both copies apart (`FC 27`, `FC 27 (2)`); `--name` (or `--as`) picks a name. The library shows an installed collection's pack origin and its readable methods; `lectic status` counts it like any other collection.
+Installing the same pack twice keeps both copies apart (`FC 27`, `FC 27 (2)`); `--name` (or `--as`) picks a name. The library shows an installed collection's pack origin and its readable methods; `waykit status` counts it like any other collection.
 
 ## Team distribution
 
 A team pack carries complete standards, rules, and procedures bundled with sources and explicit install instructions for Claude Code, Codex, and ChatGPT:
 
 ```bash
-lectic pack "Engineering Standards" --team --version 2.1.0
+waykit pack "Engineering Standards" --team --version 2.1.0
 ```
 
 - **Sources bundled by default**: No re-fetch required. Include only originals you may redistribute; `--exclude-sources` overrides `--team`.
@@ -51,16 +51,16 @@ lectic pack "Engineering Standards" --team --version 2.1.0
 New team members install with predictable naming and version pinning:
 
 ```bash
-lectic install https://.../engineering-standards.lectic --as engineering --pin
+waykit install https://.../engineering-standards.waykit --as engineering --pin
 ```
 
 ## Version pinning & updates
 
 Team standards evolve. Pinning records the installed version. No pack updates run automatically; an explicit update request advances it while preserving prior revisions:
 
-- `lectic install FILE|URL --pin`: Records pinned status and origin in collection metadata.
-- `lectic status`: Shows which collections are pinned and their versions (`engineering v2.1.0 [pinned]`).
-- `lectic update NAME`: Checks the pack's origin URL for a newer release and upgrades in-place:
+- `waykit install FILE|URL --pin`: Records pinned status and origin in collection metadata.
+- `waykit status`: Shows which collections are pinned and their versions (`engineering v2.1.0 [pinned]`).
+- `waykit update NAME`: Checks the pack's origin URL for a newer release and upgrades in-place:
   ```text
   Updated engineering from 2.0.0 to 2.1.0 — 3 new conventions added, 1 modified
   ```
@@ -70,57 +70,56 @@ Team standards evolve. Pinning records the installed version. No pack updates ru
 Publish a compiled pack directly to GitHub Releases, an S3 / R2 presigned URL, or generic HTTP PUT host:
 
 ```bash
-lectic publish "Engineering Standards" --to https://github.com/myorg/standards/releases/tag/v2.1.0
+waykit publish "Engineering Standards" --to https://github.com/myorg/standards/releases/tag/v2.1.0
 # Or with a Slack webhook notification:
-lectic publish "Engineering Standards" --to https://github.com/myorg/standards --webhook https://hooks.slack.com/services/...
+waykit publish "Engineering Standards" --to https://github.com/myorg/standards --webhook https://hooks.slack.com/services/...
 ```
 
 Output:
 ```text
-Published Engineering Standards v2.1.0. Team install: lectic install https://github.com/myorg/standards/releases/download/v2.1.0/engineering-standards.lectic --as engineering-standards
+Published Engineering Standards v2.1.0. Team install: waykit install https://github.com/myorg/standards/releases/download/v2.1.0/engineering-standards.waykit --as engineering-standards
 ```
 
 ## Expertise Marketplace & Registry
 
-The Lectic registry allows discovering, inspecting, and installing community-contributed and team knowledge packs without needing to manage URLs manually.
+The WayKit registry allows discovering, inspecting, and installing community-contributed and team knowledge packs without needing to manage URLs manually.
 
 ```bash
 # Search for verified packs by keyword or category tag
-lectic search debugging
-lectic search --tag testing
+waykit search debugging
+waykit search --tag testing
 
 # Preview pack evidence guarantee, methods, and README before installing
-lectic inspect registry:debugging-starter
+waykit inspect registry:debugging-starter
 
 # Install directly from the registry with version pinning
-lectic install registry:debugging-starter --as distributed-systems --pin
+waykit install registry:debugging-starter --as distributed-systems --pin
 ```
 
-Browse the web marketplace at [tyreamer.github.io/lectic/registry.html](https://tyreamer.github.io/lectic/registry.html).
+Browse the web marketplace at [tyreamer.github.io/waykit/registry.html](https://tyreamer.github.io/waykit/registry.html).
 
 ### Publishing to the community registry
 
 To submit your pack to the community marketplace:
-1. Ensure your signing identity is set: `lectic identity set "Your Name" --contact you@domain.com`
-2. Pack your collection: `lectic pack NAME --team`
-3. Generate the schema-compliant registry entry: `lectic publish NAME --download-url <recipient-get-url> --registry [--tags tag1,tag2]`
-4. Open a Pull Request adding the printed JSON block to `registry/index.json` in [tyreamer/lectic](https://github.com/tyreamer/lectic).
+1. Ensure your signing identity is set: `waykit identity set "Your Name" --contact you@domain.com`
+2. Pack your collection: `waykit pack NAME --team`
+3. Generate the schema-compliant registry entry: `waykit publish NAME --download-url <recipient-get-url> --registry [--tags tag1,tag2]`
+4. Open a Pull Request adding the printed JSON block to `registry/index.json` in [tyreamer/waykit](https://github.com/tyreamer/waykit).
 
 ## Sharing
 
-The file goes wherever files go: a GitHub release, a gist, a bucket, a message. Recipients need Lectic (`pip install lectic`); the pack's own README and INSTALL.md tell them so.
+The file goes wherever files go: a GitHub release, a gist, a bucket, a message. Recipients need WayKit (`pip install waykit` or `pip install lectic`); the pack's own README and INSTALL.md tell them so.
 
 Packs are content-addressed: the same knowledge over the same sources produces the same `pack_id`, so two people can tell they hold the same thing.
 
 ## What a pack does not do
 
-It does not make knowledge true. The installer's Lectic verifies structure, identity and evidence location against their copy of the sources; whether the author's interpretation is right is the same question it always was. Maps and methods arrive as readable records, not as live builds, because builds bind to the collection that made them; the installer's assistant regenerates a map or builds a method from the installed knowledge when asked.
+It does not make knowledge true. The installer's WayKit verifies structure, identity and evidence location against their copy of the sources; whether the author's interpretation is right is the same question it always was. Maps and methods arrive as readable records, not as live builds, because builds bind to the collection that made them; the installer's assistant regenerates a map or builds a method from the installed knowledge when asked.
 
-
-## Signature and publishing behavior in 0.3.1
+## Signature and publishing behavior
 
 New signatures use Ed25519 and cover the manifest plus publisher name, contact and public key. A valid signature proves possession of that key; confirm its full fingerprint separately to trust the claimed publisher. Legacy HMAC signatures remain readable and are labeled unverified. Editing local identity details preserves the key.
 
-Publishing a named collection rebuilds current knowledge. Full sources require `--include-sources`; existing GitHub assets are preserved. A presigned PUT needs a distinct `--download-url` for recipients. Lectic checks downloaded bytes before saying published or notifying a requested webhook. Uploads whose recipient link fails are reported as uploaded but unverified.
+Publishing a named collection rebuilds current knowledge. Full sources require `--include-sources`; existing GitHub assets are preserved. A presigned PUT needs a distinct `--download-url` for recipients. WayKit checks downloaded bytes before saying published or notifying a requested webhook. Uploads whose recipient link fails are reported as uploaded but unverified.
 
 The bundled catalog currently contains one unsigned, authored teaching example: Debugging Starter. Catalog validation and SHA-256 checks verify its artifact, not its semantic quality or a real-world publisher identity. Installed registry packs retain the original URL for later explicit update requests.

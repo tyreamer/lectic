@@ -52,9 +52,9 @@ def validate_capture(event):
 
 
 class CaptureStore:
-    def __init__(self,project='.'):
+    def __init__(self,project='.',home=None):
         self.project=Path(project).resolve()
-        self.home=storage_root(self.project)
+        self.home=Path(home).resolve() if home else storage_root(self.project)
         self.root=self.home/'capture'
         self.store=LocalStore(self.home)
 

@@ -1,12 +1,12 @@
-# Lectic: product north star
+# WayKit: product north star
 
-Lectic takes trusted human content and compiles its useful expertise into a durable, structured, evidence-preserving representation. People building with AI can select and rebuild that expertise toward different goals, capabilities and runtimes.
+WayKit (formerly Lectic) takes trusted human content and compiles its useful expertise into a durable, structured, evidence-preserving representation. People building with AI can select and rebuild that expertise toward different goals, capabilities and runtimes.
 
 The assistant interface should actively explain what has been saved and suggest concrete, supported applications before asking users to invent a goal. A readable library and private next-use guides expose the value of durable expertise. Relevant context actually available from the user or host may personalize those guides; it is not source truth, a global identity profile or an assumed connection to platform memory. These presentation artifacts remain separate from IR and portable build targets.
 
-**Delphi digitizes the expert. Lectic compiles the expertise.**
+**Delphi digitizes the expert. WayKit compiles the expertise.**
 
-This is product-direction shorthand, not a verified comparison of another company's features. The architectural distinction is: **digital person platforms package the person; Lectic packages reusable pieces of the expertise.** Recreating a person is neither required nor the default.
+This is product-direction shorthand, not a verified comparison of another company's features. The architectural distinction is: **digital person platforms package the person; WayKit packages reusable pieces of the expertise.** Recreating a person is neither required nor the default.
 
 ## What the product is for
 
@@ -28,7 +28,7 @@ Capture records, source content, personal reasons for saving, and compiled metho
 
 Deferred acquisition fills the gap between saving a link and possessing usable source content. YouTube caption retrieval is the first supported linked-source adapter, invoked when a user requests processing or useful work. Its cached original bytes feed the existing source contracts; retrieval never substitutes for extraction, reconciliation or evaluation. Other platforms can add adapters without changing the Expertise IR or making ingestion the product's identity.
 
-Compiled knowledge belongs to the person, not to the folder they happened to be working in or the assistant they happened to be using. One Lectic home per user holds every collection; a project is a working context and a filter, never a silo. The same home should eventually be reachable from a phone capture, a web chat, Codex and Claude Code, with local storage as the offline/private mode rather than the only mode. ChatGPT-style project memory is context for an interface; the IR stays explicit and inspectable and is never delegated to a model remembering correctly.
+Compiled knowledge belongs to the person, not to the folder they happened to be working in or the assistant they happened to be using. One WayKit home per user holds every collection; a project is a working context and a filter, never a silo. The same home should eventually be reachable from a phone capture, a web chat, Codex and Claude Code, with local storage as the offline/private mode rather than the only mode. ChatGPT-style project memory is context for an interface; the IR stays explicit and inspectable and is never delegated to a model remembering correctly.
 
 The first capture interface is an iPhone Shortcut using a synced folder; iCloud is an adapter, not a core dependency. Future share extensions, web clippers, email, Android or API adapters can implement the same contract. No native app, hosted account system or background processing service is required for this proof. Explicit IDs and relationships support future traversal; a graph database is an option only if demonstrated relational complexity justifies it.
 
@@ -47,11 +47,11 @@ For example, the same collection of 50 expert videos could independently support
 
 These are independent builds from shared sources and expertise, not successive conversions that replace one another. This example describes the intended architecture, not a claim that all six exporters exist today.
 
-## Product direction: local Lectic and the account + library service
+## Product direction: local WayKit and the account + library service
 
-Local Lectic remains a first-class product: files, CLI and assistant tools must remain useful without a cloud account. Lectic Cloud is the planned account and library service that makes the same portable knowledge available across authorized clients. It owns account identity, library ownership, permissions, availability and eventual synchronization. Packs remain inspectable, versionable, exportable artifacts carrying preferences, styles, strategies, procedures and source evidence.
+Local WayKit remains a first-class product: files, CLI and assistant tools must remain useful without a cloud account. WayKit Cloud is the account and library service that makes the same portable knowledge available across authorized clients. It owns account identity, library ownership, permissions, availability and eventual synchronization. Packs remain inspectable, versionable, exportable artifacts carrying preferences, styles, strategies, procedures and source evidence.
 
-Lectic-managed storage is the default direction for the hosted library. GitHub is an optional artifact home and import/export destination; users should not need a repository or GitHub account to use Lectic. Users must be able to export their knowledge and continue locally. The core representation and API remain independent of ChatGPT, Claude, Codex, web interfaces and future clients.
+WayKit-managed storage is the default direction for the hosted library. GitHub is an optional artifact home and import/export destination; users should not need a repository or GitHub account to use WayKit. Users must be able to export their knowledge and continue locally. The core representation and API remain independent of ChatGPT, Claude, Codex, web interfaces and future clients. Legacy Lectic installations and archives remain fully supported.
 
 The intended experience is to connect once and then speak naturally: save useful material, learn from a source, apply knowledge, or organize it. The interface should find relevant packs and explain meaningful organization decisions without requiring users to choose packs, create a graph, configure MCP or understand RDF. Pack relationships should express useful connections such as specialization and related preferences, preserve their rationale and scope, and remain inspectable and correctable. A graph database or RDF serialization is an implementation decision, not a prerequisite.
 

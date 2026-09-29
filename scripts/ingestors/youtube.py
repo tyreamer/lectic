@@ -20,17 +20,19 @@ BLOCKED_SIGNS = ('not a bot', 'sign in to confirm', 'http error 429', 'too many 
 def network_options():
     """How this machine reaches YouTube. Set once; every retrieval uses it.
 
-    LECTIC_YTDLP_PROXY   a proxy URL (a residential one is what hosted transcript sites use)
-    LECTIC_YTDLP_COOKIES a cookies.txt exported from a signed-in browser
+    WAYKIT_YTDLP_PROXY   a proxy URL (a residential one is what hosted transcript sites use)
+    WAYKIT_YTDLP_COOKIES a cookies.txt exported from a signed-in browser
+    (Legacy LECTIC_YTDLP_* environment variables remain supported)
     """
     options, sources = [], []
-    proxy = os.environ.get('LECTIC_YTDLP_PROXY', '').strip()
+    proxy = (os.environ.get('WAYKIT_YTDLP_PROXY') or os.environ.get('LECTIC_YTDLP_PROXY', '')).strip()
     if proxy:
         options += ['--proxy', proxy]; sources.append('proxy')
-    cookies = os.environ.get('LECTIC_YTDLP_COOKIES', '').strip()
+    cookies = (os.environ.get('WAYKIT_YTDLP_COOKIES') or os.environ.get('LECTIC_YTDLP_COOKIES', '')).strip()
     if cookies:
         path = Path(cookies).expanduser()
-        require(path.is_file(), f'LECTIC_YTDLP_COOKIES points at a file that does not exist: {path}')
+        var_name = 'WAYKIT_YTDLP_COOKIES' if os.environ.get('WAYKIT_YTDLP_COOKIES') else 'LECTIC_YTDLP_COOKIES'
+        require(path.is_file(), f'{var_name} points at a file that does not exist: {path}')
         options += ['--cookies', str(path)]; sources.append('cookies')
     return options, sources
 
@@ -127,7 +129,7 @@ class YouTubeIngestor:
                 _, using = network_options()
                 raise Invalid('YouTube blocked this network, not this video. ' +
                               ('The configured ' + ' and '.join(using) + ' did not help; try a residential proxy or fresh cookies. '
-                               if using else 'Give Lectic another route once: set LECTIC_YTDLP_PROXY to a proxy URL (a residential proxy is what hosted transcript sites use) or LECTIC_YTDLP_COOKIES to a cookies.txt from a signed-in browser, then process again. ')
+                               if using else 'Give WayKit another route once: set WAYKIT_YTDLP_PROXY (or LECTIC_YTDLP_PROXY) to a proxy URL (a residential proxy is what hosted transcript sites use) or WAYKIT_YTDLP_COOKIES (or LECTIC_YTDLP_COOKIES) to a cookies.txt from a signed-in browser, then process again. ')
                               + 'Or process this collection from a home connection. The link remains saved. Detail: ' + detail)
             raise Invalid('YouTube caption retrieval failed: ' + detail + ' The link remains saved; retry later or check yt-dlp availability/version.')
         return result.stdout
@@ -136,7 +138,7 @@ class YouTubeIngestor:
         require(metadata is None, 'YouTube source metadata comes from retrieval; preserve personal annotations in capture notes.')
         canonical = self.canonical_url  # Bound playlists before dependency/network access.
         launcher = self.launcher()
-        require(launcher, 'yt-dlp is not installed. Run `lectic setup` to add YouTube support (it asks before installing anything), or `pip install yt-dlp`; then process this collection again. Nothing was installed automatically.')
+        require(launcher, 'yt-dlp is not installed. Run `waykit setup` (or `lectic setup`) to add YouTube support (it asks before installing anything), or `pip install yt-dlp`; then process this collection again. Nothing was installed automatically.')
         common = launcher + ['--ignore-config', '--no-plugin-dirs', '--no-remote-components',
                   '--no-cache-dir', '--no-playlist', '--skip-download', '--ignore-no-formats-error',
                   '--no-progress', '--encoding', 'utf-8', '--socket-timeout', '15',

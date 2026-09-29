@@ -122,7 +122,7 @@ class McpWorkflowTests(unittest.TestCase):
         result = c.call('lectic_work', input=str(ec.ROOT / 'fixtures/debugging'), name='Policy', action='save')
         run = Path(result['run'])
         sid = next(iter(ec.validate_sources(run)[1]))
-        with self.assertRaisesRegex(ec.Invalid, 'inside the Lectic home'):
+        with self.assertRaisesRegex(ec.Invalid, r'inside the (WayKit|Lectic|\(Lectic\))'):
             c.call('lectic_write_json', path=str(self.base / 'elsewhere.json'), value={})
         with self.assertRaisesRegex(ec.Invalid, 'immutable'):
             c.call('lectic_write_json', path=str(run.parent.parent / 'builds' / 'build-x' / 'manifest.json'), value={})

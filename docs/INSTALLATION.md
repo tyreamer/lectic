@@ -1,37 +1,39 @@
-# Install Lectic
+# Install WayKit (formerly Lectic)
 
 The recommended way is two commands, then talk to your assistant:
 
 ```bash
-pip install lectic
-lectic setup
+pip install waykit
+waykit setup
 ```
+
+Legacy `pip install lectic` and `lectic setup` remain fully supported aliases.
 
 That connects Claude Code and Codex through the [MCP server](MCP.md). The installed skill below is the other interface to the same knowledge; it works through your assistant's own file and command access. Both need Python 3.10+ and nothing else.
 
 ## As a skill
 
-Install new copies as `lectic`. The repository root is the skill; include all supporting folders, not just SKILL.md. Existing `expertise-compiler` installations remain supported and should be updated in place instead of duplicated. Both names use the same knowledge home, so saved collections and capabilities do not need moving. Give the installation message in the README to your assistant; no manual terminal setup is needed.
+Install new copies as `waykit` (or `lectic`). The repository root is the skill; include all supporting folders, not just SKILL.md. Existing `lectic` and `expertise-compiler` installations remain supported and should be updated in place instead of duplicated. All names share the same knowledge home, so saved collections and capabilities do not need moving. Give the installation message in the README to your assistant; no manual terminal setup is needed.
 
 ### Codex
 
 Ask:
 
-> Use $skill-installer to install the repository root at https://github.com/tyreamer/lectic as a personal skill named lectic, including all supporting files.
+> Use $skill-installer to install the repository root at https://github.com/tyreamer/waykit as a personal skill named waykit, including all supporting files.
 
-The repository-relative skill path is `.`. The installed helper resolves its supported personal skill directory; follow it rather than assuming one universal directory across Codex versions. For a local development copy, ask Codex to use this repository's clean-copy installer with its personal skill directory as the destination. If either `lectic` or `expertise-compiler` is already installed, follow the update flow for that existing copy.
+The repository-relative skill path is `.`. The installed helper resolves its supported personal skill directory; follow it rather than assuming one universal directory across Codex versions. For a local development copy, ask Codex to use this repository's clean-copy installer with its personal skill directory as the destination. If `waykit`, `lectic`, or `expertise-compiler` is already installed, follow the update flow for that existing copy.
 
-New installations are normally detected automatically; restart if absent. Describe your actual task, for example: “Use the transcripts in ./input to review my draft in ./plan.md for missing steps. Save this collection as Project Training for future work.” An explicit `$lectic` mention is an optional fallback (`$expertise-compiler` for a legacy installation). [Official Codex installation guidance](https://learn.chatgpt.com/docs/build-skills).
+New installations are normally detected automatically; restart if absent. Describe your actual task, for example: “Use the transcripts in ./input to review my draft in ./plan.md for missing steps. Save this collection as Project Training for future work.” An explicit `$waykit` mention is an optional fallback (`$lectic` or `$expertise-compiler` for a legacy installation). [Official Codex installation guidance](https://learn.chatgpt.com/docs/build-skills).
 
 ### Claude Code
 
 Ask:
 
-> Install https://github.com/tyreamer/lectic as my personal lectic skill. Download and review the repository, then use its bundled installer to copy the complete skill to ~/.claude/skills/lectic. Preserve any existing installation.
+> Install https://github.com/tyreamer/waykit as my personal waykit skill. Download and review the repository, then use its bundled installer to copy the complete skill to ~/.claude/skills/waykit. Preserve any existing installation.
 
-This personal skill works across local projects. A project-scoped alternative is `.claude/skills/lectic`. On Windows, the assistant resolves `~` to your user home. Update any existing `expertise-compiler` copy in place rather than installing a duplicate.
+This personal skill works across local projects. A project-scoped alternative is `.claude/skills/waykit`. On Windows, the assistant resolves `~` to your user home. Update any existing `lectic` or `expertise-compiler` copy in place rather than installing a duplicate.
 
-Describe what you're working on and what would make the result useful, alongside the source files. If automatic matching does not activate it, use `/lectic` followed by that request (`/expertise-compiler` for a legacy installation). Personal local skills are distinct from web/account skill installations. [Official Claude Code skill locations](https://code.claude.com/docs/en/skills).
+Describe what you're working on and what would make the result useful, alongside the source files. If automatic matching does not activate it, use `/waykit` followed by that request (`/lectic` or `/expertise-compiler` for a legacy installation). Personal local skills are distinct from web/account skill installations. [Official Claude Code skill locations](https://code.claude.com/docs/en/skills).
 
 ## Installation contents
 
@@ -43,11 +45,11 @@ For a first real task and reuse checks, follow the [alpha testing guide](testing
 
 The bundled `scripts/install_skill.py` copies reviewed local skill files: scripts, prompts, schemas, fixtures, and guidance. It excludes `.git`, user workspaces, and caches and refuses to overwrite a differing installation. It makes no network requests; downloading is the host assistant/installer's responsibility.
 
-The installation may live outside your project, including paths with spaces. Knowledge lives separately in your Lectic home (below). Generated capabilities can be used immediately from their saved locations; global installation or publishing happens only when requested.
+The installation may live outside your project, including paths with spaces. Knowledge lives separately in your WayKit home (below). Generated capabilities can be used immediately from their saved locations; global installation or publishing happens only when requested.
 
 ## Where knowledge is stored
 
-Lectic keeps one home per user, shared by every project and every assistant on the machine: `~/.lectic` by default, or the folder named by the `LECTIC_HOME` environment variable. A project that already contains a populated `.expertise-compiler/` folder keeps using it, so nothing moves on upgrade; to consolidate such a project into the shared home, copy its `.expertise-compiler/` contents into the home once and remove the project folder. Ask “Where does Lectic store my knowledge?” and the assistant reports the resolved location and why (`explicit`, `project-local` or `user`). The home holds private originals; back it up like any other personal data and keep it out of version control.
+WayKit keeps one home per user, shared by every project and every assistant on the machine: `~/.waykit` by default (or legacy `~/.lectic`), or the folder named by `WAYKIT_HOME` (or `LECTIC_HOME`). A project that already contains a populated `.expertise-compiler/` folder keeps using it, so nothing moves on upgrade; to consolidate such a project into the shared home, copy its `.expertise-compiler/` contents into the home once and remove the project folder. Ask “Where does WayKit store my knowledge?” and the assistant reports the resolved location and why (`explicit`, `project-local` or `user`). The home holds private originals; back it up like any other personal data and keep it out of version control.
 
 If setup is blocked, ask the assistant to diagnose unavailable skill discovery, missing file/command access, or the missing local runtime. It should explain the specific blocker and help resolve it without teaching you compiler commands. File-access policies may require permission. A web-only chat cannot replace local execution in this MVP.
 
@@ -57,17 +59,17 @@ The clean installer continues to refuse differing installations. Use the separat
 
 Ask your assistant:
 
-> Update Lectic and enable automatic updates on this PC.
+> Update WayKit and enable automatic updates on this PC.
 
-Or: “Is my installed Lectic current?”, “Check for an update now”, “Pause Lectic updates”, or “Turn automatic updates back on.” No terminal work is required from the user; the assistant operates the helpers below. Only enable periodic updates when requested.
+Or: “Is my installed WayKit current?”, “Check for an update now”, “Pause WayKit updates”, or “Turn automatic updates back on.” No terminal work is required from the user; the assistant operates the helpers below. Only enable periodic updates when requested.
 
-The updater follows **`tyreamer/lectic`, branch `main`**. This is the current development channel, not a separately certified stable release. It downloads a pinned commit over HTTPS, validates the payload, parses Python/JSON, stages replacement, and retains the old installation. These checks verify packaging, not effectiveness or freedom from all software bugs. No model calls, subscription, GitHub login, or always-running service is required.
+The updater follows **`tyreamer/waykit`, branch `main`**. This is the current development channel, not a separately certified stable release. It downloads a pinned commit over HTTPS, validates the payload, parses Python/JSON, stages replacement, and retains the old installation. These checks verify packaging, not effectiveness or freedom from all software bugs. No model calls, subscription, GitHub login, or always-running service is required.
 
-The installed copy is separate from a checkout. Updates never pull into a developer's working repository, extract a collection, regenerate a Capability Map, or mutate an older built artifact. Existing data stays in the Lectic home. The updater refuses a destination containing Git state or project data. Its scope is the compiler skill's instructions and supporting files.
+The installed copy is separate from a checkout. Updates never pull into a developer's working repository, extract a collection, regenerate a Capability Map, or mutate an older built artifact. Existing data stays in the WayKit home. The updater refuses a destination containing Git state or project data. Its scope is the compiler skill's instructions and supporting files.
 
 An existing copy without an update receipt needs one explicit enrollment. The `--adopt` operation retains **the entire existing installation**, including unrecognized files, in a backup before installing the published payload. It does not merge customizations. Thereafter, added, deleted, or modified installed files prevent replacement; `--adopt` cannot override this check. Python bytecode caches are ignored. Review local edits instead of removing the receipt to bypass protection.
 
-The current state, exact commit, last check, last result, changed files and backup paths are available with “Show Lectic's update status.” State and backups live outside the skill discovery directory, normally `~/.codex/lectic-updates/lectic/` for an installation at `~/.codex/skills/lectic`. Legacy installations retain `lectic-updates/expertise-compiler/`. Other supported skill roots get an adjacent `lectic-updates/` directory. Receipts use version `1.0`, with a destination binding, upstream repository/ref, file SHA-256 hashes, commit, check interval and backup history. They are distribution metadata, separate from Expertise IR.
+The current state, exact commit, last check, last result, changed files and backup paths are available with “Show WayKit's update status.” State and backups live outside the skill discovery directory, normally `~/.codex/waykit-updates/waykit/` (or legacy `~/.codex/lectic-updates/lectic/`). Legacy installations retain `lectic-updates/expertise-compiler/`. Other supported skill roots get an adjacent update directory. Receipts use version `1.0`, with a destination binding, upstream repository/ref, file SHA-256 hashes, commit, check interval and backup history. They are distribution metadata, separate from Expertise IR.
 
 On **Windows**, the optional per-user scheduled task wakes hourly and at login, but contacts GitHub at most once every 24 hours. It runs without a console window, administrator privileges, stored password or AI session, and only while the user is logged in. Missed checks catch up when the machine/user is available. Offline checks, download failures, file locks and local edits preserve the installation and leave a `needs_attention` result for the assistant to explain. There are no push notifications. “Check now” bypasses the time gate; it does not bypass local-edit protection.
 

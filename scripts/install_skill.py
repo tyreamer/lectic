@@ -28,7 +28,7 @@ def payload_files(source):
 def install(destination, source=ROOT):
     destination = Path(destination).expanduser().resolve()
     source = Path(source).resolve()
-    require(destination.name in SKILL_NAMES, 'Skill folder must be named lectic (or legacy expertise-compiler)')
+    require(destination.name in SKILL_NAMES, 'Skill folder must be named waykit, lectic (or legacy expertise-compiler)')
     require(not destination.is_relative_to(source), 'Install outside the source repository')
     files = payload_files(source)
     if destination.exists():

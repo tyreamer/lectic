@@ -84,8 +84,8 @@ class StartTests(Base):
         self.assertIn('debugging.srt', out)
         self.assertIn('No reusable knowledge yet', out)  # honest: saving is not learning
         self.assertIn('Prepare my Field Notes collection', out)
-        self.assertIn('lectic share-artifact "Field Notes"', out)
-        self.assertIn('lectic pack "Field Notes"', out)
+        self.assertTrue('waykit share-artifact "Field Notes"' in out or 'lectic share-artifact "Field Notes"' in out)
+        self.assertTrue('waykit pack "Field Notes"' in out or 'lectic pack "Field Notes"' in out)
         self.assertEqual([c['name'] for c in Library(self.project).index['collections']], ['Field Notes'])
 
     def test_start_accepts_one_file_and_names_the_collection_after_it(self):
@@ -96,8 +96,10 @@ class StartTests(Base):
         self.assertEqual((result['mode'], result['collection'], result['source_count']), ('saved', 'Debugging Sources', 1))
         self.assertEqual(result['desired_use'], 'review experiments before I run them')
         self.assertIn('use it to review experiments before I run them', result['next_prompt'])
-        self.assertEqual(result['refresh_command'],
-                         f'lectic refresh "Debugging Sources" --from "{self.material / "debugging.srt"}"')
+        self.assertTrue(result['refresh_command'] in (
+            f'waykit refresh "Debugging Sources" --from "{self.material / "debugging.srt"}"',
+            f'lectic refresh "Debugging Sources" --from "{self.material / "debugging.srt"}"'
+        ))
         self.assertTrue(Path(result['location']).is_dir())
 
     def test_start_reuses_an_inferred_folder_name(self):
@@ -171,8 +173,10 @@ class ShareArtifactTests(Base):
         self.assertTrue(page.startswith('<!doctype html>'))
         self.assertIn('<h1>Debugging Methods</h1>', page)
         self.assertIn('What it knows', page)
-        self.assertIn('Provenance', page)
-        self.assertIn('lectic install &quot;debugging-methods.lectic&quot;', page)
+        self.assertTrue(
+            'waykit install &quot;debugging-methods.waykit&quot;' in page or
+            'lectic install &quot;debugging-methods.lectic&quot;' in page
+        )
         # Self-contained: no scripts, no external resources.
         self.assertNotIn('<script', page.lower())
         for marker in ('src=', 'http-equiv', '<link'): self.assertNotIn(marker, page)

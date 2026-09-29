@@ -24,6 +24,10 @@
       "type": "string",
       "minLength": 1
     },
+    "waykit_version": {
+      "type": "string",
+      "minLength": 1
+    },
     "corpus_id": {
       "type": "string",
       "pattern": "^corpus-[a-f0-9]{64}$"

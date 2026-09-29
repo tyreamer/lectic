@@ -15,24 +15,32 @@ from ec import Invalid, fingerprint, require, safe_child
 
 LEGACY_DIRNAME = '.expertise-compiler'
 LEGACY_MARKERS = ('library.json', 'session.json', 'runs', 'collections', 'capture', 'capabilities')
-DEFAULT_DIRNAME = '.lectic'
-ENV = 'LECTIC_HOME'
+DEFAULT_DIRNAME = '.waykit'
+LEGACY_LECTIC_DIRNAME = '.lectic'
+ENV = 'WAYKIT_HOME'
+LEGACY_ENV = 'LECTIC_HOME'
 
 
 def storage_root(project='.'):
     project = Path(project).resolve()
-    explicit = os.environ.get(ENV)
+    explicit = os.environ.get(ENV) or os.environ.get(LEGACY_ENV)
     if explicit:
         return Path(explicit).expanduser().resolve()
+    if project.is_dir() and any((project / marker).exists() for marker in LEGACY_MARKERS):
+        return project
     legacy = project / LEGACY_DIRNAME
     # Only real storage counts; a scratch folder with the old name must not capture the home.
     if legacy.is_dir() and any((legacy / marker).exists() for marker in LEGACY_MARKERS):
         return legacy
-    return (Path.home() / DEFAULT_DIRNAME).resolve()
+    waykit_home = (Path.home() / DEFAULT_DIRNAME).resolve()
+    lectic_home = (Path.home() / LEGACY_LECTIC_DIRNAME).resolve()
+    if not waykit_home.exists() and lectic_home.exists():
+        return lectic_home
+    return waykit_home
 
 
 def storage_mode(root, project='.'):
-    if os.environ.get(ENV): return 'explicit'
+    if os.environ.get(ENV) or os.environ.get(LEGACY_ENV): return 'explicit'
     if Path(root).resolve() == (Path(project).resolve() / LEGACY_DIRNAME): return 'project-local'
     return 'user'
 

@@ -47,8 +47,8 @@ def readable_input(project, source):
     candidate = (Path(project) / source).expanduser()
     if candidate.is_file():
         require(candidate.suffix.lower() in EXTENSIONS,
-                'Lectic reads .txt, .md, .vtt and .srt files, folders of them, or web links: ' + source)
-        with tempfile.TemporaryDirectory(prefix='lectic-start-') as staging:
+                'WayKit reads .txt, .md, .vtt and .srt files, folders of them, or web links: ' + source)
+        with tempfile.TemporaryDirectory(prefix='waykit-start-') as staging:
             shutil.copy2(candidate, Path(staging) / candidate.name)
             yield staging
         return
@@ -69,7 +69,7 @@ def start(project='.', sources=(), name=None, goal=None):
                 'first_result': sample['first_result'], 'second_result': sample['second_result'],
                 'reused_units': len(sample['reuse']['reused_units']),
                 'next_prompt': sample['next_prompt'],
-                'share_command': 'lectic share-artifact "' + sample['collection'] + '"'}
+                'share_command': 'waykit share-artifact "' + sample['collection'] + '"'}
     library = Library(project)
     name = name or suggested_name(project, sources[0])
     target = existing_collection(library, name)
@@ -79,7 +79,7 @@ def start(project='.', sources=(), name=None, goal=None):
         with readable_input(project, source) as material:
             result = work(project=project, input=material, collection=collection,
                           name=None if collection else name, action=action)
-        require(result['phase'] == 'archived', 'Lectic could not save that material: ' + str(result))
+        require(result['phase'] == 'archived', 'WayKit could not save that material: ' + str(result))
         collection = result['collection_id']
     library.reload()
     summary = library.inspect(collection)
@@ -99,5 +99,5 @@ def start(project='.', sources=(), name=None, goal=None):
                         else 'No reusable knowledge yet: the sources are saved and indexed; your assistant prepares it next.'),
             'source_revision': summary['active_revision'], 'desired_use': desired_use or None,
             'next_prompt': next_prompt,
-            'share_command': 'lectic share-artifact "' + summary['name'] + '"',
-            'refresh_command': 'lectic refresh "' + summary['name'] + '" --from "' + sources[-1] + '"'}
+            'share_command': 'waykit share-artifact "' + summary['name'] + '"',
+            'refresh_command': 'waykit refresh "' + summary['name'] + '" --from "' + sources[-1] + '"'}

@@ -19,12 +19,12 @@ The suite retains evidence/schema/hash/package failures and adds installed-skill
 An assistant can download/review a checkout, then install a clean copy using:
 
 ```text
-python scripts/install_skill.py --dest /personal/skills/lectic
+python scripts/install_skill.py --dest /personal/skills/waykit
 ```
 
-Resolve the platform's destination first: Codex's installed `$skill-installer` chooses its personal directory; Claude Code uses `~/.claude/skills/lectic`. The copy helper accepts an explicit path and never downloads or silently overwrites a differing installation. It includes runtime resources and fixtures, but no `.git`, caches, or user work. Tests install to temporary directories; they do not change real user configuration. Legacy `expertise-compiler` destinations remain supported: installation/updating adapts only the skill name and its default invocation prompt to match that folder.
+Resolve the platform's destination first: Codex's installed `$skill-installer` chooses its personal directory; Claude Code uses `~/.claude/skills/waykit` (or legacy `lectic`). The copy helper accepts an explicit path and never downloads or silently overwrites a differing installation. It includes runtime resources and fixtures, but no `.git`, caches, or user work. Tests install to temporary directories; they do not change real user configuration. Legacy `lectic` and `expertise-compiler` destinations remain supported: installation/updating adapts only the skill name and its default invocation prompt to match that folder.
 
-For Codex's bundled GitHub installer, use repository `tyreamer/lectic`, path `.`, and explicit name `lectic`. Follow the installed helper's actual syntax. For example, where that helper is present: `install-skill-from-github.py --repo tyreamer/lectic --path . --name lectic`. This is internal installation machinery; the README gives a chat request instead. Check for an existing installation under either name before installing another copy; the [legacy update procedure](INSTALLATION.md#existing-expertise-compiler-installations) preserves its path and schedule.
+For Codex's bundled GitHub installer, use repository `tyreamer/waykit`, path `.`, and explicit name `waykit`. Follow the installed helper's actual syntax. For example, where that helper is present: `install-skill-from-github.py --repo tyreamer/waykit --path . --name waykit`. This is internal installation machinery; the README gives a chat request instead. Check for an existing installation under either name before installing another copy; the [legacy update procedure](INSTALLATION.md#existing-expertise-compiler-installations) preserves its path and schedule.
 
 ## Structure
 
@@ -41,7 +41,7 @@ For Codex's bundled GitHub installer, use repository `tyreamer/lectic`, path `.`
 - `schemas/`: versioned durable artifact contracts. Regenerate from `scripts/build_schemas.py` when intentionally changing them.
 - `fixtures/flows/`: domain-specific held-out cases and scripted conversation contracts.
 
-The repository root is also the `lectic` Python package (`pyproject.toml` maps it), so `pip install -e .` gives you the `lectic` command and `python -m lectic.cli serve` against your checkout; `cli.py` and `scripts/lectic_mcp.py` are the user-facing entry points. Knowledge lives in the user's Lectic home (`~/.lectic` or `LECTIC_HOME`), outside both the installed skill and the project; a project that already has a populated `.expertise-compiler/` keeps using it. Tests set `LECTIC_HOME` to a temporary folder through `tests/support.py`, so they never touch the real home. `scripts/store.py` is the only module allowed to link, rename or lock; route new persistence through it.
+The repository root is also the `waykit` Python package (`pyproject.toml` maps it), so `pip install -e .` gives you the `waykit` (and legacy `lectic`) command and `python -m waykit.cli serve` (or `python -m lectic.cli serve`) against your checkout; `cli.py` and `scripts/waykit_mcp.py` / `scripts/lectic_mcp.py` are the user-facing entry points. Knowledge lives in the user's WayKit (Lectic) home (`~/.waykit`, `~/.lectic` or `WAYKIT_HOME` / `LECTIC_HOME`), outside both the installed skill and the project; a project that already has a populated `.expertise-compiler/` keeps using it. Tests set `WAYKIT_HOME` / `LECTIC_HOME` to a temporary folder through `tests/support.py`, so they never touch the real home. `scripts/store.py` is the only module allowed to link, rename or lock; route new persistence through it.
 
 `tests/test_goals.py` covers goal/no-goal/archive paths, actual saved synthetic reviews in two domains, fresh-process collection reuse, checklist output, another source pass, additive source dependencies, private export boundaries, adoption, tampering, installation and fair evaluation context. It replays authored semantic data at the assistant boundary; it is not a live assistant effectiveness test.
 
