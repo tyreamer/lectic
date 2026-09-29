@@ -33,15 +33,16 @@ lectic = "waykit.cli:main"
 [tool.setuptools]
 packages = [
     "waykit",
+    "waykit.scripts",
+    "waykit.scripts.ingestors",
     "lectic",
-    "scripts",
-    "scripts.ingestors"
+    "lectic.scripts",
 ]
-package-dir = {"" = "."}
+package-dir = {"waykit" = ".", "lectic" = "lectic"}
 include-package-data = true
 
 [tool.setuptools.package-data]
-"*" = [
+waykit = [
     "SKILL.md", "README.md", "LICENSE", "NORTH_STAR.md", "DESIGN.md", "AGENTS.md",
     "agents/*.yaml", "prompts/*.md", "schemas/*.json", "docs/*.md", "registry/*.json",
     "fixtures/*", "fixtures/**/*",

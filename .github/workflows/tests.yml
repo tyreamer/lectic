@@ -28,6 +28,9 @@ jobs:
         run: |
           python -m pip install --quiet .
           cd "$RUNNER_TEMP"
+          WAYKIT_HOME="$RUNNER_TEMP/waykit-home" waykit status
           LECTIC_HOME="$RUNNER_TEMP/lectic-home" lectic status
+          python -m waykit.scripts.release_check
           python -m lectic.scripts.release_check
+          printf '{"jsonrpc":"2.0","id":1,"method":"ping"}\n' | WAYKIT_HOME="$RUNNER_TEMP/waykit-home" python -m waykit.cli serve | grep -q '"result": {}'
           printf '{"jsonrpc":"2.0","id":1,"method":"ping"}\n' | LECTIC_HOME="$RUNNER_TEMP/lectic-home" python -m lectic.cli serve | grep -q '"result": {}'
