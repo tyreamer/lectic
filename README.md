@@ -17,9 +17,103 @@ Works with Claude Code, OpenAI Codex, ChatGPT, Claude Desktop, and Cursor.
 
 ## What Lectic does
 
-When you paste text or a video link into a chat with an AI, the AI forgets that information as soon as you close the conversation.
+When you paste text or a video link into a chat with an AI, it is usually available only in that conversation. Some assistants offer memory, but it may be limited, selective, or unavailable when you need to reliably reuse a specific source.
 
 Lectic saves your links, notes, and video transcripts into folders on your computer. When you ask your AI a question, it searches those saved files, writes an answer based on what you saved, and shows you the exact sentence and timestamp from the original source.
+
+---
+
+## From saved facts to reusable experience
+
+Lectic is not a replacement for an AI's personal memory. Memory can retain small facts; a Lectic pack gives the AI explicit, task-ready context for a particular kind of work: your preferences, style, strategies, constraints, and source-backed procedures.
+
+Say you ask AI to help plan a trip.
+
+### 1D — Context
+
+You tell it:
+
+> “I like great restaurants, direct flights, nice hotels, and I hate overpacked itineraries.”
+
+It uses that for this conversation. Then the context disappears.
+
+### 2D — Saved memory
+
+The AI remembers:
+
+> “Prefers good restaurants, direct flights, and relaxed trips.”
+
+Useful — but flat. It remembers a few facts about you.
+
+### 3D — Lectic context pack
+
+Instead, imagine carrying a reusable **Travel Planning Pack**—a playbook for planning, not a record of every trip you have taken:
+
+```text
+Travel Planning
+
+FLIGHTS
+- Prefer nonstop whenever reasonable
+- Avoid very early departures
+- Compare cash vs points
+- Preferred airlines and airports
+- Seat preferences
+- When fares are usually worth booking
+
+HOTELS
+- Preferred brands and loyalty programs
+- Walkability matters
+- Quiet rooms > nightlife
+- What makes an upgrade worth paying for
+- How much to spend based on the trip
+
+FOOD
+- Favorite cuisines
+- Restaurants worth planning around
+- Avoid tourist traps
+- Reservation strategy
+- Price range
+- Dietary preferences
+
+ITINERARIES
+- Don't overpack the day
+- Cluster activities geographically
+- Leave time to explore
+- One major thing per day
+- Prefer experiences over checklist sightseeing
+
+BOOKING STRATEGY
+- What to book first
+- How far ahead to book
+- When to wait
+- When to use points
+- When flexibility matters more than price
+
+PLANNING APPROACH
+- Balance comfort, cost, and time
+- What trade-offs matter most
+- How much structure is useful
+- Common mistakes to avoid
+- Decision rules when options are close
+
+SOURCES + RULES
+- Trusted travel sites
+- Loyalty-program rules
+- Booking methods
+- Decision criteria
+```
+
+Now you can say:
+
+> **“Plan me five days in Japan.”**
+
+The AI does not need you to teach it how you travel again. It already has the playbook: a reusable context for making travel decisions in your style.
+
+**1D remembers what you said.**
+
+**2D remembers facts about you.**
+
+**3D carries a context pack for the work you want to do.**
 
 ---
 
