@@ -155,6 +155,16 @@ def build_pack(project, collection, destination=None, include_sources=None, team
                 'corpus_id': corpus['corpus_id'], 'ir_hash': fingerprint(ir), 'unit_count': len(ir['units']),
                 'sources_included': bool(include_sources), 'sources': sources, 'maps': maps, 'methods': methods,
                 'share_note': SHARE_NOTE, 'files': {}}
+    # Carry the useful meaning of this collection without requiring a model or a
+    # proprietary graph service on the receiving side.
+    from intelligence import knowledge_graph
+    graph = knowledge_graph(project)
+    profile = next((p for p in graph['collections'] if p['collection_id'] == data['collection_id']), None)
+    if profile:
+        relationships = [r for r in graph['relationships'] if data['collection_id'] in {r['from'], r['to']}]
+        manifest['intelligence'] = {'layer': profile['layer'], 'relationships': relationships}
+        files['knowledge/relationships.json'] = manifest['intelligence']
+        encoded['knowledge/relationships.json'] = (json.dumps(manifest['intelligence'], ensure_ascii=False, indent=2) + '\n').encode('utf-8')
     if team:
         manifest['distribution'] = {
             'scope': 'team',

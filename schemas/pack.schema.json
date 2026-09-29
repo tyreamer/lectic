@@ -161,6 +161,16 @@
       },
       "additionalProperties": false
     },
+    "intelligence": {
+      "type": "object",
+      "description": "Portable plain-data classification and relationships for this knowledge area.",
+      "properties": {
+        "layer": {"enum": ["personal", "domain"]},
+        "relationships": {"type": "array", "items": {"type": "object"}}
+      },
+      "required": ["layer", "relationships"],
+      "additionalProperties": false
+    },
     "files": {
       "type": "object"
     }

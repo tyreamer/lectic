@@ -11,7 +11,7 @@ That is different from asking an AI to summarize something once. A summary helps
 [![Python: 3.10+](https://img.shields.io/badge/python-3.10%2B-3776ab)](https://github.com/tyreamer/lectic/blob/main/docs/DEVELOPING.md)
 [![License: MIT](https://img.shields.io/badge/license-MIT-34d399)](https://github.com/tyreamer/lectic/blob/main/LICENSE)
 
-Works with Claude Code, OpenAI Codex, ChatGPT, Claude Desktop, and Cursor.
+Works locally with Claude Code, OpenAI Codex, Claude Desktop, and Cursor.
 
 ---
 
@@ -135,17 +135,9 @@ Say this to your assistant:
 
 Lectic creates a test collection from a small debugging lesson, reviews one plan, and then applies the same saved knowledge to a second plan. The output shows the input, the reusable checklist, and how many saved knowledge units were reused. This test runs on your computer without downloading anything or calling an external API.
 
-### 3. Install it yourself
+### 3. Need a different setup?
 
-If you prefer to install it yourself, run these commands in your terminal:
-
-```bash
-pip install --upgrade lectic
-lectic setup --yes
-lectic start
-```
-
-`lectic start` asks what Lectic should learn from and what you want to use it for. Press Enter at the first question to run the offline debugging example instead. You can run `lectic status` at any time to see where your files are saved and which assistants are connected.
+Lectic is designed to be set up by your assistant. If you need a manual, self-hosted, or contributor setup, see the [installation guide](docs/INSTALLATION.md).
 
 ---
 
@@ -174,25 +166,11 @@ See the [example gallery](docs/EXAMPLES.md) for five complete journeys: learning
 
 ## Share and maintain what you build
 
-Export a portable, standalone HTML page that opens in any browser and can be hosted anywhere:
+Ask your assistant to export a collection as a portable web page, refresh it after source material changes, or compare two revisions. It handles the underlying steps and tells you what changed.
 
-```bash
-# Export interactive HTML page for a collection
-lectic share "Engineering Standards"
+> Export my Engineering Standards collection as a web page.
 
-# Or write that page to a file explicitly
-lectic share-artifact "Engineering Standards"
-
-# Or prepare and build knowledge directly
-lectic prepare "Engineering Standards"
-```
-
-When the source folder changes, save a new immutable revision and inspect the difference:
-
-```bash
-lectic refresh "Engineering Standards" --from ./engineering-standards
-lectic diff "Engineering Standards"
-```
+> Update my Engineering Standards collection with the latest source folder and show me what changed.
 
 Earlier source revisions and builds remain available. Lectic reports file-level changes immediately, then your connected assistant prepares updated knowledge without fabricating semantic change counts.
 
@@ -226,20 +204,11 @@ The assistant preserves these observations with source passages and situation li
 
 ### 3. Share collections with coworkers
 
-You can export a collection into a single `.lectic` file to share with other people:
+Ask your assistant to package a collection into a single `.lectic` file for a coworker:
 
-```bash
-# 1. Set your name and email address so recipients know who created the file
-lectic identity set "Alex Rivera" --contact alex@example.com
+> Package my Engineering Standards collection so I can send it to my team.
 
-# 2. Export your collection into a single file
-lectic pack "Engineering Standards" --team
-
-# 3. Send that file to a coworker. They install it by running:
-lectic install engineering-standards.lectic --as standards --pin
-```
-
-When your coworker asks their assistant about engineering standards, their assistant will search and quote the same material. When you update the file, your coworker can run `lectic update standards` to get the latest version.
+When your coworker gives that file to their assistant, it can install the collection and search and quote the same material. When you update the pack, they can ask their assistant to update theirs.
 
 ---
 
@@ -259,13 +228,11 @@ Walled gardens and social networks (such as Instagram, TikTok, Facebook, and X/T
 
 ## Checking your files
 
-You can check whether every quote in a collection still matches the original file text by running:
+Ask your assistant to check whether every quote in a collection still matches the original source text:
 
-```bash
-lectic verify "Engineering Standards"
-```
+> Verify the quotes in my Engineering Standards collection.
 
-If all quotes match their sources, Lectic prints `verified` and exits with code 0. If a quote was edited, deleted, or its source file was moved, Lectic prints which quote failed and exits with code 1. You can run this command in automated test scripts to make sure your AI never quotes broken sources.
+It tells you whether the quotes still match, or which source needs attention.
 
 ---
 
@@ -273,7 +240,7 @@ If all quotes match their sources, Lectic prints `verified` and exits with code 
 
 All of your saved files, notes, and collections are stored in a folder called `.lectic` in your user directory (for example, `C:\Users\YourName\.lectic` on Windows or `/Users/yourname/.lectic` on macOS). Lectic does not send your files to a cloud server. Your data stays on your computer.
 
-If you want to use Lectic with ChatGPT on the web or on your phone, you can run `lectic share --tunnel` to create a temporary, password-protected web address. Anyone who has that address can read your saved files, so keep that address private.
+ChatGPT on the web and phone do not yet have a simple Lectic connection. The current self-hosted route is for technical users, not normal setup. A chat-first hosted connection—where you connect once and then simply talk to Lectic—is still to be built.
 
 ---
 
@@ -281,4 +248,4 @@ If you want to use Lectic with ChatGPT on the web or on your phone, you can run 
 
 Lectic is open-source software licensed under the MIT license.
 
-For technical details, read the [developer documentation](docs/DEVELOPING.md), the [architecture notes](DESIGN.md), and the [MCP tool reference](docs/MCP.md).
+For technical details, read the [developer documentation](docs/DEVELOPING.md), the [architecture notes](DESIGN.md), and the [tool reference](docs/MCP.md).

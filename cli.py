@@ -25,7 +25,9 @@ Portability & Teams:
     lectic connect URL      connect your AI to a remote Lectic library
     lectic identity         set your author name for playbooks you share
     lectic search [QUERY]   find ready-to-use playbooks from creators and teams
-    lectic inspect TARGET   preview what's inside a playbook before adding it
+    lectic inspect [TARGET] show your knowledge and its useful connections, or preview a pack
+    lectic explain NAME     explain what a knowledge area knows and where it came from
+    lectic context "TASK"   show the focused knowledge Lectic would use for a task
     lectic update NAME      get the latest updates for an installed playbook
     lectic publish NAME     share your playbook with your team or community
     lectic serve [--http]   start the AI connector (launched automatically by your AI)
@@ -575,13 +577,27 @@ def search(argv):
 
 
 def inspect_cmd(argv):
-    """Inspect a pack from the registry, local file, or URL without installing."""
+    """Inspect local knowledge, or a pack from the registry, local file, or URL."""
     from packs import inspect_pack
     from registry import inspect_registry_pack, format_inspect_report
     location = next((a for a in argv if not a.startswith('--')), None)
     if not location:
-        print('Usage: lectic inspect REGISTRY:NAME | FILE | URL')
-        return 2
+        from intelligence import knowledge_graph
+        info = knowledge_graph(os.getcwd())
+        if '--json' in argv:
+            print(json.dumps(info, indent=2)); return 0
+        print('Your Lectic knowledge')
+        if not info['collections']:
+            print('  Nothing has been saved yet.'); return 0
+        for item in info['collections']:
+            kind = 'personal preferences' if item['layer'] == 'personal' else 'reusable knowledge'
+            print(f"  {item['name']} — {item['knowledge_units']} useful idea(s), {kind}")
+        if info['relationships']:
+            names = {x['collection_id']:x['name'] for x in info['collections']}
+            print('\nUseful connections')
+            for rel in info['relationships']:
+                print(f"  {names[rel['from']]} → {names[rel['to']]}: {rel['reason']}")
+        return 0
     try:
         if location.startswith('registry:'):
             info = inspect_registry_pack(location, project=os.getcwd())
@@ -595,6 +611,47 @@ def inspect_cmd(argv):
     except Exception as exc:
         print(f"Inspect failed: {exc}")
         return 1
+    return 0
+
+
+def explain_cmd(argv):
+    from intelligence import explain_collection
+    names = [a for a in argv if not a.startswith('--')]
+    if not names:
+        print('Usage: lectic explain "Knowledge name"'); return 2
+    try: info = explain_collection(os.getcwd(), ' '.join(names))
+    except Exception as exc:
+        print('Explain failed: ' + str(exc)); return 1
+    if '--json' in argv:
+        print(json.dumps(info, indent=2)); return 0
+    print(info['summary'])
+    if info['knows']:
+        print('\nWhat it knows')
+        for title in info['knows']: print('  ' + title)
+    if info['relationships']:
+        print('\nWhy it connects')
+        for rel in info['relationships']: print('  ' + rel['reason'])
+    if info['sources']:
+        print('\nLearned from')
+        for source in info['sources']: print('  ' + source['title'])
+    return 0
+
+
+def context_cmd(argv):
+    from intelligence import compose_context
+    intent = ' '.join(a for a in argv if not a.startswith('--'))
+    if not intent:
+        print('Usage: lectic context "describe the task"'); return 2
+    try: result = compose_context(os.getcwd(), intent)
+    except Exception as exc:
+        print('Context failed: ' + str(exc)); return 1
+    if '--json' in argv:
+        print(json.dumps(result, indent=2)); return 0
+    print(result['summary'])
+    print('\nUsing for this task')
+    for item in result['using']: print(f"  {item['name']} — {item['why']}")
+    print(f"  {result['task_context']['label']} — {result['task_context']['reason']}")
+    print(f"\nSelected {len(result['knowledge'])} relevant idea(s); unrelated collections were left out.")
     return 0
 
 
@@ -1025,7 +1082,7 @@ def main(argv=None):
                 'identity': identity, 'share': share, 'share-artifact': share_artifact,
                 'refresh': refresh_cmd, 'diff': diff_cmd, 'connect': connect,
                 'pack': pack, 'install': install, 'update': update, 'publish': publish, 'verify': verify,
-                'search': search, 'inspect': inspect_cmd, 'inbox': inbox_cmd,
+                'search': search, 'inspect': inspect_cmd, 'explain': explain_cmd, 'context': context_cmd, 'inbox': inbox_cmd,
                 'backup': backup, 'push': push, 'pull': pull, 'restore': restore,
                 'status': status, 'serve': serve, 'ec': ec}
     if command in {'-h', '--help', 'help'} or command not in handlers:

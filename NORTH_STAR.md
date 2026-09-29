@@ -47,6 +47,16 @@ For example, the same collection of 50 expert videos could independently support
 
 These are independent builds from shared sources and expertise, not successive conversions that replace one another. This example describes the intended architecture, not a claim that all six exporters exist today.
 
+## Product direction: local Lectic and the account + library service
+
+Local Lectic remains a first-class product: files, CLI and assistant tools must remain useful without a cloud account. Lectic Cloud is the planned account and library service that makes the same portable knowledge available across authorized clients. It owns account identity, library ownership, permissions, availability and eventual synchronization. Packs remain inspectable, versionable, exportable artifacts carrying preferences, styles, strategies, procedures and source evidence.
+
+Lectic-managed storage is the default direction for the hosted library. GitHub is an optional artifact home and import/export destination; users should not need a repository or GitHub account to use Lectic. Users must be able to export their knowledge and continue locally. The core representation and API remain independent of ChatGPT, Claude, Codex, web interfaces and future clients.
+
+The intended experience is to connect once and then speak naturally: save useful material, learn from a source, apply knowledge, or organize it. The interface should find relevant packs and explain meaningful organization decisions without requiring users to choose packs, create a graph, configure MCP or understand RDF. Pack relationships should express useful connections such as specialization and related preferences, preserve their rationale and scope, and remain inspectable and correctable. A graph database or RDF serialization is an implementation decision, not a prerequisite.
+
+This is the accepted development direction, not a description of shipped capabilities. The current remote server is single-user; managed accounts, library authorization, automatic pack relationships, hosted orchestration and synchronization remain future work. See [the service design](DESIGN.md#future-interface-chat-first-hosted-access) for the delivery boundaries.
+
 ## Compilation model
 
 ```text
@@ -170,4 +180,4 @@ For future architectural changes, reviewers should ask:
 - What test would reveal that the compiled capability does not behave as intended?
 - Does this strengthen expertise compilation for AI builders, or drift toward a digital-person destination or ingestion-only utility?
 
-A hosted store, an API or an MCP server are interfaces to the core, and are welcome when they carry the same immutable, content-addressed records and the same validators; they must not become a marketplace, billing, multi-tenant accounts or a reason to weaken the IR. Do not add agent teams or a large catalog of interfaces/targets simply to illustrate this architecture. Extend real boundaries incrementally, keep older artifacts readable, and label future direction separately from implemented capability.
+A hosted store, an API or an MCP server must carry the same immutable, content-addressed records and the same validators. Account identity and multi-user authorization belong in the planned account and library service, outside the provider-neutral IR. Marketplace and billing expansion are separate product decisions. Do not add agent teams or a large catalog of interfaces/targets simply to illustrate this architecture. Extend real boundaries incrementally, keep older artifacts readable, and label future direction separately from implemented capability.

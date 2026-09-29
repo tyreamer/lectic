@@ -4,6 +4,8 @@
 
 It requires Python 3.10+ and the package runtime dependencies (`cryptography`, plus `tomli` on Python 3.10). Install Lectic as a package before launching the server.
 
+The intelligent context tools are `lectic_knowledge`, `lectic_explain`, `lectic_context`, and `lectic_import_plan`. They infer knowledge roles and relationships, compose only the evidence-backed units relevant to the current task, preserve current task details without saving them as permanent knowledge, and explain gaps without blocking the assistant. Their results are plain JSON and Markdown so every model provider can use them.
+
 ## Connect a client
 
 The short way:

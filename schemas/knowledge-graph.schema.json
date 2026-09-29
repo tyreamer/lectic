@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "knowledge-graph",
+  "type": "object",
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "graph_id": {"type": "string", "pattern": "^graph-[a-f0-9]{24}$"},
+    "generated_at": {"type": "string", "minLength": 1},
+    "collections": {"type": "array", "items": {"type": "object"}},
+    "relationships": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "from": {"type": "string"}, "to": {"type": "string"},
+          "kind": {"enum": ["related_to", "specializes", "part_of", "useful_with", "derived_from", "supersedes", "contradicts", "personal_preference_relevant_to", "learned_from"]},
+          "reason": {"type": "string", "minLength": 1},
+          "shared_topics": {"type": "array", "items": {"type": "string"}},
+          "evidence": {"type": "array", "items": {"type": "object"}}
+        },
+        "required": ["from", "to", "kind", "reason", "shared_topics", "evidence"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["schema_version", "graph_id", "generated_at", "collections", "relationships"],
+  "additionalProperties": false
+}

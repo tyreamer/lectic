@@ -38,6 +38,7 @@ How to talk to the user:
 - When the user asks to save a link, text, or file, call lectic_capture_save immediately. The response decides where it went; follow it instead of improvising. `decision` is one of: `explicit` (they named the collection), `auto_filed` (one collection clearly matched and the item is already in it), `needs_clarification` (several fit, so ask the one short `question` verbatim and nothing else), `inbox_fallback` (nothing fit, so it is in Inbox). Say the returned `confirmation` in your own words, always naming where the item went and what Lectic can actually read from it.
 - When the user asks to try Lectic, call lectic_starter. Show the sample review and checklist, explain that these are sample examples from a saved lesson, and give one question the user can ask next about their own work.
 - When the user asks "What do I have saved?", call lectic_library. List their saved collections and tell them what questions they can ask about those files.
+- When the user asks for help using saved knowledge, call lectic_context with their task. Use its focused knowledge and show the short "Using for this task" list when that would build trust. Continue even when it reports a knowledge gap.
 - When the user asks you to review work or answer a question using their saved files, search their files, write an answer based on what you find, and quote the exact sentence and timestamp from the original source.
 - Speak in plain, normal sentences. Tell the user what the saved file says and quote the exact words. Never mention technical IDs, content hashes, file paths, or internal JSON, and never ask the user to run terminal commands.
 - When files are waiting in the drop folder (Documents/Lectic Inbox), tell the user what was dropped and ask where they want to file them. When confirmed, call lectic_inbox(action='route').
@@ -77,6 +78,17 @@ TOOLS = [
           'text': S('Incoming text to match candidate collections for.'),
           'title': S('Incoming title to match candidate collections for.')}),
     tool('lectic_collection_candidates', 'Find candidate collections for incoming source material (URL, text, title, files) using topic, creator and keyword matching. Use when the user asks to organize material; saving to Inbox does not need this step.',
+         {'project': PROJECT, 'url': S('Incoming link/URL.'), 'text': S('Incoming text or transcript snippet.'),
+          'title': S('Title if known.'), 'files': L('Filenames or file paths.'), 'note': S('User note if any.')}),
+    tool('lectic_knowledge', 'Show the knowledge Lectic has inferred, including personal or reusable roles and plain-language relationships. Users never need to organize these manually.',
+         {'project': PROJECT}),
+    tool('lectic_explain', 'Explain what one saved knowledge area knows, what it relates to, and which sources support it.',
+         {'project': PROJECT, 'collection': S('Saved knowledge area name or ID.')}, ['collection']),
+    tool('lectic_context', 'Build a focused, evidence-preserving context for a task. Automatically combines relevant personal preferences and domain knowledge, excludes unrelated material, removes duplicates, and reports helpful gaps.',
+         {'project': PROJECT, 'intent': S('What the user is trying to do.'),
+          'task_context': S('Optional current details that should be used now but not saved as permanent knowledge.'),
+          'max_units': {'type':'integer','minimum':1,'maximum':100,'description':'Maximum selected knowledge units; defaults to 24.'}}, ['intent']),
+    tool('lectic_import_plan', 'Explain whether incoming material should enrich existing knowledge, become a distinct related area, or stay with the current task. Returns a plain-language automatic recommendation.',
          {'project': PROJECT, 'url': S('Incoming link/URL.'), 'text': S('Incoming text or transcript snippet.'),
           'title': S('Title if known.'), 'files': L('Filenames or file paths.'), 'note': S('User note if any.')}),
     tool('lectic_work', 'Goal-driven coordinator: save sources as a collection, prepare knowledge, apply it to a brief, export a method, or manage collections. Returns the next phase and any agent_task for you.',
@@ -287,6 +299,22 @@ class Server:
         from candidate_collections import find_candidate_collections
         return find_candidate_collections(self.resolve_project(project), url=url, text=text, title=title, files=files, note=note)
 
+    def tool_knowledge(self, project=None):
+        from intelligence import knowledge_graph
+        return knowledge_graph(self.resolve_project(project))
+
+    def tool_explain(self, project=None, collection=None):
+        from intelligence import explain_collection
+        return explain_collection(self.resolve_project(project), collection)
+
+    def tool_context(self, project=None, intent='', task_context='', max_units=24):
+        from intelligence import compose_context
+        return compose_context(self.resolve_project(project), intent, task_context, int(max_units))
+
+    def tool_import_plan(self, project=None, url='', text='', title='', files=(), note=''):
+        from intelligence import assess_import
+        return assess_import(self.resolve_project(project), url=url, text=text, title=title, files=files, note=note)
+
     def tool_work(self, project=None, **kwargs):
         from goal_workflow import work
         return work(project=self.resolve_project(project), **kwargs)
@@ -315,6 +343,9 @@ class Server:
             require_shareable(source, storage_root(project))
         placement = decide_placement(project, url=url or '', text=text or '', title=title or '',
                                      files=files or (), note=note or '', collections=collections or ())
+        from intelligence import assess_import
+        import_plan = assess_import(project, url=url or '', text=text or '', title=title or '',
+                                    files=files or (), note=note or '')
         source = describe_source(url=url or '', text=text or '', files=files or ())
         record = save_capture(inbox, url=url or '', text=text or '', files=list(files or ()), note=note or '',
                               collections=list(placement['collections']), title=title or '', origin='assistant-supplied')
@@ -325,6 +356,7 @@ class Server:
                 'issues': item['issues'], 'collections': list(placement['collections']),
                 'decision': placement['decision'], 'question': placement['question'],
                 'candidate_collections': placement['candidates'], 'all_collections': placement['all_collections'],
+                'knowledge_plan': import_plan,
                 'source': source, 'confirmation': confirmation_line(placement, source),
                 'guidance': placement['guidance'],
                 'note': 'Saved only. Nothing was retrieved, extracted or built; process the collection when a use needs it.'}

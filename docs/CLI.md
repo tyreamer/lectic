@@ -4,6 +4,16 @@ For a returning user's saved library, run `python scripts/ec.py library --projec
 
 These commands are for the assistant, contributors, and advanced debugging. Normal users install the skill and talk to it; see [README](../README.md). Run from a user's project and resolve the installed scripts by absolute path. Relative input/output/metadata paths resolve against `--project` for the coordinator.
 
+## Intelligent knowledge debugging
+
+```text
+lectic inspect
+lectic explain "Europe Travel"
+lectic context "plan a trip to Italy"
+```
+
+`inspect` shows the roles and useful connections Lectic inferred without asking the user to organize them. `explain` traces one knowledge area to its sources and related areas. `context` shows the small, de-duplicated set of personal preferences and reusable knowledge that would be activated for a task, plus any helpful knowledge gap. Add `--json` for the portable structured form.
+
 ## MCP server
 
 ```text
