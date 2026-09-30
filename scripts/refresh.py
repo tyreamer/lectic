@@ -1,9 +1,9 @@
 """Refresh a saved collection from material the user names again, and report honestly what changed.
 
-Lectic never guesses where a collection's sources came from on disk, so `--from` is required.
+WayKit never guesses where a collection's sources came from on disk, so `--from` is required.
 Refreshing adds a new immutable source revision; every earlier revision, its knowledge and
 every saved build stay exactly where they were. Comparison is file-level and deterministic:
-Lectic reports which sources appeared, vanished or changed bytes, and which extracted units
+WayKit reports which sources appeared, vanished or changed bytes, and which extracted units
 could no longer be carried forward. It does not claim to know what the change means.
 """
 from pathlib import Path

@@ -38,7 +38,8 @@ class CloudLibraryTests(unittest.TestCase):
         result = self.lib_alice.save_knowledge(
             text="High hydration sourdough (75%+) requires coil folds every 30 minutes during bulk fermentation.",
             title="Sourdough Fermentation Notes",
-            note="Saved for next weekend bake"
+            note="Saved for next weekend bake",
+            auto_process=False
         )
         self.assertTrue(result['saved'])
         self.assertIn('capture_id', result)
@@ -48,6 +49,16 @@ class CloudLibraryTests(unittest.TestCase):
         # Verify nothing was compiled or converted to IR yet
         home_alice = self.accounts.get_account_home(self.alice['account_id'])
         self.assertFalse(list(home_alice.rglob('ir.json')))
+
+    def test_save_knowledge_auto_processes_when_collection_specified(self):
+        result = self.lib_alice.save_knowledge(
+            text="High hydration sourdough (75%+) requires coil folds every 30 minutes during bulk fermentation.",
+            title="Sourdough Fermentation Notes",
+            collections=('Sourdough',),
+            auto_process=True
+        )
+        self.assertTrue(result['saved'])
+        self.assertIn('learned', result)
 
     def test_learn_from_source_preserves_evidence_and_distinguishes_status(self):
         # 1. Save text

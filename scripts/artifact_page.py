@@ -1,8 +1,8 @@
-"""One self-contained HTML page describing what a collection knows, for people without Lectic.
+"""One self-contained HTML page describing what a collection knows, for people without WayKit.
 
-`lectic share` opens a live MCP tunnel; this is the opposite. It writes a single file with
+`waykit share` opens a live MCP tunnel; this is the opposite. It writes a single file with
 no scripts, no network requests and no dependencies, so it opens from a folder, an email
-attachment or a static host. Only material Lectic already treats as shareable travels:
+attachment or a static host. Only material WayKit already treats as shareable travels:
 knowledge units and their cited excerpts, the sources they came from, and reusable methods.
 Private briefs, the user's own work and generated results stay behind.
 """
@@ -104,7 +104,7 @@ def page_data(project='.', selector=None, build=None, include_quotes=True):
     record = folder / 'collection.json'
     return {'name': data['name'], 'collection_id': data['collection_id'], 'build_id': build_id,
             'purpose': (f"Reusable, source-backed knowledge compiled from {len(sources)} "
-                        f"source{'s' if len(sources) != 1 else ''} with Lectic."),
+                        f"source{'s' if len(sources) != 1 else ''} with WayKit."),
             'units': units, 'unit_kinds': sorted(kinds.items(), key=lambda kv: (-kv[1], kv[0])),
             'unit_count': len(units), 'sources': sources, 'quotes_included': include_quotes,
             'methods': method_records(folder, data, ir, build_id),
@@ -153,7 +153,7 @@ def render_page(info):
     p = info['provenance']
     out = ['<!doctype html>', '<html lang="en">', '<head>', '<meta charset="utf-8">',
            '<meta name="viewport" content="width=device-width, initial-scale=1">',
-           f'<title>{e(info["name"])} | Lectic knowledge</title>', f'<style>{STYLE}</style>',
+           f'<title>{e(info["name"])} | WayKit knowledge</title>', f'<style>{STYLE}</style>',
            '</head>', '<body>',
            f'<h1>{e(info["name"])}</h1>', f'<p class="lede">{e(info["purpose"])}</p>']
     if info['unit_kinds']:

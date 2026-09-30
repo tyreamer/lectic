@@ -1,4 +1,4 @@
-"""Private cloud library operations for authenticated Lectic accounts.
+"""Private cloud library operations for authenticated WayKit accounts.
 
 Provides goal-oriented chat operations:
 - save_knowledge: Save text, URLs, or files for later without triggering extraction.
@@ -8,7 +8,7 @@ Provides goal-oriented chat operations:
 - get_relevant_context: Selectively retrieve relevant knowledge units across relationships.
 - apply_knowledge: Apply relevant compiled knowledge to real tasks with auditable citations.
 - search_knowledge: Search across private library knowledge and sources.
-- export_library / import_library: Portable whole-home export/import compatible with local Lectic.
+- export_library / import_library: Portable whole-home export/import compatible with local WayKit.
 
 Authorization is strictly scoped to the verified account's private home.
 """
@@ -39,7 +39,7 @@ from store import LocalStore
 
 
 class CloudLibrary:
-    """Manages the private, isolated Lectic library for an authenticated account."""
+    """Manages the private, isolated WayKit library for an authenticated account."""
 
     def __init__(self, account_id: str, cloud_root: Union[Path, str],
                  account_store: Optional[AccountStore] = None):
@@ -80,11 +80,9 @@ class CloudLibrary:
     # 1. save_knowledge
     # -------------------------------------------------------------------------
     def save_knowledge(self, *, text: str = '', url: str = '', title: str = '',
-                       note: str = '', files: tuple = (), collections: tuple = ()) -> Dict[str, Any]:
-        """Save a source, link, or note for later.
-        
-        Saving alone never silently triggers extraction, compilation, or paid processing.
-        """
+                       note: str = '', files: tuple = (), collections: tuple = (),
+                       auto_process: bool = True) -> Dict[str, Any]:
+        """Save a source, link, or note and process immediately when destination is clear."""
         placement = decide_placement(self.home, url=url or '', text=text or '', title=title or '',
                                      files=files or (), note=note or '', collections=collections or ())
         import_plan = assess_import(self.home, url=url or '', text=text or '', title=title or '',
@@ -98,7 +96,27 @@ class CloudLibrary:
                               title=title or '', origin='cloud-chat')
         item = self.inbox.import_record(record)
 
-        return {
+        target_col = list(placement['collections'])[0] if placement['collections'] else 'Inbox'
+        learned_res = None
+        if auto_process and placement['decision'] in {'explicit', 'auto_filed'}:
+            try:
+                learned_res = self.learn_from_source(
+                    capture_id=item['capture_id'],
+                    collection=target_col,
+                    title=title or source_desc.get('title')
+                )
+            except Exception as e:
+                learned_res = {'error': str(e)}
+
+        if not auto_process:
+            note_msg = 'Saved only. Nothing was retrieved, extracted or built; process the collection when a use needs it.'
+        elif placement['decision'] == 'needs_clarification':
+            note_msg = ('Saved pending collection clarification. Ask user which collection to associate it with. '
+                        'Once confirmed, learn_from_source will process it immediately.')
+        else:
+            note_msg = f"Saved and immediately processed into '{target_col}'."
+
+        res = {
             'saved': True,
             'capture_id': item['capture_id'],
             'new': item['new'],
@@ -111,8 +129,11 @@ class CloudLibrary:
             'source': source_desc,
             'confirmation': confirmation_line(placement, source_desc),
             'guidance': placement.get('guidance'),
-            'note': 'Saved only. Nothing was retrieved, extracted or built; process the collection when a use needs it.'
+            'note': note_msg
         }
+        if learned_res:
+            res['learned'] = learned_res
+        return res
 
     # -------------------------------------------------------------------------
     # 2. learn_from_source
@@ -562,12 +583,12 @@ class CloudLibrary:
     # 7. export_library & import_library
     # -------------------------------------------------------------------------
     def export_library(self) -> bytes:
-        """Export the private library to a portable .lectic-home archive.
+        """Export the private library to a portable .waykit-home (or .lectic-home) archive.
         
-        Can be restored locally with 'lectic restore' or scripts/home_archive.py.
+        Can be restored locally with 'waykit restore' (or 'lectic restore') or scripts/home_archive.py.
         """
         return archive_home(self.home)
 
     def import_library(self, archive_raw: bytes) -> Dict[str, Any]:
-        """Merge an incoming .lectic-home archive into this account's private library."""
+        """Merge an incoming .waykit-home (or .lectic-home) archive into this account's private library."""
         return merge_archive(self.home, archive_raw, home=self.home)

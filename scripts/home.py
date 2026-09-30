@@ -1,9 +1,9 @@
-"""Where Lectic keeps knowledge: one store per user, with projects as working contexts.
+"""Where WayKit keeps knowledge: one store per user, with projects as working contexts.
 
 Resolution order:
-  1. LECTIC_HOME environment variable (explicit; also how tests isolate storage).
+  1. WAYKIT_HOME (or legacy LECTIC_HOME) environment variable (explicit; also how tests isolate storage).
   2. PROJECT/.expertise-compiler when it already exists (legacy project-local storage).
-  3. ~/.lectic (default for new installations).
+  3. ~/.waykit (or existing ~/.lectic; default for new installations).
 
 A project is where the user is working, not a silo: collections saved from one
 project are visible from every other project that resolves to the same home.
@@ -71,7 +71,7 @@ def relative_run(root, project, run):
     """
     root, project, run = Path(root).resolve(), Path(project).resolve(), Path(run).resolve()
     if run.is_relative_to(root): return run.relative_to(root).as_posix()
-    require(run.is_relative_to(project), 'Compilation output must be inside the selected project or the Lectic home')
+    require(run.is_relative_to(project), 'Compilation output must be inside the selected project or the WayKit home')
     return run.relative_to(project).as_posix()
 
 

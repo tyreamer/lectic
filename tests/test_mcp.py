@@ -144,10 +144,10 @@ class McpWorkflowTests(unittest.TestCase):
             c.call('lectic_write_json', path=str(run.parent.parent / 'requests' / 'b' / 'r' / 'review' / 'notes.json'), value={})
         with self.assertRaisesRegex(ec.Invalid, 'Only files inside'):
             c.call('lectic_read', path=str(self.base / 'oracle-secret.txt'))
-        # A capture saved through the tool lands in the home's Inbox without any retrieval.
-        saved = c.call('lectic_capture_save', url='https://example.com/talk', note='Good framing; not policy', collections=['Ideas'])
+        # A capture saved with process=False lands in the home's Inbox without any retrieval.
+        saved = c.call('lectic_capture_save', url='https://example.com/talk', note='Good framing; not policy', collections=['Ideas'], process=False)
         self.assertEqual(saved['phase'], 'captured'); self.assertTrue(saved['new'])
-        again = c.call('lectic_capture_save', text='a second thought', collections=['Ideas'])
+        again = c.call('lectic_capture_save', text='a second thought', collections=['Ideas'], process=False)
         self.assertTrue(again['new']); self.assertNotEqual(again['capture_id'], saved['capture_id'])
         rows = {r['capture_id']: r for r in c.call('lectic_capture', action='list', collection='Ideas')['items']}
         self.assertEqual(len(rows), 2)

@@ -21,7 +21,7 @@ PACK_PATH = ROOT / 'fixtures/packs/debugging-starter.lectic'
 def example_result(project, collection, *, second=False):
     """Apply the authored teaching method to one of two fixed sample plans."""
     brief = {'schema_version': '1.0', 'objective': 'Review the second sample plan' if second else 'Review a sample debugging plan',
-             'context': 'Lectic offline starter. Prewritten synthetic example, not a live AI assessment.',
+             'context': 'WayKit offline starter. Prewritten synthetic example, not a live AI assessment.',
              'constraints': ['Use only the three cited debugging procedures.'],
              'work': {'label': 'Sample plan', 'text': ('I reproduced the bug and changed one variable. Ship after one passing example.' if second else
                       'Change the parser and delimiter settings together, then ship after one successful file.')},
@@ -109,7 +109,7 @@ def build_starter(destination=PACK_PATH):
                 segment = doc['segments'][spec['segment'] - 1]
                 units.append({'schema_version': VERSION, 'unit_id': spec['unit_id'], 'type': spec['type'],
                     'status': 'explicit', 'title': spec['unit_id'].replace('-', ' ').capitalize(),
-                    'statement': spec['statement'], 'scope': 'Synthetic debugging teaching transcript authored for Lectic.',
+                    'statement': spec['statement'], 'scope': 'Synthetic debugging teaching transcript authored for WayKit.',
                     'derivation': '', 'evidence': [{'source_id': sid, 'segment_id': segment['segment_id'], 'quote': segment['text']}],
                     'attribution': [{'source_id': sid, 'name': 'Ada'}], 'relations': []})
             write(run / f'units/{sid}.json', {'schema_version': VERSION, 'corpus_id': corpus['corpus_id'],

@@ -20,7 +20,7 @@ class GalleryTests(unittest.TestCase):
             self.assertTrue((ROOT / fixture).is_file(), fixture)
             self.assertIn(fixture, gallery)
         self.assertEqual(gallery.count('### Real use'), 5)
-        self.assertIn('INPUT -> LECTIC -> ARTIFACT -> REAL USE', gallery)
+        self.assertTrue('INPUT -> WAYKIT -> ARTIFACT -> REAL USE' in gallery or 'INPUT -> LECTIC -> ARTIFACT -> REAL USE' in gallery)
 
     def test_gallery_and_beginner_commands_are_discoverable(self):
         readme = (ROOT / 'README.md').read_text(encoding='utf-8')

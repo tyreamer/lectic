@@ -60,6 +60,6 @@ Missing captions, unsupported languages, unavailable/private videos, access rest
 
 For a live test, use one or two public captioned videos first, then the eight-link fixture. Ask:
 
-> Use Lectic to save these YouTube links as Entrepreneurship Growth. My reason for saving them is personal growth and becoming an entrepreneur; that is my context, not evidence or a promise of income. Process the collection now, retrieve available captions yourself, and use the supported methods to propose a practical first-week experiment. Tell me which videos were actually retrieved and what remains unavailable. Preserve exact links, including timestamps, and save the result for reuse.
+> Use WayKit to save these YouTube links as Entrepreneurship Growth. My reason for saving them is personal growth and becoming an entrepreneur; that is my context, not evidence or a promise of income. Process the collection now, retrieve available captions yourself, and use the supported methods to propose a practical first-week experiment. Tell me which videos were actually retrieved and what remains unavailable. Preserve exact links, including timestamps, and save the result for reuse.
 
 Append the actual links. If the optional dependency is missing, authorize its installation separately. Inspect actual caption files and evidence timestamps, then repeat the request in a fresh session in the same project. No second upload or successful-caption download should be necessary. Live YouTube access and assistant judgment must be assessed separately from deterministic tests.

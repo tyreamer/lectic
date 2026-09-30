@@ -1,4 +1,4 @@
-"""Zero-daemon intake drop folder for Lectic.
+"""Zero-daemon intake drop folder for WayKit.
 
 Allows users to drop web links (.url, .webloc, .desktop), text notes,
 transcripts, or files into a single folder without running a background server.
@@ -64,7 +64,7 @@ def inbox_folder_path(project=None):
 
 
 def ensure_inbox_folder(project=None):
-    """Ensure the Lectic Inbox folder and its processed subfolder exist."""
+    """Ensure the WayKit Inbox folder and its processed subfolder exist."""
     folder = inbox_folder_path(project)
     folder.mkdir(parents=True, exist_ok=True)
     processed = folder / '.processed'
@@ -197,7 +197,7 @@ def scan_inbox(project=None):
 
 
 @home_transaction
-def route_inbox_item(project, filename_or_path, collection_name=None):
+def route_inbox_item(project, filename_or_path, collection_name=None, auto_process=True):
     """Route a single inbox item into a collection and move it to .processed."""
     folder = ensure_inbox_folder(project)
     p = Path(filename_or_path)
@@ -229,7 +229,7 @@ def route_inbox_item(project, filename_or_path, collection_name=None):
         files=parsed['files'],
         title=parsed['title'],
         collections=[target_col],
-        note=f"Captured from Lectic Drop Inbox: {p.name}",
+        note=f"Captured from WayKit Drop Inbox: {p.name}",
         origin='drop-inbox', capture_id=capture_id, captured_at=captured_at
     )
     import_report = store.import_folder(staging)
@@ -254,7 +254,14 @@ def route_inbox_item(project, filename_or_path, collection_name=None):
         return {'phase': 'captured_pending_archive', 'file': p.name, 'collection': target_col,
                 'capture_id': capture_id, 'issues': [f'Saved, but could not archive the original: {exc}. Retry safely.']}
 
-    return {
+    process_result = None
+    if auto_process:
+        try:
+            process_result = store.process(target_col)
+        except Exception as exc:
+            process_result = {'error': str(exc)}
+
+    res = {
         'phase': 'routed',
         'capture_id': capture_id,
         'file': p.name,
@@ -263,10 +270,13 @@ def route_inbox_item(project, filename_or_path, collection_name=None):
         'title': parsed['title'],
         'archived_to': str(dest)
     }
+    if process_result:
+        res['processed'] = process_result
+    return res
 
 
 @home_transaction
-def route_all_inbox(project=None, mapping=None):
+def route_all_inbox(project=None, mapping=None, auto_process=True):
     """Route all items in the inbox folder according to mapping or candidate matches."""
     folder = ensure_inbox_folder(project)
     report = scan_inbox(project)
@@ -279,9 +289,9 @@ def route_all_inbox(project=None, mapping=None):
         fn = item['filename']
         if mapping is not None and fn not in mapping:
             continue
-        target = (mapping or {}).get(fn) or 'Inbox'
+        target = (mapping or {}).get(fn) or item.get('suggested_collection') or 'Inbox'
         try:
-            res = route_inbox_item(project, fn, collection_name=target)
+            res = route_inbox_item(project, fn, collection_name=target, auto_process=auto_process)
         except (OSError, ValueError) as exc:
             res = {'phase': 'needs_attention', 'file': fn, 'issues': [str(exc)]}
         results.append(res)
@@ -293,3 +303,69 @@ def route_all_inbox(project=None, mapping=None):
         'needs_attention_count': sum(item['phase'] != 'routed' for item in results),
         'items': results
     }
+
+
+def watch_inbox(project=None, interval=1.0, callback=None, stop_event=None):
+    """Continuously watch the WayKit Drop Inbox folder and immediately process incoming items.
+
+    If a dropped item clearly matches a collection (or has an explicit target), it is automatically
+    routed and processed into that collection immediately.
+    If multiple candidate collections fit, it informs the user/assistant that clarification is needed.
+    """
+    import time
+    folder = ensure_inbox_folder(project)
+    seen_sizes = {}
+
+    def log(msg):
+        if callback:
+            callback(msg)
+        else:
+            print(f"[WayKit Watch] {msg}")
+
+    log(f"Monitoring drop folder: {folder}")
+    while stop_event is None or not stop_event.is_set():
+        try:
+            for p in sorted(folder.iterdir()):
+                if p.is_dir() or p.name.startswith(('.', '_')):
+                    continue
+                try:
+                    cur_size = p.stat().st_size
+                except OSError:
+                    continue
+
+                prev_size = seen_sizes.get(str(p))
+                if prev_size != cur_size:
+                    seen_sizes[str(p)] = cur_size
+                    continue
+
+                parsed = parse_drop_file(p)
+                from candidate_collections import find_candidate_collections
+                cand = find_candidate_collections(
+                    project,
+                    url=parsed['url'],
+                    text=parsed['text'],
+                    title=parsed['title'],
+                    files=parsed['files']
+                )
+                action = cand.get('suggested_action', 'ask_user')
+                candidates = cand.get('candidates', [])
+
+                if action == 'auto_file' and candidates:
+                    target = candidates[0]['name']
+                    log(f"Detected clear match for '{p.name}' -> '{target}'. Processing immediately...")
+                    res = route_inbox_item(project, p.name, collection_name=target, auto_process=True)
+                    log(f"Completed processing '{p.name}' into '{target}'.")
+                elif action == 'ask_user' and len(candidates) > 1:
+                    candidate_names = ', '.join(c['name'] for c in candidates)
+                    log(f"'{p.name}' arrived: matches multiple collections ({candidate_names}). Waiting for user clarification.")
+                else:
+                    target = candidates[0]['name'] if candidates else 'Inbox'
+                    log(f"Routing '{p.name}' into '{target}'. Processing immediately...")
+                    res = route_inbox_item(project, p.name, collection_name=target, auto_process=True)
+                    log(f"Completed processing '{p.name}' into '{target}'.")
+
+                seen_sizes.pop(str(p), None)
+        except Exception as exc:
+            log(f"Error in drop folder watcher: {exc}")
+
+        time.sleep(interval)

@@ -82,14 +82,14 @@ The downloaded payload is refreshed on disk. Use a new turn/task for new instruc
 Run the updater from a reviewed checkout for the first enrollment, using the actual installed location. The old installed copy might not yet contain it:
 
 ```text
-python /path/to/lectic/scripts/update_skill.py update --dest /path/to/skills/lectic --adopt
-python /path/to/skills/lectic/scripts/update_skill.py status --dest /path/to/skills/lectic
+python /path/to/waykit/scripts/update_skill.py update --dest /path/to/skills/waykit --adopt
+python /path/to/skills/waykit/scripts/update_skill.py status --dest /path/to/skills/waykit
 ```
 
 To enable the Windows schedule after enrollment:
 
 ```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "C:\path\to\lectic\scripts\enable_updates_windows.ps1" -Destination "C:\path\to\skills\lectic" -Python "C:\path\to\python.exe"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "C:\path\to\waykit\scripts\enable_updates_windows.ps1" -Destination "C:\path\to\skills\waykit" -Python "C:\path\to\python.exe"
 ```
 
 The setup checks the managed installation, creates a task for the current user, then enables the update receipt. Inspect the returned task name, action and next run, and exercise the task once before reporting success. Re-running setup is idempotent for that installation; it refuses to overwrite an unrelated task. `-Disable` pauses checks and removes that exact task. The simpler `update_skill.py pause --dest ...` leaves the task registered but makes it a no-op.
@@ -100,12 +100,12 @@ On macOS/Linux, the Python updater can be run manually. Automatic scheduler setu
 
 ### Existing expertise-compiler installations
 
-Use the actual legacy destination in the commands above. The clean installer and updater preserve its `name: expertise-compiler` metadata and matching default prompt, while new `lectic` copies use `name: lectic`. Only these two interface metadata fields are adapted; no project records or generated capability names are rewritten.
+Use the actual legacy destination in the commands above. The clean installer and updater preserve its `name: expertise-compiler` metadata and matching default prompt, while new copies use `name: waykit` (or legacy `name: lectic`). Only these two interface metadata fields are adapted; no project records or generated capability names are rewritten.
 
 The first updater release (`8ca8f79`) rejects the new name during download validation. For a managed installation on that release, have the assistant download/review the current checkout and run **that checkout's updater** once:
 
 ```text
-python /path/to/lectic/scripts/update_skill.py update --dest /path/to/skills/expertise-compiler
+python /path/to/waykit/scripts/update_skill.py update --dest /path/to/skills/expertise-compiler
 ```
 
 This retains its file-edit protections, backup history, existing invocation name and scheduled task, and refreshes the independent runner so subsequent updates work normally. No receipt deletion or bypass of local-edit protection is needed. Unmanaged older installations use the same command with `--adopt` for their first enrollment. Do not merely rename an installed folder: update receipts and scheduled tasks refer to its actual path.

@@ -1,4 +1,4 @@
-"""Lectic: deterministic, offline plumbing. Python 3.10+, stdlib only."""
+"""WayKit: deterministic, offline plumbing. Python 3.10+, stdlib only."""
 from __future__ import annotations
 
 import argparse
@@ -509,7 +509,7 @@ def status(run):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest='command', required=True)
-    p = sub.add_parser('home', help='Show where Lectic stores knowledge for this project and why')
+    p = sub.add_parser('home', help='Show where WayKit stores knowledge for this project and why')
     p.add_argument('--project', default='.')
     p = sub.add_parser('library', help='Read saved methods, results, possibilities and availability without processing')
     p.add_argument('--project', default='.'); p.add_argument('--collection')

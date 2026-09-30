@@ -189,7 +189,7 @@ class CaptureStore:
         require(len(hits)==1,'Saved item is missing or ambiguous; list the Inbox and select an item')
         return hits[0]
 
-    def membership(self,selectors,names,mode='add'):
+    def membership(self,selectors,names,mode='add',auto_process=False):
         require(selectors and names,'Choose saved items and collections')
         require(mode in {'add','move','remove'},'Unknown membership operation')
         states=[self.find(selector)[1] for selector in selectors]
@@ -202,7 +202,17 @@ class CaptureStore:
             self.save_state(state)
         # Membership changes update source snapshots only for already normalized sources.
         for cid in sorted(touched): self.materialize(cid)
-        return {'phase':'capture_membership_updated','items':len(states),'mode':mode,'collections':names}
+        processed_reports = {}
+        if auto_process and mode in {'add','move'}:
+            for name in names:
+                try:
+                    processed_reports[name] = self.process(name)
+                except Exception as exc:
+                    processed_reports[name] = {'error': str(exc)}
+        res = {'phase':'capture_membership_updated','items':len(states),'mode':mode,'collections':names}
+        if processed_reports:
+            res['processed'] = processed_reports
+        return res
 
     def status(self,event,state,processed_ids):
         retrieval=state.get('retrieval',{})
@@ -393,7 +403,7 @@ class CaptureStore:
 
 @home_transaction
 def capture_command(*,project='.',action='list',inbox=None,collection=None,items=None,to=None,
-                    query=None,since=None,until=None,note=None,build=None):
+                    query=None,since=None,until=None,note=None,build=None,process=True):
     store=CaptureStore(project)
     if action=='list': return store.listing(collection,query,since,until)
     if action=='show':
@@ -402,7 +412,7 @@ def capture_command(*,project='.',action='list',inbox=None,collection=None,items
     if action=='trace': require(build,'Select a saved build');return store.trace(build)
     with store.writer():
         if action=='import': require(inbox,'Choose a synced Inbox folder');return store.import_folder(inbox)
-        if action in {'add','move','remove'}: return store.membership(items,to,action)
+        if action in {'add','move','remove'}: return store.membership(items,to,action,auto_process=process and action in {'add','move'})
         if action=='note':
             require(items and len(items)==1 and note is not None,'Select one saved item and a note')
             event,_=store.find(items[0])

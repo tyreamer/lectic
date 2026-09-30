@@ -1,23 +1,24 @@
 ---
-title: Lectic example gallery
+title: WayKit example gallery
 description: Five reproducible journeys from trusted source material to reusable, evidence-backed expertise
 ---
 
 ## Five reusable expertise journeys
 
-These examples use small authored fixtures in this repository so you can run them offline and inspect every source sentence. The situations are realistic, but the fixture material is synthetic teaching data, not a claim that Lectic evaluated a live expert or measured model quality.
+These examples use small authored fixtures in this repository so you can run them offline and inspect every source sentence. The situations are realistic, but the fixture material is synthetic teaching data, not a claim that WayKit evaluated a live expert or measured model quality.
 
-From a repository checkout, install Lectic and connect an assistant once:
+From a repository checkout, install WayKit and connect an assistant once:
 
 ```bash
 python -m pip install -e .
-lectic setup --yes
+waykit setup --yes
 ```
 
 Each example follows the same loop:
 
 ```text
-INPUT -> LECTIC -> ARTIFACT -> REAL USE
+INPUT -> WAYKIT -> ARTIFACT -> REAL USE
+# (formerly: INPUT -> LECTIC -> ARTIFACT -> REAL USE)
 ```
 
 ## Learn from an expert: diagnose handheld blur
@@ -26,20 +27,20 @@ INPUT -> LECTIC -> ARTIFACT -> REAL USE
 
 The timed tutorial in `fixtures/photography/photography.vtt` separates camera shake from missed focus. It recommends inspecting a test photo before changing settings, explains the light tradeoff from a faster shutter, and warns that shutter speed cannot repair missed focus.
 
-### Lectic
+### WayKit
 
 ```bash
-lectic start fixtures/photography --name "Handheld Photography" --goal "diagnose blur and plan the next test" --yes
+waykit start fixtures/photography --name "Handheld Photography" --goal "diagnose blur and plan the next test" --yes
 ```
 
-Open your connected assistant and send the exact prompt printed by `lectic start`. The assistant prepares reusable checks while Lectic retains the tutorial timestamps and quotes.
+Open your connected assistant and send the exact prompt printed by `waykit start`. The assistant prepares reusable checks while WayKit retains the tutorial timestamps and quotes.
 
 ### Artifact
 
 The collection can support a diagnostic method with three bounded steps: inspect the blur, test camera shake with the stated exposure tradeoff, then check focus before drawing a conclusion. Generate its public page after preparation:
 
 ```bash
-lectic share-artifact "Handheld Photography"
+waykit share-artifact "Handheld Photography"
 ```
 
 ### Real use
@@ -54,13 +55,13 @@ This applies the tutorial to a new photograph instead of summarizing the lesson 
 
 `fixtures/universal/architecture/source.txt` contains two architecture rules: define the principal, resource, and action before choosing credentials, then test expiration and revocation as separate failure cases.
 
-### Lectic
+### WayKit
 
 ```bash
-lectic start fixtures/universal/architecture --name "Access Control Review" --goal "review authorization designs and test plans" --yes
+waykit start fixtures/universal/architecture --name "Access Control Review" --goal "review authorization designs and test plans" --yes
 ```
 
-Ask your connected assistant to prepare the collection using the prompt Lectic prints.
+Ask your connected assistant to prepare the collection using the prompt WayKit prints.
 
 ### Artifact
 
@@ -73,8 +74,8 @@ The reusable expertise is a narrow architecture review, not a generic security c
 When the architecture notes change, refresh the same maintained collection:
 
 ```bash
-lectic refresh "Access Control Review" --from fixtures/universal/architecture
-lectic diff "Access Control Review"
+waykit refresh "Access Control Review" --from fixtures/universal/architecture
+waykit diff "Access Control Review"
 ```
 
 ## Student: turn learning science notes into a study method
@@ -83,10 +84,10 @@ lectic diff "Access Control Review"
 
 `fixtures/universal/education/source.txt` says to ask learners to retrieve an idea before showing the explanation, then use the learner's error to choose the next example.
 
-### Lectic
+### WayKit
 
 ```bash
-lectic start fixtures/universal/education --name "Active Recall Study" --goal "plan study sessions that adapt to mistakes" --yes
+waykit start fixtures/universal/education --name "Active Recall Study" --goal "plan study sessions that adapt to mistakes" --yes
 ```
 
 The assistant prepares the source-backed procedure without adding unsupported claims about grades, memory duration, or a specific subject.
@@ -107,10 +108,10 @@ The new task applies the saved teaching method to biology material that was not 
 
 `fixtures/opportunities/conflicting/source.txt` records two explicit thresholds for a small reversible trial. One expert would proceed after one confirmed customer commitment; the other requires three. The source limits both thresholds to a trial, not a full launch.
 
-### Lectic
+### WayKit
 
 ```bash
-lectic start fixtures/opportunities/conflicting --name "Trial Decision Thresholds" --goal "compare recommendations without averaging away disagreement" --yes
+waykit start fixtures/opportunities/conflicting --name "Trial Decision Thresholds" --goal "compare recommendations without averaging away disagreement" --yes
 ```
 
 ### Artifact
@@ -129,19 +130,19 @@ The value is traceable comparison on a new decision, not a blended summary.
 
 `fixtures/debugging/debugging.srt` is a short timed lesson: reproduce the smallest failure, change one suspected cause at a time, revert ineffective changes, and retain both the original reproducer and a nearby boundary test.
 
-### Lectic
+### WayKit
 
 ```bash
-lectic start fixtures/debugging --name "Debugging Playbook" --goal "review bug-fix plans before I edit code" --yes
+waykit start fixtures/debugging --name "Debugging Playbook" --goal "review bug-fix plans before I edit code" --yes
 ```
 
 ### Artifact
 
-After preparation, the playbook can review a proposed debugging approach against the same evidence-backed sequence every time. Package it for another Lectic user or generate a read-only page:
+After preparation, the playbook can review a proposed debugging approach against the same evidence-backed sequence every time. Package it for another WayKit user or generate a read-only page:
 
 ```bash
-lectic pack "Debugging Playbook"
-lectic share-artifact "Debugging Playbook" --no-quotes
+waykit pack "Debugging Playbook"
+waykit share-artifact "Debugging Playbook" --no-quotes
 ```
 
 ### Real use

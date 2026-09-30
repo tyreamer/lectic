@@ -1,7 +1,7 @@
 """Two decisions a save must not leave to improvisation.
 
 Where the item goes (one strong match files itself, several plausible ones earn a
-single question, nothing plausible falls to Inbox), and what Lectic can honestly
+single question, nothing plausible falls to Inbox), and what WayKit can honestly
 read from it later (YouTube captions are retrievable; almost every other link is
 kept as a reference only).
 """
@@ -47,7 +47,7 @@ def _retriever(url):
 
 
 def describe_source(url='', text='', files=()):
-    """What arrived and what Lectic will ever be able to read from it.
+    """What arrived and what WayKit will ever be able to read from it.
 
     `content_available` is the honest answer to "will the words in this thing be
     searchable and quotable?": false for a link nothing can retrieve.
@@ -133,7 +133,7 @@ def decide_placement(project, *, url='', text='', title='', files=(), note='', c
                 'all_collections': everything, 'question': question,
                 'guidance': 'Several collections fit, so the item is already safe in Inbox. Ask exactly this one '
                             'short question and nothing more. When the user answers, move it with '
-                            "lectic_capture(action='move', items=[capture_id], to=[name]), or save a new "
+                            "waykit_capture(action='move', items=[capture_id], to=[name]) (or lectic_capture), or save a new "
                             'collection by name if they want somewhere new.'}
 
     return {'decision': 'inbox_fallback', 'collections': ['Inbox'], 'candidates': [], 'all_collections': everything,

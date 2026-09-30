@@ -70,7 +70,7 @@ def fetch_registry(project=None, refresh=False):
         except Exception:
             pass
 
-    require(registry_data is not None, f"Could not load Lectic registry from {url}: {fetch_error}")
+    require(registry_data is not None, f"Could not load WayKit registry from {url}: {fetch_error}")
 
     validate_schema(registry_data, 'registry')
 

@@ -1,4 +1,4 @@
-"""Move a whole Lectic home: to an always-on server, to another machine, or to a backup file.
+"""Move a whole WayKit home: to an always-on server, to another machine, or to a backup file.
 
 The home is already content-addressed, so a transfer is archive → send → merge by
 identity. Blobs dedupe by hash, collections by ID, capture records are immutable
@@ -80,7 +80,7 @@ def open_archive(raw):
     try:
         archive = zipfile.ZipFile(io.BytesIO(raw))
     except zipfile.BadZipFile as exc:
-        raise Invalid('Not a Lectic home archive (not a zip archive)') from exc
+        raise Invalid('Not a WayKit home archive (not a zip archive)') from exc
     members = {}
     for info in archive.infolist():
         name = info.filename
@@ -88,7 +88,7 @@ def open_archive(raw):
                 'Archive contains an unsafe path: ' + name)
         require(info.file_size <= MAX_MEMBER_BYTES, 'Archive member exceeds the supported size: ' + name)
         members[name] = archive.read(name)
-    require('home.json' in members, 'Not a Lectic home archive (no home.json)')
+    require('home.json' in members, 'Not a WayKit home archive (no home.json)')
     manifest = json.loads(members.pop('home.json').decode('utf-8'))
     require(manifest.get('schema_version') == ARCHIVE_VERSION, 'Unsupported home archive version')
     require(set(manifest['files']) == set(members), 'Archive inventory differs from its manifest')
@@ -190,21 +190,21 @@ def verify(project, home):
 # ---------------------------------------------------------------- over the link
 
 def endpoint(link):
-    require(isinstance(link, str) and re.match(r'https?://', link), 'Give the link a Lectic server printed (…/t/SECRET/mcp)')
+    require(isinstance(link, str) and re.match(r'https?://', link), 'Give the link a WayKit server printed (…/t/SECRET/mcp)')
     return re.sub(r'/(mcp|home|capture)/?$', '', link.rstrip('/')) + '/home'
 
 
 def request(url, data=None, timeout=300):
     req = urllib.request.Request(url, data=data, method='POST' if data is not None else 'GET',
-                                 headers={'Content-Type': 'application/zip', 'User-Agent': 'lectic/' + VERSION})
+                                 headers={'Content-Type': 'application/zip', 'User-Agent': 'waykit/' + VERSION})
     try:
         with urllib.request.urlopen(req, timeout=timeout) as response:
             return response.read(MAX_ARCHIVE_BYTES + 1)
     except urllib.error.HTTPError as exc:
         detail = exc.read().decode('utf-8', 'replace')[:400]
-        raise Invalid(f'The Lectic server refused ({exc.code}): {detail}') from exc
+        raise Invalid(f'The WayKit server refused ({exc.code}): {detail}') from exc
     except urllib.error.URLError as exc:
-        raise Invalid('Could not reach that Lectic: ' + str(exc.reason)) from exc
+        raise Invalid('Could not reach that WayKit: ' + str(exc.reason)) from exc
 
 
 def push(project, link):

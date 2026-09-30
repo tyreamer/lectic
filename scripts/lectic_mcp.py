@@ -35,7 +35,10 @@ PROTOCOL_VERSIONS = ['2025-06-18', '2025-03-26', '2024-11-05']
 INSTRUCTIONS = '''WayKit (formerly Lectic) stores the user's saved videos, notes, and transcripts in a folder on their computer so you can search them and quote them. You answer questions and review work; these tools handle saving, searching, and checking quotes.
 
 How to talk to the user:
-- When the user asks to save a link, text, or file, call waykit_capture_save (or lectic_capture_save) immediately. The response decides where it went; follow it instead of improvising. `decision` is one of: `explicit` (they named the collection), `auto_filed` (one collection clearly matched and the item is already in it), `needs_clarification` (several fit, so ask the one short `question` verbatim and nothing else), `inbox_fallback` (nothing fit, so it is in Inbox). Say the returned `confirmation` in your own words, always naming where the item went and what WayKit can actually read from it.
+- When the user asks to save or process a link, text, or file, call waykit_capture_save (or lectic_capture_save) immediately. WayKit processes incoming items immediately!
+  - If `decision` is `explicit` or `auto_filed`: it is immediately saved and processed into that collection. If the tool response includes an `agent_task`, extract and save the knowledge units right away so the knowledge is ready to use.
+  - If `decision` is `needs_clarification`: ask the returned `question` verbatim so the user can choose which collection to associate it with. Once they answer, move the item to that collection with waykit_capture(action='move', items=[capture_id], to=[name]), which will immediately process it into that collection.
+  - If `decision` is `inbox_fallback`: confirm it was filed to Inbox and processed.
 - When the user asks to try WayKit, call waykit_starter (or lectic_starter). Show the sample review and checklist, explain that these are sample examples from a saved lesson, and give one question the user can ask next about their own work.
 - When the user asks "What do I have saved?", call waykit_library (or lectic_library). List their saved collections and tell them what questions they can ask about those files.
 - When the user asks for help using saved knowledge, call waykit_context (or lectic_context) with their task. Use its focused knowledge and show the short "Using for this task" list when that would build trust. Continue even when it reports a knowledge gap.
@@ -122,10 +125,11 @@ TOOLS = [
           'items': L('Capture IDs, titles or original values to act on.'), 'to': L('Collection names for add/move/remove/note.'),
           'query': S('Lexical filter over shared text, titles and notes.'), 'since': S('ISO timestamp with timezone, inclusive.'),
           'until': S('ISO timestamp with timezone, exclusive.'), 'note': S('Personal note text (action=note).'), 'build': S('Saved build folder (action=trace).')}),
-    tool('lectic_capture_save', 'Save something the user shared right now (a URL, pasted text, or local files) as a capture record, then import it. Cheap storage only: no retrieval, extraction or map. The response carries a `decision` (explicit | auto_filed | needs_clarification | inbox_fallback), a `question` to ask only when clarification is needed, and a `source` describing what Lectic can actually read from the item.',
+    tool('lectic_capture_save', 'Save something the user shared right now (a URL, pasted text, or local files) and process it immediately. If destination is ambiguous (needs_clarification), asks which collection to associate it with before processing.',
          {'project': PROJECT, 'url': S('Shared link, exactly as given.'), 'text': S('Shared text, verbatim.'),
           'files': L('Local file paths to attach as originals.'), 'note': S('The user\'s reason for saving, verbatim.'),
-          'collections': L('Requested collection names; omitted means Inbox.'), 'title': S('Title only if actually known.')}),
+          'collections': L('Requested collection names; omitted means Inbox.'), 'title': S('Title only if actually known.'),
+          'process': B('Process immediately (default: True).')}),
     tool('lectic_compile', 'Legacy numbered-capability coordinator over a transcript folder or run.',
          {'project': PROJECT, 'input': S('Transcript folder or YouTube URL.'), 'run': S('Existing run folder to resume or adopt.'),
           'metadata': S('Metadata JSON path.'), 'intent': S('compile | discover | build | use | compare', enum=['compile', 'discover', 'build', 'use', 'compare']),
@@ -272,10 +276,10 @@ class Server:
     def tool_home(self, project=None):
         info = dict(describe(self.resolve_project(project)))
         info['transport'] = self.transport
-        info['reach'] = ('You are reaching Lectic over a shared HTTP link, so this works from a hosted chat.'
+        info['reach'] = ('You are reaching WayKit over a shared HTTP link, so this works from a hosted chat.'
                          if self.transport == 'http' else
-                         'You are running Lectic locally on this computer over stdio. A hosted chatbot such as '
-                         'ChatGPT or Gemini cannot reach this server; the user would need to run `lectic share` '
+                         'You are running WayKit locally on this computer over stdio. A hosted chatbot such as '
+                         'ChatGPT or Gemini cannot reach this server; the user would need to run `waykit share` (or `lectic share`) '
                          'and paste the link into that product.')
         return info
 
@@ -347,7 +351,7 @@ class Server:
         from capture_store import capture_command
         return capture_command(project=self.resolve_project(project), **kwargs)
 
-    def tool_capture_save(self, project=None, url='', text='', files=(), note='', collections=(), title=''):
+    def tool_capture_save(self, project=None, url='', text='', files=(), note='', collections=(), title='', process=True):
         from capture_policy import confirmation_line, decide_placement, describe_source
         from capture_store import capture_command
         from capture_write import save_capture
@@ -368,14 +372,43 @@ class Server:
         report = capture_command(project=project, action='import', inbox=str(inbox))
         item = next((i for i in report['items'] if i['capture_id'] == record.stem), None)
         require(item is not None and item['saved'], 'The capture was written but its import reported a problem: ' + json.dumps(report['needs_attention']))
-        return {'phase': 'captured', 'capture_id': item['capture_id'], 'new': item['new'], 'record': str(record),
-                'issues': item['issues'], 'collections': list(placement['collections']),
-                'decision': placement['decision'], 'question': placement['question'],
-                'candidate_collections': placement['candidates'], 'all_collections': placement['all_collections'],
-                'knowledge_plan': import_plan,
-                'source': source, 'confirmation': confirmation_line(placement, source),
-                'guidance': placement['guidance'],
-                'note': 'Saved only. Nothing was retrieved, extracted or built; process the collection when a use needs it.'}
+
+        target_col = list(placement['collections'])[0] if placement['collections'] else 'Inbox'
+        process_report = None
+        if process and placement['decision'] in {'explicit', 'auto_filed', 'inbox_fallback'}:
+            from capture_store import CaptureStore
+            store = CaptureStore(project)
+            try:
+                process_report = store.process(target_col)
+            except Exception as exc:
+                process_report = {'error': str(exc)}
+
+        if not process:
+            guidance = placement['guidance']
+            note_msg = 'Saved only. Nothing was retrieved, extracted or built; process the collection when a use needs it.'
+        elif placement['decision'] == 'needs_clarification':
+            guidance = ('Several candidate collections fit, so the item is safe in Inbox for now. '
+                        f"Ask the user: {placement['question']} "
+                        "When they answer, move the item with waykit_capture(action='move', items=[capture_id], to=[collection]), "
+                        "which will immediately process it into that collection.")
+            note_msg = 'Saved pending collection clarification. Clarify destination with the user; once chosen, moving it processes it immediately.'
+        else:
+            guidance = f"Saved and immediately processed into '{target_col}'."
+            note_msg = f"Saved and processed into '{target_col}'. Linked content normalized."
+
+        res = {'phase': 'captured', 'capture_id': item['capture_id'], 'new': item['new'], 'record': str(record),
+               'issues': item['issues'], 'collections': list(placement['collections']),
+               'decision': placement['decision'], 'question': placement['question'],
+               'candidate_collections': placement['candidates'], 'all_collections': placement['all_collections'],
+               'knowledge_plan': import_plan,
+               'source': source, 'confirmation': confirmation_line(placement, source),
+               'guidance': guidance,
+               'note': note_msg}
+        if process_report:
+            res['processed'] = process_report
+            if process_report.get('agent_task'):
+                res['agent_task'] = process_report['agent_task']
+        return res
 
     def tool_compile(self, project=None, input=None, run=None, **kwargs):
         from workflow import compile_workflow

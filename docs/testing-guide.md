@@ -1,6 +1,6 @@
-# Lectic: concept-validation testing guide
+# WayKit: concept-validation testing guide
 
-Bring material you trust. You don't need to know what to build: Lectic should show you its strongest supported opportunities, then build one you choose. If you already have a task, bring it too. The underlying expertise, evidence and methods should remain reusable for future work.
+Bring material you trust. You don't need to know what to build: WayKit should show you its strongest supported opportunities, then build one you choose. If you already have a task, bring it too. The underlying expertise, evidence and methods should remain reusable for future work.
 
 We're testing whether that saves effort and improves your work compared with attaching transcripts to an ordinary AI conversation. We haven't established that advantage yet. Honest failures and reasons you wouldn't use it again are especially useful feedback.
 
@@ -36,7 +36,7 @@ Use material you are authorized to process. For client or internal content, foll
 
 For the discovery test, give a normal user this exact prompt with their transcript files:
 
-> Use Lectic with these transcripts. I think this material is valuable, but I don't know what I want to build. Save it as My Test Collection, show me the strongest things it could become, and recommend what to build first. Explain what I would give each one, what I would get back, and the important limits.
+> Use WayKit with these transcripts. I think this material is valuable, but I don't know what I want to build. Save it as My Test Collection, show me the strongest things it could become, and recommend what to build first. Explain what I would give each one, what I would get back, and the important limits.
 
 Check whether the ranked Capability Map helps you understand useful possibilities without having to choose technical formats. Does it explain why the sources support each opportunity? Are the ideas distinct and realistic, or attractive names for unsupported promises? A narrow map or an honest gap is better than five invented agents.
 
@@ -46,7 +46,7 @@ If you already have a goal, you can bypass discovery:
 
 Tell your assistant what you're trying to accomplish and what a useful result would look like. For example:
 
-> Use Lectic to save these transcripts as Client Onboarding. I'm preparing a handoff for a new team member. Use the training to review my draft in ./handoff.md for missing steps and unclear responsibilities. Give me an improved handoff with reasons for the changes. Flag anything the training doesn't establish.
+> Use WayKit to save these transcripts as Client Onboarding. I'm preparing a handoff for a new team member. Use the training to review my draft in ./handoff.md for missing steps and unclear responsibilities. Give me an improved handoff with reasons for the changes. Flag anything the training doesn't establish.
 
 Use your own words. Share relevant context, a draft or decision if you have one, and any constraints or things to exclude. You don't need to pick a capability type or know compiler terminology. The assistant should ask focused questions only when it needs more information.
 
@@ -75,7 +75,7 @@ Start a fresh assistant session in the **same project folder**. Name the saved c
 
 Don't reattach the original transcripts. Check whether the assistant finds the collection, reuses its expertise and produces the new result. It may need to read archived sources again for knowledge the first task didn't require. That is different from asking you to upload everything again.
 
-Record any repeated explanation, missing context or manual help. Collections belong to your Lectic home, so opening an unrelated project on the same machine should find them; note if it does not.
+Record any repeated explanation, missing context or manual help. Collections belong to your WayKit home, so opening an unrelated project on the same machine should find them; note if it does not.
 
 ## 4. Change the source material
 

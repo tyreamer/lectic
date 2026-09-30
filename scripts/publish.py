@@ -16,7 +16,7 @@ from packs import build_pack, open_pack, slug
 def publish_pack(project, target, to_url, token=None, webhook_url=None, download_url=None, include_sources=False):
     """Publish a compiled pack to a team host.
 
-    target: a collection name or a path to an existing .lectic file.
+    target: a collection name or a path to an existing .waykit (or .lectic) file.
     to_url: a GitHub Release URL / repo spec (e.g. 'owner/repo'), S3/R2 presigned PUT URL, or HTTP PUT URL.
     token: optional auth token (for GitHub or HTTP Bearer; falls back to GITHUB_TOKEN / GH_TOKEN env vars).
     webhook_url: optional Slack/Discord webhook URL to notify after publishing.

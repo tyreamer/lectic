@@ -13,9 +13,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import threading
+import time
+
 from support import isolate_home
 import ec
-from inbox import ensure_inbox_folder, parse_drop_file, scan_inbox, route_inbox_item, route_all_inbox
+from inbox import ensure_inbox_folder, parse_drop_file, scan_inbox, route_inbox_item, route_all_inbox, watch_inbox
 import cli
 from lectic_mcp import Server
 
@@ -147,6 +150,58 @@ class InboxDropTests(unittest.TestCase):
             code = cli.main(['inbox', '--process'])
         self.assertEqual(code, 0)
         self.assertIn('Sorted 1 drop item into your collections', buf.getvalue())
+
+    def test_immediate_processing_on_mcp_capture_save(self):
+        server = Server(project=str(self.author))
+        # Explicit collection immediately processes
+        res = server.tool_capture_save(text="Clean Architecture is a software design philosophy.", collections=['Software Design'])
+        self.assertEqual(res['phase'], 'captured')
+        self.assertEqual(res['decision'], 'explicit')
+        self.assertIn('processed', res)
+
+    def test_clarification_flow_then_immediate_processing(self):
+        from collection_store import Library
+        Library(self.author).archive(name='Backend Architecture')
+        Library(self.author).archive(name='Frontend Architecture')
+
+        server = Server(project=str(self.author))
+        # Ambiguous target -> needs clarification
+        res = server.tool_capture_save(text="Architecture design decisions for microservices.")
+        self.assertEqual(res['decision'], 'needs_clarification')
+        self.assertTrue(res['question'])
+        cid = res['capture_id']
+
+        # User clarifies: move to Backend Architecture -> immediately processes
+        move_res = server.tool_capture(action='move', items=[cid], to=['Backend Architecture'])
+        self.assertEqual(move_res['phase'], 'capture_membership_updated')
+        self.assertIn('processed', move_res)
+        self.assertIn('Backend Architecture', move_res['processed'])
+
+    def test_watch_inbox_auto_processes_drops(self):
+        folder = ensure_inbox_folder(self.author)
+        stop_event = threading.Event()
+        watch_thread = threading.Thread(
+            target=watch_inbox,
+            kwargs={'project': self.author, 'interval': 0.1, 'stop_event': stop_event}
+        )
+        watch_thread.daemon = True
+        watch_thread.start()
+
+        try:
+            drop_file = folder / 'auto_note.txt'
+            drop_file.write_text('Some dropped quick note for our knowledge base.', encoding='utf-8')
+            # Wait for watcher to pick up and process
+            for _ in range(30):
+                if not drop_file.exists():
+                    break
+                time.sleep(0.1)
+
+            self.assertFalse(drop_file.exists())
+            scan = scan_inbox(self.author)
+            self.assertEqual(scan['count'], 0)
+        finally:
+            stop_event.set()
+            watch_thread.join(timeout=2)
 
 
 if __name__ == '__main__':

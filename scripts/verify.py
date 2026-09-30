@@ -1,4 +1,4 @@
-"""Evidence linkage verification for Lectic collections and packs.
+"""Evidence linkage verification for WayKit collections and packs.
 
 Checks that every knowledge unit in a compiled IR has its claimed evidence
 anchored in the actual source material — verifying both that evidence excerpts
@@ -128,7 +128,7 @@ def verify_collection(project, collection_name: str | None = None) -> dict:
     require(resolved is not None, 'No collection found — pass a collection name or set an active one')
     folder, data = resolved
     run = library.run(folder, data)
-    require((run / 'ir.json').is_file(), 'Collection has not been compiled yet — run lectic prepare first')
+    require((run / 'ir.json').is_file(), 'Collection has not been compiled yet — run waykit prepare first')
     ir = validate_ir(run)
     corpus, docs, segments = validate_sources(run)
 

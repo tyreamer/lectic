@@ -23,7 +23,7 @@ from ec import Invalid
 CLOUD_TOOLS = [
     {
         'name': 'save_knowledge',
-        'description': 'Save a link, note, text, or source to your private WayKit library for later. Storage only: does not extract or compile until you ask to learn from it.',
+        'description': 'Save a link, note, text, or source to your private WayKit library and process it immediately into reusable knowledge when destination is clear. If ambiguous, asks for collection clarification.',
         'inputSchema': {
             'type': 'object',
             'properties': {

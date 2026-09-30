@@ -107,7 +107,7 @@ def _unit_score(unit, query):
 
 def compose_context(project='.', intent='', task_context='', max_units=24):
     """Select useful units for an intent, following only helpful relationships."""
-    if not str(intent).strip(): raise ValueError('Describe the task Lectic should prepare for')
+    if not str(intent).strip(): raise ValueError('Describe the task WayKit should prepare for')
     library = Library(project)
     profiles = [_profile(library, e) for e in library.index['collections']]
     raw, query = _query_features(intent + ' ' + (task_context or ''))
@@ -173,7 +173,7 @@ def compose_context(project='.', intent='', task_context='', max_units=24):
 
 
 def _context_summary(using, gaps):
-    if not using: return "Lectic did not find saved knowledge that clearly matches this task."
+    if not using: return "WayKit did not find saved knowledge that clearly matches this task."
     names = ', '.join(x['name'] for x in using)
     text = f"Using {names} for this task."
     if gaps: text += ' ' + gaps[0]['message']

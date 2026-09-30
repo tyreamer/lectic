@@ -1,4 +1,4 @@
-"""Opt-in Lectic skill updates. Standalone stdlib runner; never opens project data."""
+"""Opt-in WayKit skill updates. Standalone stdlib runner; never opens project data."""
 import argparse
 from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
@@ -198,7 +198,7 @@ def locked(state):
                 import fcntl
                 fcntl.flock(stream, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except OSError as exc:
-            raise UpdateError('Another Lectic update is running') from exc
+            raise UpdateError('Another WayKit update is running') from exc
         try:
             yield
         finally:
@@ -254,7 +254,7 @@ def replace_install(dest, state, current, stage, commit, files):
     backup.parent.mkdir(exist_ok=True)
     write(backup.with_suffix('.receipt.json'), current)
     next_state = dict(current, installed_commit=commit, files=files, last_success=timestamp(),
-                      last_result='updated', message='Installed the published Lectic revision',
+                      last_result='updated', message='Installed the published WayKit revision',
                       backups=[*current.get('backups', []), {'path': str(backup),
                                'commit': current.get('installed_commit'), 'created_at': timestamp()}])
     write(state / 'transaction.json', {'backup': str(backup), 'stage': str(stage), 'next_state': next_state})
@@ -284,7 +284,7 @@ def operate(action, destination, state_dir=None, adopt=False, interval=24, task_
     if action == 'status':
         return status(dest, state)
     require(dest.is_dir() or (state / 'transaction.json').exists(),
-            'Install Lectic first; the updater only manages an existing installation')
+            'Install WayKit first; the updater only manages an existing installation')
     with locked(state):
         recover(dest, state)
         if not (state / 'state.json').exists():
@@ -357,7 +357,7 @@ def main():
         result = operate(args.action, args.dest, args.state_dir, args.adopt, args.interval_hours, args.task_name)
     except Exception as exc:
         if sys.stderr is not None:
-            print(f'Lectic update: {exc}', file=sys.stderr)
+            print(f'WayKit update: {exc}', file=sys.stderr)
         return 1
     if sys.stdout is not None:
         print(json.dumps(result, indent=2))  # ASCII transport also works in legacy Windows shells.

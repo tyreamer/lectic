@@ -28,13 +28,13 @@ The manual way, from a checkout, with a Python 3.10+ interpreter path:
 **Claude Code** (once, from any folder):
 
 ```bash
-claude mcp add --scope user waykit -- python /path/to/waykit/scripts/lectic_mcp.py
+claude mcp add --scope user waykit -- python /path/to/waykit/scripts/waykit_mcp.py
 ```
 
 Or per project in `.mcp.json`:
 
 ```json
-{"mcpServers": {"waykit": {"command": "python", "args": ["/path/to/waykit/scripts/lectic_mcp.py"]}}}
+{"mcpServers": {"waykit": {"command": "python", "args": ["/path/to/waykit/scripts/waykit_mcp.py"]}}}
 ```
 
 **Codex** (`~/.codex/config.toml`):
@@ -42,7 +42,7 @@ Or per project in `.mcp.json`:
 ```toml
 [mcp_servers.waykit]
 command = "python"
-args = ["/path/to/waykit/scripts/lectic_mcp.py"]
+args = ["/path/to/waykit/scripts/waykit_mcp.py"]
 ```
 
 The server treats its working directory as the user's project; every tool also accepts an explicit `project`. Set `WAYKIT_HOME` (or `LECTIC_HOME`) in the client's environment to point all of them at one home (see [installation](INSTALLATION.md#where-knowledge-is-stored)).
@@ -52,7 +52,7 @@ The server treats its working directory as the user's project; every tool also a
 Check the server independently with the MCP Inspector:
 
 ```bash
-npx @modelcontextprotocol/inspector --cli python /path/to/lectic/scripts/lectic_mcp.py --method tools/list
+npx @modelcontextprotocol/inspector --cli python /path/to/waykit/scripts/waykit_mcp.py --method tools/list
 ```
 
 ## Transports
@@ -88,9 +88,9 @@ Prompts and schemas are published as both `waykit://` and legacy `lectic://` res
 
 ## How a workflow runs over tools
 
-Workflow tools return a `phase`. When the response carries `agent_task`, it is work for the client: read the named prompt with `lectic_read`, reason, save the requested record with `lectic_write_json` at the path the task names, then call the same workflow tool again. This is the same state machine the installed skill drives with the CLI; only the transport changed.
+Workflow tools return a `phase`. When the response carries `agent_task`, it is work for the client: read the named prompt with `waykit_read` (or `lectic_read`), reason, save the requested record with `waykit_write_json` (or `lectic_write_json`) at the path the task names, then call the same workflow tool again. This is the same state machine the installed skill drives with the CLI; only the transport changed.
 
-`lectic_write_json` is the single door for records the client produces. It admits exactly the kinds a workflow asks for, and validates each before it lands:
+`waykit_write_json` (or `lectic_write_json`) is the single door for records the client produces. It admits exactly the kinds a workflow asks for, and validates each before it lands:
 
 | Location | Kind | Validation |
 | --- | --- | --- |

@@ -3,7 +3,7 @@
 A pack holds the knowledge (checkpoints, IR, the author's reconciliation receipt), the
 evidence excerpts every unit cites, the latest Capability Map and built methods as
 readable records, a rendered README, and a manifest with hashes. Sources travel as
-links by default: on install, Lectic retrieves them again on the recipient's own
+links by default: on install, WayKit retrieves them again on the recipient's own
 network and verifies the bytes against the pack, so the knowledge is validated against
 their copy and nothing is redistributed. `include_sources` bundles full text for
 material you own. What cannot be verified drops out, and the install says so.
@@ -259,7 +259,7 @@ def render_readme(manifest, ir, files, maps, methods):
         lines.append(f"- [{label}]({s['url']})" if s['url'] else f'- {label}')
     lines += ['', '## Provenance', '',
               f"Knowledge revision `{manifest['ir_hash'][:16]}…` over source revision `{manifest['corpus_id'][7:23]}…`, "
-              f"built with Lectic {manifest['lectic_version']}. "
+              f"built with WayKit {manifest.get('waykit_version', manifest.get('lectic_version', ''))}. "
               + ('Full source text is included.' if manifest['sources_included'] else
                  'Sources are not included: installing retrieves them on your own network and verifies them against this pack.'),
               '', manifest['share_note'], '']
@@ -272,7 +272,7 @@ def fetch(location):
     """A local file or an https link, bounded in size."""
     if re.match(r'https?://', str(location)):
         require(urlsplit(location).scheme == 'https' or urlsplit(location).hostname in {'localhost', '127.0.0.1'}, 'Packs are fetched over https')
-        with urllib.request.urlopen(urllib.request.Request(location, headers={'User-Agent': 'lectic/' + VERSION}), timeout=60) as response:
+        with urllib.request.urlopen(urllib.request.Request(location, headers={'User-Agent': 'waykit/' + VERSION}), timeout=60) as response:
             raw = response.read(MAX_PACK_BYTES + 1)
     else:
         path = Path(location).expanduser().resolve()
@@ -287,7 +287,7 @@ def open_pack(raw):
     try:
         archive = zipfile.ZipFile(io.BytesIO(raw))
     except zipfile.BadZipFile as exc:
-        raise Invalid('Not a Lectic pack (not a zip archive)') from exc
+        raise Invalid('Not a WayKit pack (not a zip archive)') from exc
     members = {}
     for info in archive.infolist():
         name = info.filename
@@ -298,7 +298,7 @@ def open_pack(raw):
         require(sum(len(value) for value in members.values()) + info.file_size <= MAX_PACK_BYTES,
                 'Expanded pack exceeds the supported size')
         members[name] = archive.read(name)
-    require('pack.json' in members, 'Not a Lectic pack (no pack.json)')
+    require('pack.json' in members, 'Not a WayKit pack (no pack.json)')
     manifest = json.loads(members['pack.json'].decode('utf-8'))
     validate_schema(manifest, 'pack')
     require(set(manifest['files']) == set(members) - {'pack.json'}, 'Pack file inventory differs from its manifest')

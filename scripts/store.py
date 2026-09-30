@@ -1,6 +1,6 @@
 """Storage primitives with cloud-shaped semantics, implemented on the local filesystem.
 
-Everything Lectic persists is one of two kinds:
+Everything WayKit persists is one of two kinds:
 
 - immutable objects: content-addressed blobs and validated snapshots (source runs,
   builds, maps, packages), written once and never edited in place;

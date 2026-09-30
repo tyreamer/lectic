@@ -156,7 +156,7 @@ def library_view(project='.', collection=None):
 
 
 def render_library(view):
-    lines = ['# Your Lectic library', '', 'Saved in this project. Other projects and platform memories are not searched.', '']
+    lines = ['# Your WayKit library', '', 'Saved in this project. Other projects and platform memories are not searched.', '']
     if not view['collections'] and not view['legacy_methods'] and not view['legacy_runs']:
         lines += ['No saved collections or methods found here. If you used another project, open that project; no re-upload is needed when the originals are still saved there.', '']
     for row in view['collections']:

@@ -16,8 +16,8 @@ Sharing & Maintenance:
 Portability & Teams:
     waykit pack NAME        export a collection into one shareable playbook file (.waykit / .lectic)
     waykit install TARGET   add a playbook to your AI (from a link, file, or name)
-    waykit verify [NAME]    check that every rule in a collection links to exact source quotes
-    waykit inbox [--process] view or sort dropped links and files from your drop folder
+    waykit inbox [--process] [--watch] view, sort, or watch dropped links and files
+    waykit watch            watch your drop folder and immediately process incoming files
     waykit backup [--out F] back up all your playbooks and sources in one file
     waykit restore FILE     restore your playbooks from a backup file
     waykit push LINK        sync your playbooks to another computer
@@ -207,7 +207,7 @@ def verify_server():
 
 
 def youtube_route():
-    """What `lectic status` shows: how this machine reaches YouTube."""
+    """What `waykit status` shows: how this machine reaches YouTube."""
     sys.path.insert(0, str(SCRIPTS))
     from ingestors.youtube import network_options
     try:
@@ -496,23 +496,23 @@ def share_tunnel(argv):
 
 
 def connect(argv):
-    """Point the assistants on this machine at a Lectic that runs somewhere else."""
+    """Point the assistants on this machine at a WayKit that runs somewhere else."""
     url = next((a for a in argv if a.startswith('http')), None)
     if not url:
-        print('Usage: lectic connect https://host/t/TOKEN/mcp   (the link `lectic share` or your server printed)'); return 2
+        print('Usage: waykit connect https://host/t/TOKEN/mcp   (the link `waykit share` or your server printed)'); return 2
     from client_check import check_connection
     if not check_connection({'url': url})[0]:
-        print('The remote Lectic server did not complete a connection check. Existing assistant settings were left unchanged.')
+        print('The remote WayKit server did not complete a connection check. Existing assistant settings were left unchanged.')
         return 1
     results = {'Claude Code': connect_claude(url=url), 'Codex': connect_codex(url=url)}
     for name, state in results.items(): print(f'  {name:<12} {state}')
     if any(v == 'connected' for v in results.values()):
-        print('\nConnected. Restart the assistant once if it was already open. `lectic setup` switches back to this machine\'s own knowledge.')
+        print('\nConnected. Restart the assistant once if it was already open. `waykit setup` switches back to this machine\'s own knowledge.')
     return 0
 
 
 def live_link(home):
-    """The link a running `lectic share` is serving, or None. Checked, never just believed."""
+    """The link a running `waykit share` is serving, or None. Checked, never just believed."""
     import json as _json, urllib.error, urllib.request
     path = Path(home) / 'share-link.json'
     if not path.is_file(): return None
@@ -542,7 +542,7 @@ def pack(argv):
         return any(option(argv, f) == a for f in flags_with_val)
     name = next((a for a in argv if not a.startswith('--') and not is_flag_val(a)), None)
     if not name:
-        print('Usage: lectic pack "Collection Name" [--out FILE] [--include-sources] [--team] [--version VER]')
+        print('Usage: waykit pack "Collection Name" [--out FILE] [--include-sources] [--team] [--version VER]')
         return 2
     out = option(argv, '--out')
     version = option(argv, '--version')
@@ -557,20 +557,20 @@ def pack(argv):
     if result.get('publisher'):
         print(f"  {result['publisher']}")
     else:
-        print('  Unsigned — run `lectic identity set "Name" --contact email` to sign packs')
+        print('  Unsigned — run `waykit identity set "Name" --contact email` to sign packs')
     print(result['share_note'])
     for warning in result.get('warnings', []): print('  ' + warning)
     if team:
         dist = result.get('distribution', {})
         install_as = dist.get('install_name', 'standards')
-        print(f"\nTeam pack ready. Recipients install with:\n  lectic install <file or link> --as {install_as} --pin")
+        print(f"\nTeam pack ready. Recipients install with:\n  waykit install <file or link> --as {install_as} --pin")
     else:
-        print('\nShare the file or a link to it. Anyone with Lectic installs it with:  lectic install <file or link>')
+        print('\nShare the file or a link to it. Anyone with WayKit installs it with:  waykit install <file or link>')
     return 0
 
 
 def search(argv):
-    """Search the Lectic Expertise Marketplace registry."""
+    """Search the WayKit Expertise Marketplace registry."""
     from registry import search_registry, format_search_results
     flags_with_val = {'--tag'}
     def is_flag_val(a):
@@ -603,7 +603,7 @@ def inspect_cmd(argv):
         info = knowledge_graph(os.getcwd())
         if '--json' in argv:
             print(json.dumps(info, indent=2)); return 0
-        print('Your Lectic knowledge')
+        print('Your WayKit knowledge')
         if not info['collections']:
             print('  Nothing has been saved yet.'); return 0
         for item in info['collections']:
@@ -635,7 +635,7 @@ def explain_cmd(argv):
     from intelligence import explain_collection
     names = [a for a in argv if not a.startswith('--')]
     if not names:
-        print('Usage: lectic explain "Knowledge name"'); return 2
+        print('Usage: waykit explain "Knowledge name"'); return 2
     try: info = explain_collection(os.getcwd(), ' '.join(names))
     except Exception as exc:
         print('Explain failed: ' + str(exc)); return 1
@@ -658,7 +658,7 @@ def context_cmd(argv):
     from intelligence import compose_context
     intent = ' '.join(a for a in argv if not a.startswith('--'))
     if not intent:
-        print('Usage: lectic context "describe the task"'); return 2
+        print('Usage: waykit context "describe the task"'); return 2
     try: result = compose_context(os.getcwd(), intent)
     except Exception as exc:
         print('Context failed: ' + str(exc)); return 1
@@ -679,7 +679,7 @@ def install(argv):
         return any(option(argv, f) == a for f in flags_with_val)
     location = next((a for a in argv if not a.startswith('--') and not is_flag_val(a)), None)
     if not location:
-        print('Usage: lectic install REGISTRY:NAME | FILE | URL [--as NAME | --name NAME] [--pin] [--inspect]')
+        print('Usage: waykit install REGISTRY:NAME | FILE | URL [--as NAME | --name NAME] [--pin] [--inspect]')
         return 2
     if '--inspect' in argv:
         return inspect_cmd([location])
@@ -712,7 +712,7 @@ def update(argv):
     from packs import update_pack
     name = next((a for a in argv if not a.startswith('--')), None)
     if not name:
-        print('Usage: lectic update <collection-name> [--force]')
+        print('Usage: waykit update <collection-name> [--force]')
         return 2
     try:
         report = update_pack(os.getcwd(), name, force='--force' in argv)
@@ -736,7 +736,7 @@ def publish(argv):
     to_url = option(argv, '--to')
     to_registry = '--registry' in argv
     if not name or (not to_url and not to_registry):
-        print('Usage: lectic publish <collection-or-file> --to <URL> [--registry] [--token <TOKEN>] [--webhook <URL>]')
+        print('Usage: waykit publish <collection-or-file> --to <URL> [--registry] [--token <TOKEN>] [--webhook <URL>]')
         return 2
     token = option(argv, '--token')
     webhook = option(argv, '--webhook')
@@ -768,7 +768,7 @@ def publish(argv):
             print("\nRegistry Entry (for registry/index.json):")
             print(json.dumps(reg_entry, indent=2))
             print("\nTo submit this pack to the community marketplace:")
-            print("  1. Submit a PR to https://github.com/tyreamer/lectic")
+            print("  1. Submit a PR to https://github.com/tyreamer/waykit")
             print("  2. Add the JSON entry above to `registry/index.json` under `packs`")
         except Exception as exc:
             print(f"Registry entry generation failed: {exc}")
@@ -791,25 +791,25 @@ def backup(argv):
     result = run(os.getcwd(), option(argv, '--out'))
     names = ', '.join(result['collections']) or 'no named collections yet'
     print(f"Backed up {names} ({result['blobs']} sources) -> {result['file']} ({result['bytes'] // 1024} KB)")
-    print('Restore it anywhere with:  lectic restore ' + Path(result['file']).name)
+    print('Restore it anywhere with:  waykit restore ' + Path(result['file']).name)
     return 0
 
 
 def push(argv):
     from home_archive import push as run
     link = next((a for a in argv if a.startswith('http')), None)
-    if not link: print('Usage: lectic push https://host/t/SECRET/mcp   (the link that Lectic printed)'); return 2
+    if not link: print('Usage: waykit push https://host/t/SECRET/mcp   (the link that WayKit printed)'); return 2
     report = run(os.getcwd(), link)
     print(f"Sent {report['sent_bytes'] // 1024} KB to {report['destination']}")
     describe_merge(report)
-    print('\nThat Lectic now holds this knowledge. Point this machine at it with:  lectic connect ' + link)
+    print('\nThat WayKit now holds this knowledge. Point this machine at it with:  waykit connect ' + link)
     return 0
 
 
 def pull(argv):
     from home_archive import pull as run
     link = next((a for a in argv if a.startswith('http')), None)
-    if not link: print('Usage: lectic pull https://host/t/SECRET/mcp'); return 2
+    if not link: print('Usage: waykit pull https://host/t/SECRET/mcp'); return 2
     report = run(os.getcwd(), link)
     print(f"Received {report['received_bytes'] // 1024} KB from {report['source']}")
     describe_merge(report)
@@ -819,7 +819,7 @@ def pull(argv):
 def restore(argv):
     from home_archive import restore as run
     location = next((a for a in argv if not a.startswith('--')), None)
-    if not location: print('Usage: lectic restore FILE   (an archive from `lectic backup`)'); return 2
+    if not location: print('Usage: waykit restore FILE   (an archive from `waykit backup`)'); return 2
     report = run(os.getcwd(), location)
     print('Restored into ' + str(Path(os.getcwd())) + "'s knowledge home.")
     describe_merge(report)
@@ -850,22 +850,36 @@ def verify(argv):
     return 0 if report['overall'] == 'verified' else 1
 
 
+def watch_cmd(argv):
+    """Watch the WayKit Drop Inbox folder and immediately process incoming items."""
+    from inbox import watch_inbox
+    try:
+        watch_inbox(os.getcwd())
+    except KeyboardInterrupt:
+        print("\nStopped watching WayKit Drop Inbox.")
+        return 0
+    return 0
+
+
 def inbox_cmd(argv):
-    """View or sort dropped links and files from your Lectic Inbox folder."""
+    """View, sort or watch dropped links and files from your WayKit Drop Inbox folder."""
+    if '--watch' in argv or '-w' in argv:
+        return watch_cmd(argv)
     from inbox import ensure_inbox_folder, scan_inbox, route_all_inbox
     folder = ensure_inbox_folder(os.getcwd())
     if '--process' in argv or '--route' in argv:
-        res = route_all_inbox(os.getcwd())
+        res = route_all_inbox(os.getcwd(), auto_process=True)
         if not res['items']:
-            print(f"Lectic Inbox is empty ({folder}).")
+            print(f"WayKit Inbox is empty ({folder}).")
             return 0
         print(f"Sorted {len(res['items'])} drop item{'s' if len(res['items']) != 1 else ''} into your collections:")
         for it in res['items']:
-            print(f"  {it['file']} -> {it['collection']}")
+            processed_info = " (processed)" if it.get('processed') else ""
+            print(f"  {it['file']} -> {it['collection']}{processed_info}")
         return 0
 
     scan = scan_inbox(os.getcwd())
-    print(f"Lectic Drop Inbox: {scan['inbox_folder']}\n")
+    print(f"WayKit Drop Inbox: {scan['inbox_folder']}\n")
     if not scan['items']:
         print("Inbox is empty. Drop web shortcuts, YouTube links, notes, or files here anytime.")
         print("Your connected assistants will notice them and ask where to add them!")
@@ -878,7 +892,7 @@ def inbox_cmd(argv):
         if it['url']:
             print(f"    Link:       {it['url']}")
         print(f"    Suggested:  {target} ({it['match_reason']})")
-    print("\nRun `lectic inbox --process` or ask your assistant: 'Sort my inbox drops'.")
+    print("\nRun `waykit inbox --process` to process waiting items, or `waykit watch` to watch and process drops live.")
     return 0
 
 
@@ -896,7 +910,7 @@ def try_example(argv):
     else:
         print('Debugging Starter is ready.')
         print('This is a prewritten teaching example; no model was called.')
-        print('\nWhat Lectic did:')
+        print('\nWhat WayKit did:')
         print('  Input:   a short debugging lesson with three source-backed procedures')
         print('  Output:  a review, then a repeatable debugging checklist')
         print('  Reuse:   ' + str(len(result['reuse']['reused_units'])) + ' saved knowledge units were applied again')
@@ -930,8 +944,8 @@ def start_cmd(argv):
     if interactive:
         try:
             if not sources:
-                print("Lectic saves material you trust so your assistant can use it again later.\n")
-                answer = input('  What do you want Lectic to learn from? A file, a folder, or a YouTube link.\n'
+                print("WayKit saves material you trust so your assistant can use it again later.\n")
+                answer = input('  What do you want WayKit to learn from? A file, a folder, or a YouTube link.\n'
                                '  (press Enter to run the built-in sample instead): ').strip().strip('"')
                 if answer: sources = [answer]
             if sources and not goal:
@@ -1105,7 +1119,7 @@ def main(argv=None):
                 'identity': identity, 'share': share, 'share-artifact': share_artifact,
                 'refresh': refresh_cmd, 'diff': diff_cmd, 'connect': connect,
                 'pack': pack, 'install': install, 'update': update, 'publish': publish, 'verify': verify,
-                'search': search, 'inspect': inspect_cmd, 'explain': explain_cmd, 'context': context_cmd, 'inbox': inbox_cmd,
+                'search': search, 'inspect': inspect_cmd, 'explain': explain_cmd, 'context': context_cmd, 'inbox': inbox_cmd, 'watch': watch_cmd,
                 'backup': backup, 'push': push, 'pull': pull, 'restore': restore,
                 'status': status, 'serve': serve, 'cloud': cloud, 'ec': ec}
     if command in {'-h', '--help', 'help'} or command not in handlers:

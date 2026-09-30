@@ -14,7 +14,7 @@ if ((Split-Path -Leaf $Destination) -notin @('waykit', 'lectic', 'expertise-comp
 }
 $lecticUpdater = Join-Path $Destination 'scripts/update_skill.py'
 $lecticStatusText = & $Python -B $lecticUpdater status --dest $Destination
-if ($LASTEXITCODE -ne 0) { throw 'Could not verify the installed Lectic copy.' }
+if ($LASTEXITCODE -ne 0) { throw 'Could not verify the installed WayKit copy.' }
 $lecticStatus = ($lecticStatusText -join "`n") | ConvertFrom-Json
 if (($lecticStatus.status -ne 'managed' -and -not $Disable) -or -not $lecticStatus.installed_commit -or $lecticStatus.recovery_pending) {
     throw 'First run update_skill.py update --adopt for a clean, managed installation.'
@@ -30,7 +30,7 @@ try {
     $lecticHash = [BitConverter]::ToString($lecticHasher.ComputeHash(
         [System.Text.Encoding]::UTF8.GetBytes($Destination.ToLowerInvariant()))).Replace('-', '').Substring(0, 8)
 } finally { $lecticHasher.Dispose() }
-$lecticTaskName = "Lectic Skill Update $lecticHash"
+$lecticTaskName = "WayKit Skill Update $lecticHash"
 $lecticArguments = '-B "' + $lecticRunner + '" run --dest "' + $Destination + '" --state-dir "' + $lecticState + '"'
 $lecticService = New-Object -ComObject 'Schedule.Service'
 $lecticService.Connect()
@@ -50,12 +50,12 @@ if ($Disable) {
     & $Python -B $lecticRunner pause --dest $Destination --state-dir $lecticState
     if ($LASTEXITCODE -ne 0) { throw 'Could not pause updates.' }
     if ($lecticExisting) { $lecticFolder.DeleteTask($lecticTaskName, 0) }
-    Write-Output 'Lectic automatic updates disabled; installation and backups retained.'
+    Write-Output 'WayKit automatic updates disabled; installation and backups retained.'
     exit 0
 }
 $lecticUser = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
 $lecticTask = $lecticService.NewTask(0)
-$lecticTask.RegistrationInfo.Description = 'Update the installed Lectic skill from tyreamer/lectic main. No collection processing or AI calls.'
+$lecticTask.RegistrationInfo.Description = 'Update the installed WayKit skill from tyreamer/waykit main. No collection processing or AI calls.'
 $lecticTask.Principal.UserId = $lecticUser
 $lecticTask.Principal.LogonType = 3 # Interactive token: only while this user is logged in.
 $lecticTask.Principal.RunLevel = 0

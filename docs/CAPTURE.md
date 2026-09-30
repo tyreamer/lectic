@@ -11,7 +11,7 @@ SYNCED_INBOX/
   capture-UUID/original.ext     # optional supplied attachment
   annotation-UUID.note.json     # optional personal context, after capture
 
-LECTIC_HOME/                  # ~/.lectic, or a project's existing .expertise-compiler/
+WAYKIT_HOME/                  # ~/.waykit, ~/.lectic, or a project's existing .expertise-compiler/
   blobs/SHA256                # one payload per exact byte hash, shared by everything
   capture/
     records/capture-ID.json     # original validated envelope
@@ -42,7 +42,7 @@ The phone must still supply the original capture time and serialize a complete J
 
 ## Placement and source honesty
 
-A save never stalls waiting for a decision: the record is written first, then reported. `lectic_capture_save` resolves the destination itself and returns a `decision` so the assistant does not have to guess from prose.
+A save never stalls waiting for a decision: the record is written first, then reported. `waykit_capture_save` (or `lectic_capture_save`) resolves the destination itself and returns a `decision` so the assistant does not have to guess from prose.
 
 | `decision` | When | Destination | Question asked |
 | --- | --- | --- | --- |
@@ -51,7 +51,7 @@ A save never stalls waiting for a decision: the record is written first, then re
 | `needs_clarification` | Two or more plausible candidates, or one that was not clearly strong | Inbox | One, naming the candidates plus “or somewhere new” |
 | `inbox_fallback` | No candidate scored above the matching floor | Inbox | None; the confirmation says nothing fit |
 
-The response also carries a `source` object saying what Lectic will ever be able to read from the item, so a confirmation cannot imply retrieval that will not happen.
+The response also carries a `source` object saying what WayKit will ever be able to read from the item, so a confirmation cannot imply retrieval that will not happen.
 
 | Shared thing | `retrieval` | What is actually stored |
 | --- | --- | --- |

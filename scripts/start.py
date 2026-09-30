@@ -1,4 +1,4 @@
-"""First run for someone who has never used Lectic: save real material, or show the offline example.
+"""First run for someone who has never used WayKit: save real material, or show the offline example.
 
 Nothing here invents knowledge. Saving sources is deterministic and local; deriving
 reusable knowledge from them is the assistant's job, so `start` reports the exact

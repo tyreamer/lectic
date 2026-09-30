@@ -50,6 +50,97 @@ def _clean_str(text: str) -> str:
     return ' '.join(re.findall(r'[a-zA-Z0-9]+', (text or '').lower()))
 
 
+GENERIC_COLLECTION_NAME = "General Knowledge"
+
+
+def infer_collection_name(
+    *,
+    url: str = '',
+    text: str = '',
+    title: str = '',
+    files: tuple | list = (),
+    fallback: str = GENERIC_COLLECTION_NAME
+) -> str:
+    """Infer a clean, specific topic collection name from incoming material.
+
+    Processed material must never be assigned to or remain in 'Inbox'.
+    When no candidate collection matches, this function derives a meaningful
+    specific topic name (e.g. 'Handheld Photography', 'Active Recall Study',
+    'Quantum Computing') or falls back to a generic collection ('General Knowledge').
+    """
+    # 1. Inspect title
+    t = (title or '').strip()
+    if t:
+        t = re.sub(
+            r'\s*([|\-–—:]\s*(YouTube|Medium|Substack|Vimeo|GitHub|Wikipedia|Twitter|X|LinkedIn|Reddit|TikTok|Instagram)).*$',
+            '', t, flags=re.IGNORECASE
+        )
+        t = re.sub(r'^(Notes\s+on|Guide\s+to|Introduction\s+to|Intro\s+to|Tutorial\s+on)\s+', '', t, flags=re.IGNORECASE)
+        t = t.strip(' "“\'”‘-–—:|#')
+        words = t.split()
+        if 1 <= len(words) <= 6:
+            return ' '.join(w.capitalize() if not w.isupper() else w for w in words)
+        elif len(words) > 6:
+            toks = [w for w in re.findall(r'[a-zA-Z0-9]+', t) if w.lower() not in STOPWORDS]
+            if toks:
+                selected = toks[:4]
+                return ' '.join(w.capitalize() if not w.isupper() else w for w in selected)
+
+    # 2. Inspect files
+    for f in (files or ()):
+        stem = Path(f).stem
+        cleaned = re.sub(r'^[0-9]+[-_.]*', '', stem)
+        cleaned = cleaned.replace('-', ' ').replace('_', ' ').strip()
+        words = cleaned.split()
+        if words:
+            return ' '.join(w.capitalize() if not w.isupper() else w for w in words[:4])
+
+    # 3. Inspect URL
+    u = (url or '').strip()
+    if u:
+        try:
+            from urllib.parse import urlparse
+            parsed = urlparse(u if '://' in u else f'https://{u}')
+            path_parts = [p for p in parsed.path.strip('/').split('/') if p and not re.match(r'^[0-9a-fA-F]{10,}$', p)]
+            if 'github.com' in parsed.netloc and len(path_parts) >= 2:
+                return path_parts[1].replace('-', ' ').replace('_', ' ').capitalize()
+            if 'wikipedia.org' in parsed.netloc and path_parts:
+                wiki_title = path_parts[-1].replace('_', ' ')
+                return ' '.join(w.capitalize() for w in wiki_title.split()[:4])
+            if path_parts:
+                slug_words = re.findall(r'[a-zA-Z0-9]+', path_parts[-1])
+                toks = [w for w in slug_words if w.lower() not in STOPWORDS]
+                if toks:
+                    return ' '.join(w.capitalize() for w in toks[:4])
+            domain = parsed.netloc.lower()
+            if domain.startswith('www.'):
+                domain = domain[4:]
+            domain_name = domain.split('.')[0]
+            if domain_name and domain_name not in {'youtube', 'youtu', 'medium', 'x', 'twitter'}:
+                return domain_name.capitalize()
+        except Exception:
+            pass
+
+    # 4. Inspect text
+    tx = (text or '').strip()
+    if tx:
+        lines = [line.strip() for line in tx.splitlines() if line.strip()]
+        if lines:
+            first = lines[0].strip('#-*\t ')
+            words = first.split()
+            if 1 <= len(words) <= 5 and not any(ch in first for ch in '{};='):
+                return ' '.join(w.capitalize() if not w.isupper() else w for w in words)
+        toks = [w for w in re.findall(r'[a-zA-Z0-9]+', tx) if w.lower() not in STOPWORDS]
+        if toks:
+            freq = {}
+            for w in toks:
+                freq[w.lower()] = freq.get(w.lower(), 0) + 1
+            top_words = sorted(freq.keys(), key=lambda k: (-freq[k], len(k)))[:3]
+            return ' '.join(w.capitalize() for w in top_words)
+
+    return fallback
+
+
 def find_candidate_collections(project='.', *, url='', text='', title='', files=(), note='') -> dict[str, Any]:
     """Match incoming source material against existing collections.
 
@@ -64,13 +155,16 @@ def find_candidate_collections(project='.', *, url='', text='', title='', files=
     library = Library(project)
     entries = library.index.get('collections', [])
     if not entries:
+        inferred = infer_collection_name(url=url, text=text, title=title, files=files)
         return {
             'has_collections': False,
             'total_collections': 0,
             'candidates': [],
             'all_collections': [],
+            'suggested_collection': inferred,
+            'generic_collection': GENERIC_COLLECTION_NAME,
             'suggested_action': 'no_collections',
-            'prompt_guidance': 'There are no existing collections yet. Propose creating the first collection for this material, suggesting a clear name based on the content.',
+            'prompt_guidance': f"There are no existing collections yet. Propose creating the first collection for this material ('{inferred}' or generic '{GENERIC_COLLECTION_NAME}').",
         }
 
     # Aggregate incoming content for feature extraction
@@ -235,10 +329,16 @@ def find_candidate_collections(project='.', *, url='', text='', title='', files=
             "and ask if they would like to add this to one of them or create a new collection for it."
         )
 
+    inferred = infer_collection_name(url=url, text=text, title=title, files=files)
+    suggested_target = top_candidates[0]['name'] if top_candidates else inferred
+
     return {
         'has_collections': True,
         'total_collections': len(all_summary),
         'candidates': top_candidates,
+        'suggested_collection': suggested_target,
+        'generic_collection': GENERIC_COLLECTION_NAME,
+        'inferred_topic_collection': inferred,
         'all_collections': all_summary,
         'suggested_action': suggested_action,
         'prompt_guidance': guidance,

@@ -1,6 +1,6 @@
 # Extract observable language patterns
 
-Use for requests about vocabulary, verbiage, word choice, recurring phrases, sentence structure, register, transitions, hedging, or how someone talks or writes. The host assistant does the analysis; Lectic stores and validates the records. This is a selectable dimension of expertise using the existing knowledge and method schemas.
+Use for requests about vocabulary, verbiage, word choice, recurring phrases, sentence structure, register, transitions, hedging, or how someone talks or writes. The host assistant does the analysis; WayKit stores and validates the records. This is a selectable dimension of expertise using the existing knowledge and method schemas.
 
 ## Read the actual wording
 
