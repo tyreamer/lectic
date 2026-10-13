@@ -15,6 +15,7 @@ Authorization is strictly scoped to the verified account's private home.
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from functools import wraps
 import json
 import os
 from pathlib import Path
@@ -36,6 +37,16 @@ from home_archive import archive_home, merge_archive
 from ingestors import TranscriptInput
 from intelligence import assess_import, compose_context, explain_collection, knowledge_graph, tokens
 from store import LocalStore
+from organization import POLICY as ORGANIZATION_POLICY
+from home import home_scope
+
+
+def account_home(operation):
+    @wraps(operation)
+    def scoped(self, *args, **kwargs):
+        with home_scope(self.home):
+            return operation(self, *args, **kwargs)
+    return scoped
 
 
 class CloudLibrary:
@@ -79,6 +90,7 @@ class CloudLibrary:
     # -------------------------------------------------------------------------
     # 1. save_knowledge
     # -------------------------------------------------------------------------
+    @account_home
     def save_knowledge(self, *, text: str = '', url: str = '', title: str = '',
                        note: str = '', files: tuple = (), collections: tuple = ()) -> Dict[str, Any]:
         """Save a source, link, or note for later.
@@ -100,6 +112,8 @@ class CloudLibrary:
 
         return {
             'saved': True,
+            'organization_task': None if placement['decision'] in {'explicit', 'auto_filed'} else {'tool': 'organize_knowledge', 'action': 'route',
+                                  'items': [item['capture_id']], 'guidance': placement['guidance']},
             'capture_id': item['capture_id'],
             'new': item['new'],
             'collections': list(placement['collections']),
@@ -117,6 +131,7 @@ class CloudLibrary:
     # -------------------------------------------------------------------------
     # 2. learn_from_source
     # -------------------------------------------------------------------------
+    @account_home
     def learn_from_source(self, *, source_id: Optional[str] = None, capture_id: Optional[str] = None,
                           collection: Optional[str] = None, text: Optional[str] = None,
                           title: Optional[str] = None, units: Optional[List[Dict[str, Any]]] = None,
@@ -346,95 +361,31 @@ class CloudLibrary:
             'units': user_units,
             'source_evidence_count': sum(len(u['evidence']) for u in compiled_units),
             'inferred_relationships': inferred_rels,
+            'organization_task': {'tool': 'organize_knowledge', 'action': 'infer', 'instruction': ORGANIZATION_POLICY},
             'summary': f"Successfully learned {len(compiled_units)} reusable knowledge units for '{target_name}'. Source evidence and epistemic status ('observed' vs 'inferred') have been preserved."
         }
 
     # -------------------------------------------------------------------------
     # 3. organize_knowledge
     # -------------------------------------------------------------------------
-    def organize_knowledge(self, *, action: str = 'infer', source_collection: Optional[str] = None,
-                           target_collection: Optional[str] = None, relationship: Optional[str] = None,
-                           reason: Optional[str] = None) -> Dict[str, Any]:
-        """Manage and infer typed pack relationships across this account's private library.
-        
-        Supports 'infer', 'link', 'unlink', and 'explain'.
-        """
-        graph = knowledge_graph(self.home)
-
-        if action == 'explain' and source_collection:
+    @account_home
+    def organize_knowledge(self, *, action='infer', source_collection=None,
+                           target_collection=None, relationship=None, reason=None, items=()):
+        from organization import organize
+        # Resolve existing endpoints inside this authenticated account before mutation.
+        self.library.reload()
+        if source_collection:
             self._require_authorized_collection(source_collection)
-            return explain_collection(self.home, source_collection)
-
-        if action == 'link':
-            require(source_collection and target_collection and relationship,
-                    'source_collection, target_collection, and relationship type are required')
-            folder_src, data_src = self._require_authorized_collection(source_collection)
-            folder_tgt, data_tgt = self._require_authorized_collection(target_collection)
-
-            valid_kinds = {"related_to", "specializes", "part_of", "useful_with", "derived_from",
-                           "supersedes", "contradicts", "personal_preference_relevant_to", "learned_from"}
-            require(relationship in valid_kinds, f"Invalid relationship kind. Must be one of: {sorted(valid_kinds)}")
-
-            custom_file = self.home / 'custom_relationships.json'
-            custom = read(custom_file) if custom_file.is_file() else {'relationships': []}
-
-            new_rel = {
-                'from': data_src['collection_id'],
-                'to': data_tgt['collection_id'],
-                'kind': relationship,
-                'reason': reason or f"User connected {data_src['name']} to {data_tgt['name']}",
-                'shared_topics': sorted(set(tokens(data_src['name'])) & set(tokens(data_tgt['name']))),
-                'evidence': [{'collection_id': data_src['collection_id']}, {'collection_id': data_tgt['collection_id']}],
-                'created_at': datetime.now(timezone.utc).isoformat()
-            }
-            custom['relationships'] = [r for r in custom.get('relationships', [])
-                                       if not (r['from'] == new_rel['from'] and r['to'] == new_rel['to'] and r['kind'] == new_rel['kind'])]
-            custom['relationships'].append(new_rel)
-            write(custom_file, custom)
-
-            return {
-                'action': 'linked',
-                'relationship': new_rel,
-                'message': f"Connected '{data_src['name']}' to '{data_tgt['name']}' ({relationship})."
-            }
-
-        if action == 'unlink':
-            require(source_collection and target_collection, 'source_collection and target_collection are required')
-            _, data_src = self._require_authorized_collection(source_collection)
-            _, data_tgt = self._require_authorized_collection(target_collection)
-
-            custom_file = self.home / 'custom_relationships.json'
-            if custom_file.is_file():
-                custom = read(custom_file)
-                custom['relationships'] = [r for r in custom.get('relationships', [])
-                                           if not (r['from'] == data_src['collection_id'] and r['to'] == data_tgt['collection_id'])]
-                write(custom_file, custom)
-
-            return {
-                'action': 'unlinked',
-                'message': f"Removed connections between '{data_src['name']}' and '{data_tgt['name']}'."
-            }
-
-        # Default action: infer
-        custom_file = self.home / 'custom_relationships.json'
-        if custom_file.is_file():
-            custom = read(custom_file)
-            existing_pairs = {(r['from'], r['to'], r['kind']) for r in graph['relationships']}
-            for r in custom.get('relationships', []):
-                if (r['from'], r['to'], r['kind']) not in existing_pairs:
-                    graph['relationships'].append(r)
-
-        return {
-            'phase': 'organized',
-            'graph_id': graph['graph_id'],
-            'collections': graph['collections'],
-            'relationships': graph['relationships'],
-            'summary': f"Library organized with {len(graph['collections'])} pack(s) and {len(graph['relationships'])} typed relationship(s)."
-        }
+        if target_collection and action != 'route':
+            self._require_authorized_collection(target_collection)
+        return organize(self.home, action=action, source_collection=source_collection,
+                        target_collection=target_collection, relationship=relationship,
+                        reason=reason, items=items)
 
     # -------------------------------------------------------------------------
     # 4. get_relevant_context
     # -------------------------------------------------------------------------
+    @account_home
     def get_relevant_context(self, intent: str, task_context: str = '', max_units: int = 24) -> Dict[str, Any]:
         """Selectively retrieve relevant authorized knowledge units across relationships."""
         require(intent.strip(), 'Describe the task or question WayKit should prepare for')
@@ -443,6 +394,7 @@ class CloudLibrary:
     # -------------------------------------------------------------------------
     # 5. apply_knowledge
     # -------------------------------------------------------------------------
+    @account_home
     def apply_knowledge(self, intent: str, task_context: str = '', collection: Optional[str] = None) -> Dict[str, Any]:
         """Apply relevant compiled knowledge to review, solve, or plan a task with citations."""
         require(intent.strip(), 'Describe what work or review should be performed')
@@ -507,6 +459,7 @@ class CloudLibrary:
     # -------------------------------------------------------------------------
     # 6. search_knowledge
     # -------------------------------------------------------------------------
+    @account_home
     def search_knowledge(self, query: str, limit: int = 10) -> Dict[str, Any]:
         """Search across all authorized units, statements, and sources in this account's library."""
         require(query.strip(), 'Query string is required')
@@ -561,6 +514,7 @@ class CloudLibrary:
     # -------------------------------------------------------------------------
     # 7. export_library & import_library
     # -------------------------------------------------------------------------
+    @account_home
     def export_library(self) -> bytes:
         """Export the private library to a portable .lectic-home archive.
         
@@ -568,6 +522,7 @@ class CloudLibrary:
         """
         return archive_home(self.home)
 
+    @account_home
     def import_library(self, archive_raw: bytes) -> Dict[str, Any]:
         """Merge an incoming .lectic-home archive into this account's private library."""
         return merge_archive(self.home, archive_raw, home=self.home)

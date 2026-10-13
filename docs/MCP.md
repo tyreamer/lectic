@@ -71,7 +71,7 @@ All tools are callable with `waykit_*` or legacy `lectic_*` prefix:
 | `waykit_map` (`lectic_map`) | Capability Maps: discover, list, inspect, compare, select |
 | `waykit_guide` (`lectic_guide`) | Grounded next-use suggestions: prepare, save, show, select |
 | `waykit_capture` (`lectic_capture`) | Inbox: import a synced folder, list, show, memberships, notes, process, trace |
-| `waykit_capture_save` (`lectic_capture_save`) | Save a link, pasted text or files shared right now; storage only. Returns `decision` (`explicit` / `auto_filed` / `needs_clarification` / `inbox_fallback`), a single `question` when one is warranted, and a `source` object saying whether the item's content is retrievable (YouTube captions) or kept as a reference only (Instagram, TikTok, most web links) |
+| `waykit_capture_save` (`lectic_capture_save`) | Save a link, pasted text or files shared right now; storage only. Returns `decision` (`explicit` / `auto_filed` / `agent_organization` / `inbox_fallback`), an internal `organization_task` instead of a taxonomy question, and a `source` object saying whether the item's content is retrievable (YouTube captions) or kept as a reference only (Instagram, TikTok, most web links) |
 | `waykit_collection_candidates` (`lectic_collection_candidates`) | Intelligent candidate collection suggestions for incoming source material |
 | `waykit_compile` (`lectic_compile`) | Legacy numbered-capability coordinator |
 | `waykit_pack` (`lectic_pack`) | One shareable `.waykit` / `.lectic` file carrying a collection's knowledge |
@@ -123,3 +123,7 @@ These tools require no compiler phase knowledge from the user or assistant and a
 ## What this establishes, and what it does not
 
 Because every client-produced record now passes through one validated door, the store beneath it can change without the client noticing: a remote store implementing the same seam is the next step, and index files can replace directory listing once no client writes files directly. Semantic quality is unchanged by the transport: the server verifies structure, identity and evidence location, not whether an interpretation is right. Human review and evaluation remain part of quality assurance.
+
+### Agent-managed organization
+
+`waykit_organize` / `lectic_organize` and cloud `organize_knowledge` share persisted relationships. Actions: `infer`, `explain`, `link`, `unlink`, and `route`. Route accepts `items` (capture IDs), `target_collection` (existing or new), and a source-based `reason`. It moves saved membership and reuses normalized sources without retrieval. Continue prepare and review any reused checkpoints. Link accepts existing source/target collections, relationship and reason; `part_of` and `specializes` point child → parent. Cycles and self-links are rejected. Unlink suppresses reinference; explicit links override guesses for their pair. Context selection follows hierarchy up to three hops and explicit related/preferences/contradiction links for one initial hop, within the unit budget and excluding archived collections. The agent owns routine placement and creation, honors user corrections, and does not ask users to manage taxonomy.

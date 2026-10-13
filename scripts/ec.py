@@ -151,7 +151,10 @@ def normalize(raw, suffix):
             segments.append({'segment_id': f'seg-{len(segments)+1:06d}', 'start': start, 'end': end,
                              'speaker': speaker, 'text': clean, 'raw_text': body})
     if suffix in ('.vtt', '.srt'):
-        for block in re.split(r'\n[ \t]*\n', text.strip()):
+        # WebVTT roll-up captions can contain a whitespace-only payload line.
+        # Only a truly empty line separates its cues.
+        separator = r'\n\n' if suffix == '.vtt' else r'\n[ \t]*\n'
+        for block in re.split(separator, text.strip()):
             lines = block.splitlines()
             if not lines or lines[0].startswith(('WEBVTT', 'NOTE', 'STYLE', 'REGION')):
                 continue
@@ -160,7 +163,10 @@ def normalize(raw, suffix):
             match = TIMING.fullmatch(lines[timing_index].strip())
             start, end = seconds(match[1]), seconds(match[2])
             require(end >= start, 'Caption ends before it starts')
-            require(timing_index + 1 < len(lines), 'Caption has no text')
+            # YouTube may emit empty cues between spoken captions.
+            # Keep validating their timing, but do not create empty segments.
+            if timing_index + 1 == len(lines):
+                continue
             add('\n'.join(lines[timing_index+1:]), start, end)
     else:
         for block in re.split(r'\n[ \t]*\n', text.strip()):

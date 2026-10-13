@@ -59,6 +59,24 @@ class CompilerTests(unittest.TestCase):
         for content in [b'WEBVTT\n\nbad caption', b'WEBVTT', b'00:00:60.000 --> 00:00:61.000\nx', b'00:00:04.000 --> 00:00:02.000\nx']:
             with self.subTest(content=content), self.assertRaises(ec.Invalid): ec.normalize(content, '.vtt')
 
+    def test_empty_cues_preserve_neighboring_caption_text_and_timing(self):
+        vtt = (b'WEBVTT\n\n00:00:01.000 --> 00:00:02.000\nFirst\n\n'
+               b'00:00:02.000 --> 00:00:03.000\n\n'
+               b'00:00:03.000 --> 00:00:04.000\nLast\n')
+        segments = ec.normalize(vtt, '.vtt')
+        self.assertEqual([(s['text'], s['start'], s['end']) for s in segments],
+                         [('First', 1.0, 2.0), ('Last', 3.0, 4.0)])
+        with self.assertRaisesRegex(ec.Invalid, 'no usable segments'):
+            ec.normalize(b'WEBVTT\n\n00:00:01.000 --> 00:00:02.000\n', '.vtt')
+
+    def test_youtube_whitespace_payload_line_is_not_a_cue_separator(self):
+        vtt = (b'WEBVTT\n\n00:00:00.160 --> 00:00:01.750 align:start position:0%\n'
+               b' \nHey<00:00:00.320><c> guys,</c>\n\n'
+               b'00:00:01.750 --> 00:00:01.760\nHey guys,\n \n\n')
+        segments = ec.normalize(vtt, '.vtt')
+        self.assertEqual([s['text'] for s in segments], ['Hey guys,', 'Hey guys,'])
+        self.assertEqual(segments[0]['start'], 0.16)
+
     def test_duplicate_contents_keep_distinct_sources(self):
         inputs = self.base / 'input'; inputs.mkdir()
         for name in ['one.txt', 'two.txt']: (inputs / name).write_text('Same content.', encoding='utf-8')

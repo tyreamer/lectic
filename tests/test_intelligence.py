@@ -11,6 +11,8 @@ from collection_store import Library
 from demo import build
 from intelligence import assess_import, compose_context, explain_collection, knowledge_graph
 from lectic_mcp import Server
+from organization import organize
+from ec import Invalid
 
 
 class IntelligentKnowledgeTests(unittest.TestCase):
@@ -64,6 +66,42 @@ class IntelligentKnowledgeTests(unittest.TestCase):
         decision = assess_import(self.project, title='Three Europe travel train tips')
         self.assertEqual(decision['decision'], 'enrich_existing')
         self.assertNotIn('ontology', decision['message'].lower())
+
+    def test_persisted_child_is_retrieved_without_matching_its_name(self):
+        organize(self.project, action='link', source_collection='Photography',
+                 target_collection='Travel', relationship='part_of', reason='Trip photography techniques')
+        result = Server(self.project).tool_context(intent='Travel')
+        self.assertIn('Photography', [p['name'] for p in result['using']])
+        self.assertNotIn('React', [p['name'] for p in result['using']])
+        self.assertLessEqual(len(result['knowledge']), 24)
+        self.assertIn('Trip photography techniques', [p['why'] for p in result['using']])
+
+    def test_cycles_rejected_and_unlink_survives_fresh_session(self):
+        with self.assertRaises(Invalid):
+            organize(self.project, action='link', source_collection='Travel',
+                     target_collection='Travel', relationship='part_of', reason='Invalid')
+        organize(self.project, action='link', source_collection='Photography',
+                 target_collection='Travel', relationship='part_of', reason='Trip images')
+        with self.assertRaises(Invalid):
+            organize(self.project, action='link', source_collection='Travel',
+                     target_collection='Photography', relationship='part_of', reason='Cycle')
+        organize(self.project, action='unlink', source_collection='Europe Travel',
+                 target_collection='Travel', relationship='specializes')
+        graph = Server(self.project).tool_knowledge()
+        names = {p['collection_id']: p['name'] for p in graph['collections']}
+        self.assertNotIn(('Europe Travel', 'Travel', 'specializes'),
+                         {(names[r['from']], names[r['to']], r['kind']) for r in graph['relationships']})
+
+    def test_route_bare_link_never_retrieves_and_creates_subject_collection(self):
+        from unittest.mock import patch
+        server = Server(self.project)
+        saved = server.tool_capture_save(url='https://www.youtube.com/watch?v=IZoBsCXBNfE')
+        with patch('capture_store.CaptureStore.normalize_item', side_effect=AssertionError('No retrieval')):
+            result = server.tool_organize(action='route', items=[saved['capture_id']],
+                                         target_collection='Ultimate Team Strategy', reason='User supplied topic')
+        self.assertEqual(result['collection'], 'Ultimate Team Strategy')
+        listing = server.tool_capture(action='list', collection='Ultimate Team Strategy')
+        self.assertEqual(listing['items'][0]['capture_id'], saved['capture_id'])
 
 
 if __name__ == '__main__': unittest.main()

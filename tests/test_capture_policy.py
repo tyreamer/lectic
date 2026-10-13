@@ -73,18 +73,16 @@ class PlacementDecisionTests(PlacementBase):
         self.assertEqual(result['question'], '')
         self.assertIn('Database Indexing', result['confirmation'])
 
-    def test_several_plausible_matches_ask_exactly_one_question(self):
+    def test_several_plausible_matches_delegate_to_agent(self):
         self.add_collection('Python Performance Optimization')
         self.add_collection('Python Debugging Tools')
         result = self.save(url='https://example.com/py', title='Python profiling and debugging performance')
-        self.assertEqual(result['decision'], 'needs_clarification')
+        self.assertEqual(result['decision'], 'agent_organization')
         self.assertEqual(result['collections'], ['Inbox'])
         self.assertGreaterEqual(len(result['candidate_collections']), 2)
-        for candidate in result['candidate_collections']:
-            self.assertIn(candidate['name'], result['question'])
-        self.assertIn('somewhere new', result['question'])
-        self.assertEqual(result['question'].count('?'), 1)
-        self.assertIn(result['question'], result['confirmation'])
+        self.assertEqual(result['question'], '')
+        self.assertEqual(result['organization_task']['action'], 'route')
+        self.assertIn('Do not ask', result['guidance'])
 
     def test_no_plausible_match_goes_to_inbox_and_says_so(self):
         self.add_collection('Machine Learning Systems')
@@ -187,17 +185,16 @@ class HostedAssistantLoopTests(PlacementBase):
         self.assertFalse(result['isError'], result['content'][0]['text'])
         return json.loads(result['content'][0]['text'])
 
-    def test_ambiguous_save_asks_once_then_lands_where_the_user_said(self):
+    def test_ambiguous_save_can_be_organized_without_a_user_question(self):
         self.add_collection('Python Performance Optimization')
         self.add_collection('Python Debugging Tools')
 
         saved = self.call('lectic_capture_save', url='https://example.com/py', title='Python profiling and debugging performance')
-        self.assertEqual(saved['decision'], 'needs_clarification')
+        self.assertEqual(saved['decision'], 'agent_organization')
         self.assertEqual(saved['collections'], ['Inbox'])
-        self.assertIn('somewhere new', saved['question'])
-        self.assertIn('Python Debugging Tools', saved['question'])
+        self.assertEqual(saved['question'], '')
 
-        self.call('lectic_capture', action='move', items=[saved['capture_id']], to=['Python Debugging Tools'])
+        self.call('waykit_organize', action='route', items=[saved['capture_id']], target_collection='Python Debugging Tools', reason='The supplied title concerns debugging and profiling.')
 
         chosen = self.call('lectic_capture', action='list', collection='Python Debugging Tools')
         self.assertIn(saved['capture_id'], [i['capture_id'] for i in chosen['items']])

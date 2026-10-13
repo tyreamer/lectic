@@ -16,6 +16,7 @@ import zipfile
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
 import install_skill
 import update_skill as updater
+from support import isolate_home
 
 ROOT = Path(__file__).resolve().parents[1]
 COMMIT = 'a' * 40
@@ -26,6 +27,7 @@ class UpdatesTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.base = Path(self.temp.name).resolve()
+        isolate_home(self, self.base)
         self.dest = self.base / 'Assistant With Spaces/skills/expertise-compiler'
         self.dest.mkdir(parents=True)
         (self.dest / 'SKILL.md').write_text('Old customized skill\n', encoding='utf-8')

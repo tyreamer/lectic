@@ -9,7 +9,8 @@ from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
 from support import isolate_home
 import ec
-from home import DEFAULT_DIRNAME, LEGACY_DIRNAME, relative_run, resolve_run, session_path, storage_mode, storage_root
+from home import DEFAULT_DIRNAME, LEGACY_DIRNAME, home_scope, relative_run, resolve_run, session_path, storage_mode, storage_root
+from home_migration import centralize
 from goal_workflow import work
 from workflow import compile_workflow
 import test_workflow
@@ -20,18 +21,22 @@ class HomeResolutionTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory(); self.addCleanup(self.temp.cleanup)
         self.base = Path(self.temp.name).resolve()
         self.project = self.base / 'Project'; self.project.mkdir()
+        environment = patch.dict(os.environ, {}, clear=False)
+        environment.start(); self.addCleanup(environment.stop)
+        os.environ.pop('WAYKIT_HOME', None); os.environ.pop('LECTIC_HOME', None)
 
     def test_environment_variable_wins(self):
         home = isolate_home(self, self.base)
         self.assertEqual(storage_root(self.project), home.resolve())
         self.assertEqual(storage_mode(storage_root(self.project), self.project), 'explicit')
 
-    def test_existing_project_local_storage_is_detected(self):
+    def test_existing_project_local_storage_cannot_shadow_the_shared_home(self):
         os.environ.pop('LECTIC_HOME', None)
         legacy = self.project / LEGACY_DIRNAME; (legacy / 'collections').mkdir(parents=True)
-        self.assertEqual(storage_root(self.project), legacy.resolve())
-        self.assertEqual(storage_mode(legacy, self.project), 'project-local')
-        self.assertEqual(session_path(legacy, self.project), legacy / 'session.json')
+        with patch('home.Path.home', return_value=self.base / 'fake-user'):
+            root = storage_root(self.project)
+            self.assertEqual(root, (self.base / 'fake-user' / DEFAULT_DIRNAME).resolve())
+            self.assertEqual(storage_mode(root, self.project), 'user')
 
     def test_scratch_folder_with_legacy_name_does_not_capture_the_home(self):
         os.environ.pop('LECTIC_HOME', None)
@@ -39,7 +44,25 @@ class HomeResolutionTests(unittest.TestCase):
         with patch('home.Path.home', return_value=self.base / 'fake-user'):
             self.assertEqual(storage_root(self.project), (self.base / 'fake-user' / DEFAULT_DIRNAME).resolve())
         ec.write(self.project / LEGACY_DIRNAME / 'library.json', {})
-        self.assertEqual(storage_root(self.project), (self.project / LEGACY_DIRNAME).resolve())
+        with patch('home.Path.home', return_value=self.base / 'fake-user'):
+            self.assertEqual(storage_root(self.project), (self.base / 'fake-user' / DEFAULT_DIRNAME).resolve())
+
+    def test_project_directories_named_runs_or_collections_are_not_libraries(self):
+        (self.project / 'runs').mkdir(); (self.project / 'collections').mkdir()
+        with patch('home.Path.home', return_value=self.base / 'fake-user'):
+            self.assertEqual(storage_root(self.project), (self.base / 'fake-user' / DEFAULT_DIRNAME).resolve())
+
+    def test_a_library_index_in_a_project_cannot_redirect_the_shared_home(self):
+        ec.write(self.project / 'library.json', {'schema_version': '1.0', 'collections': [], 'active_collection': None})
+        with patch('home.Path.home', return_value=self.base / 'fake-user'):
+            self.assertEqual(storage_root(self.project), (self.base / 'fake-user' / DEFAULT_DIRNAME).resolve())
+
+    def test_account_scope_overrides_local_environment_then_restores_it(self):
+        local = isolate_home(self, self.base)
+        account = self.base / 'account-home'
+        with home_scope(account):
+            self.assertEqual(storage_root(self.project), account.resolve())
+        self.assertEqual(storage_root(self.project), local.resolve())
 
     def test_default_is_user_home_not_project(self):
         os.environ.pop('LECTIC_HOME', None)
@@ -88,19 +111,37 @@ class SharedHomeTests(unittest.TestCase):
 
     def test_legacy_session_resumes_after_switching_to_a_shared_home(self):
         project = self.base / 'Old Project'; project.mkdir()
-        os.environ.pop('LECTIC_HOME', None)
         legacy = project / LEGACY_DIRNAME; (legacy / 'runs').mkdir(parents=True)
-        with patch('home.Path.home', return_value=self.base / 'never-used'):
+        with patch.dict(os.environ, {'LECTIC_HOME': str(legacy)}):
             run = Path(compile_workflow(str(ec.ROOT / 'fixtures/photography'), project=project)['run'])
         self.assertTrue(run.is_relative_to(legacy))
-        self.assertEqual(ec.read(legacy / 'session.json')['active_run'], 'runs/' + run.name)
-        # An older install recorded the run relative to the project; that pointer still resolves.
-        session = ec.read(legacy / 'session.json'); session['active_run'] = LEGACY_DIRNAME + '/runs/' + run.name
+        session = ec.read(session_path(legacy, project)); session['active_run'] = LEGACY_DIRNAME + '/runs/' + run.name
         ec.write(legacy / 'session.json', session)
         self.seed(run)
-        with patch('home.Path.home', return_value=self.base / 'never-used'):
-            self.assertEqual(compile_workflow(project=project)['phase'], 'reconcile')
-        self.assertFalse((self.base / 'never-used').exists())
+        imported = centralize(project)
+        self.assertTrue(imported['session_imported'])
+        self.assertTrue(Path(imported['backup']).is_file())
+        self.assertTrue(run.is_dir())
+        self.assertEqual(compile_workflow(project=project)['phase'], 'reconcile')
+        self.assertTrue(Path(compile_workflow(project=project)['run']).is_relative_to(self.home))
+
+    def test_centralize_merges_collections_without_overwrite_and_can_repeat(self):
+        project = self.base / 'Old Project'; project.mkdir()
+        legacy = project / LEGACY_DIRNAME
+        with patch.dict(os.environ, {'LECTIC_HOME': str(legacy)}):
+            work(project=project, input=str(ec.ROOT / 'fixtures/debugging'), name='Old Knowledge', action='save')
+        work(project=project, input=str(ec.ROOT / 'fixtures/photography'), name='Central Knowledge', action='save')
+        report = centralize(project)
+        self.assertEqual(report['collections_added'], ['Old Knowledge'])
+        self.assertEqual(report['issues'], [])
+        self.assertTrue(report['original_preserved'])
+        self.assertTrue(Path(report['backup']).is_file())
+        repeated = centralize(project)
+        self.assertEqual(repeated['collections_added'], [])
+        self.assertEqual(repeated['collections_present'], ['Old Knowledge'])
+        other = self.base / 'Other Project'; other.mkdir()
+        self.assertEqual({c['name'] for c in work(project=other, action='list')['collections']},
+                         {'Old Knowledge', 'Central Knowledge'})
 
 
 if __name__ == '__main__':

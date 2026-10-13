@@ -8,10 +8,12 @@ Verifies:
 5. Saving alone never extracts or triggers compilation.
 """
 import json
+import os
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
 from account_service import AccountStore, AuthorizationError
@@ -21,6 +23,44 @@ from home_archive import merge_archive
 
 
 class CloudLibraryTests(unittest.TestCase):
+    def test_account_operations_do_not_use_or_mutate_the_local_home(self):
+        from home import storage_root
+        local = self.root / 'local'
+        Library(local, home=local).archive(name='Local Only')
+        with patch.dict(os.environ, {'WAYKIT_HOME': str(local)}):
+            saved = self.lib_alice.save_knowledge(text='Keep account notes private.', collections=['Alice Notes'])
+            self.assertEqual(saved['collections'], ['Alice Notes'])
+            self.lib_alice.learn_from_source(text='Ask about recent examples before proposing a solution.', collection='Alice Methods')
+            using = self.lib_alice.get_relevant_context('proposing a solution')['using']
+            self.assertIn('Alice Methods', [c['name'] for c in using])
+            self.assertFalse(self.lib_bob.get_relevant_context('proposing a solution')['knowledge'])
+            self.assertEqual(storage_root(self.root), local.resolve())
+        self.assertEqual([c['name'] for c in Library(local, home=local).index['collections']], ['Local Only'])
+
+    def test_explicit_relationship_retrieval_and_private_export(self):
+        from organization import organize
+        from intelligence import knowledge_graph
+        from support import at_home
+        self.lib_alice.learn_from_source(text='Check the total number of cards before committing.', collection='SBC Methods')
+        self.lib_alice.learn_from_source(text='Compare team alternatives.', collection='Ultimate Team')
+        self.lib_alice.organize_knowledge(action='link', source_collection='SBC Methods',
+            target_collection='Ultimate Team', relationship='part_of', reason='SBC decisions are part of team strategy')
+        fresh = CloudLibrary(self.alice['account_id'], self.root)
+        self.assertIn('SBC Methods', [p['name'] for p in fresh.get_relevant_context('Ultimate Team')['using']])
+        with self.assertRaises(AuthorizationError):
+            self.lib_bob.organize_knowledge(action='link', source_collection='SBC Methods',
+                target_collection='Ultimate Team', relationship='part_of', reason='Not my data')
+        destination = self.root / 'restored'
+        with at_home(destination):
+            report = merge_archive(destination, fresh.export_library())
+            self.assertFalse(report['issues'])
+            graph = knowledge_graph(destination)
+            self.assertTrue(any(r['kind'] == 'part_of' for r in graph['relationships']))
+            organize(destination, action='unlink', source_collection='SBC Methods',
+                     target_collection='Ultimate Team', relationship='part_of')
+            merge_archive(destination, fresh.export_library())
+            self.assertFalse(any(r['kind'] == 'part_of' for r in knowledge_graph(destination)['relationships']))
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
@@ -181,7 +221,7 @@ class CloudLibraryTests(unittest.TestCase):
         self.assertIn('Machine Learning', merge_report['collections_added'])
 
         # Verify local Lectic Library sees the restored collection and IR
-        local_lib = Library(local_home)
+        local_lib = Library(local_home, home=local_home)
         self.assertEqual(len(local_lib.index['collections']), 1)
         col_entry = local_lib.index['collections'][0]
         self.assertEqual(col_entry['name'], 'Machine Learning')

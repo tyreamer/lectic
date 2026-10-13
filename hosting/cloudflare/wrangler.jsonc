@@ -1,0 +1,14 @@
+{
+  "name": "waykit-free",
+  "main": "worker.mjs",
+  "compatibility_date": "2026-10-13",
+  "workers_dev": true,
+  "observability": {
+    "enabled": true,
+    "logs": { "enabled": true, "invocation_logs": false },
+    "traces": { "enabled": true, "head_sampling_rate": 0.01 }
+  },
+  "d1_databases": [
+    { "binding": "DB", "database_name": "waykit-free", "database_id": "a2a7f556-3024-487d-966f-6642a473afc3" }
+  ]
+}

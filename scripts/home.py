@@ -1,14 +1,16 @@
-"""Where Lectic keeps knowledge: one store per user, with projects as working contexts.
+"""Where WayKit keeps knowledge: one store per user, with projects as working contexts.
 
 Resolution order:
-  1. LECTIC_HOME environment variable (explicit; also how tests isolate storage).
-  2. PROJECT/.expertise-compiler when it already exists (legacy project-local storage).
-  3. ~/.lectic (default for new installations).
+  1. An explicitly scoped home supplied by authenticated account internals.
+  2. WAYKIT_HOME or LECTIC_HOME (explicit; also how tests isolate storage).
+  3. ~/.waykit, or an existing ~/.lectic for backwards compatibility.
 
 A project is where the user is working, not a silo: collections saved from one
 project are visible from every other project that resolves to the same home.
 """
 import os
+from contextlib import contextmanager
+from contextvars import ContextVar
 from pathlib import Path
 
 from ec import Invalid, fingerprint, require, safe_child
@@ -19,19 +21,27 @@ DEFAULT_DIRNAME = '.waykit'
 LEGACY_LECTIC_DIRNAME = '.lectic'
 ENV = 'WAYKIT_HOME'
 LEGACY_ENV = 'LECTIC_HOME'
+_SCOPED_HOME = ContextVar('waykit_home', default=None)
+
+
+@contextmanager
+def home_scope(root):
+    """Bind account operations without changing process-wide environment variables."""
+    token = _SCOPED_HOME.set(Path(root).resolve())
+    try:
+        yield
+    finally:
+        _SCOPED_HOME.reset(token)
 
 
 def storage_root(project='.'):
-    project = Path(project).resolve()
+    scoped = _SCOPED_HOME.get()
+    if scoped is not None: return scoped
     explicit = os.environ.get(ENV) or os.environ.get(LEGACY_ENV)
     if explicit:
         return Path(explicit).expanduser().resolve()
-    if project.is_dir() and any((project / marker).exists() for marker in LEGACY_MARKERS):
-        return project
-    legacy = project / LEGACY_DIRNAME
-    # Only real storage counts; a scratch folder with the old name must not capture the home.
-    if legacy.is_dir() and any((legacy / marker).exists() for marker in LEGACY_MARKERS):
-        return legacy
+    # An old project library must never override the shared home. setup/centralize
+    # imports it additively, retaining the original and a recoverable archive.
     waykit_home = (Path.home() / DEFAULT_DIRNAME).resolve()
     lectic_home = (Path.home() / LEGACY_LECTIC_DIRNAME).resolve()
     if not waykit_home.exists() and lectic_home.exists():
@@ -40,8 +50,7 @@ def storage_root(project='.'):
 
 
 def storage_mode(root, project='.'):
-    if os.environ.get(ENV) or os.environ.get(LEGACY_ENV): return 'explicit'
-    if Path(root).resolve() == (Path(project).resolve() / LEGACY_DIRNAME): return 'project-local'
+    if _SCOPED_HOME.get() is not None or os.environ.get(ENV) or os.environ.get(LEGACY_ENV): return 'explicit'
     return 'user'
 
 
@@ -51,10 +60,8 @@ def project_key(project='.'):
 
 
 def session_path(root, project='.'):
-    """Legacy numbered-capability sessions stay where existing installs expect them."""
+    """Per-project resume pointers belong inside the central home."""
     root = Path(root)
-    if storage_mode(root, project) == 'project-local':
-        return root / 'session.json'
     return root / 'sessions' / (project_key(project) + '.json')
 
 

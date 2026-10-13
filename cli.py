@@ -4,6 +4,7 @@ Daily Use & First Run:
     waykit start [SOURCE]   save trusted material (files, folder, or link) and start
     waykit prepare [NAME]   compile and verify knowledge from saved sources directly
     waykit setup            connect your AI assistants in seconds (Claude Code, Codex, ChatGPT)
+    waykit centralize       import this project's old library into your shared home
     waykit try              try a sample playbook offline to see your AI in action
     waykit status           see your saved playbooks, drop folder, and connected AIs
 
@@ -267,9 +268,25 @@ def offer_identity(interactive):
 
 # ----------------------------------------------------------------- commands
 
+def centralize_cmd(argv):
+    from home_migration import centralize
+    report = centralize(Path.cwd(), option(argv, '--from'))
+    if '--json' in argv:
+        print(json.dumps(report, indent=2, ensure_ascii=False))
+    elif report['phase'] == 'centralized':
+        print(f'Knowledge centralized in {report["home"]}.')
+        for key, label in (('collections_added', 'Added'), ('collections_present', 'Already present'),
+                           ('collections_diverged', 'Kept apart')):
+            if report[key]: print(f'  {label}: ' + ', '.join(report[key]))
+        print(f'  Backup: {report["backup"]}; original library preserved.')
+        for issue in report['issues']: print('  Needs attention: ' + issue)
+    return 1 if report.get('issues') else 0
+
+
 def setup(argv):
     interactive = sys.stdin.isatty() and '--yes' not in argv
     print('Connecting WayKit to the AI assistants on your computer.\n')
+    if centralize_cmd([]): return 1
     ok, home = verify_server()
     if not ok:
         print('  The WayKit service did not start correctly. Run `waykit status` for details.'); return 1
@@ -1101,7 +1118,7 @@ def cloud(argv):
 def main(argv=None):
     argv = list(sys.argv[1:] if argv is None else argv)
     command = argv[0] if argv else 'status'
-    handlers = {'setup': setup, 'start': start_cmd, 'prepare': prepare_cmd, 'try': try_example,
+    handlers = {'setup': setup, 'centralize': centralize_cmd, 'start': start_cmd, 'prepare': prepare_cmd, 'try': try_example,
                 'identity': identity, 'share': share, 'share-artifact': share_artifact,
                 'refresh': refresh_cmd, 'diff': diff_cmd, 'connect': connect,
                 'pack': pack, 'install': install, 'update': update, 'publish': publish, 'verify': verify,

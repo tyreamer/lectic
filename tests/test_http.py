@@ -85,6 +85,29 @@ class HttpTransportTests(unittest.TestCase):
         other = serve_http(self.project, port=0, token='explicit-token-for-a-hosted-deployment', announce=None)
         self.assertEqual(other.token, 'explicit-token-for-a-hosted-deployment'); other.server_close()
 
+    def test_instagram_phone_share_is_available_from_another_project(self):
+        from capture_store import CaptureStore
+        url = 'https://www.instagram.com/reel/WayKitPhoneFixture/?igsh=fixture'
+        status, body, _ = self.request(self.origin + '/t/' + self.httpd.token + '/capture', {'value': url})
+        self.assertEqual(status, 200)
+        self.assertTrue(body['saved'])
+        self.assertEqual(body['source']['platform'], 'Instagram')
+        self.assertFalse(body['source']['content_available'])
+        other = self.base / 'Other Project'; other.mkdir()
+        saved = CaptureStore(other).find(body['capture_id'])
+        self.assertEqual(saved[0]['original_value'], url)
+        self.assertFalse(list(self.home.rglob('ir.json')))
+
+    def test_phone_share_preserves_mixed_text_and_rejects_invalid_json_shapes(self):
+        from capture_store import CaptureStore
+        capture = self.origin + '/t/' + self.httpd.token + '/capture'
+        value = 'https://www.instagram.com/reel/WayKitPhoneFixture/\nA note shared with the link 📌'
+        status, body, _ = self.request(capture, {'value': value})
+        self.assertEqual(status, 200)
+        self.assertEqual(CaptureStore(self.project).find(body['capture_id'])[0]['original_value'], value)
+        for payload in ([value], {'value': 123}, {'value': value, 'collections': 'Baking'}):
+            self.assertEqual(self.request(capture, payload)[0], 400)
+
 
 if __name__ == '__main__':
     unittest.main()

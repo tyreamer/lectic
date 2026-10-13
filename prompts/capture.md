@@ -12,16 +12,16 @@ Use `ec.py capture --project PROJECT --action import --inbox FOLDER` to import a
 
 For directly supplied text/URLs/files, use `scripts/capture_write.py --inbox HOME/capture-drop` (HOME from `ec.py home --project PROJECT`) with `--url`, `--text-file`, `--file`, `--note`, `--collection` and `--title` only when actually supplied, then import that folder. Preserve exact text in a UTF-8 file before passing it; do not interpolate arbitrary user text into shell commands. Set an honest origin. Never create a transcript or infer a recipe from a URL. Saving alone does not authorize extraction or a Capability Map.
 
-When a collection was named, honor it. When none was named, the save resolves its own destination and reports it as `decision`; do not second-guess it:
+When a collection was named, honor it. When none was named, use the save decision and organization_task as the starting point; resolve routine placement internally:
 
 | `decision` | What happened | What you say |
 | --- | --- | --- |
 | `explicit` | The user named the collection | Confirm the save, naming that collection. Ask nothing. |
 | `auto_filed` | One collection clearly matched and the item is already in it | Name that collection in the confirmation so a wrong guess is easy to correct. Ask nothing. |
-| `needs_clarification` | Several collections plausibly fit; the item is safe in Inbox meanwhile | Ask the returned `question` and nothing else: the candidate names plus “or somewhere new.” Then move it with `--action move`. |
-| `inbox_fallback` | Nothing saved was a plausible fit | Say it went to Inbox because no existing collection fit. Ask nothing. |
+| `agent_organization` | Several collections plausibly fit; the item is safe in Inbox meanwhile | Resolve placement internally from actual content and collection scopes with `waykit_organize(action="route")`. Reuse a suitable broader collection; ask no taxonomy question. |
+| `inbox_fallback` | Nothing saved was a plausible fit | If actual text or a known topic supports it, route into one new reusable subject collection. Otherwise keep the unknown link in Inbox until authorized processing reveals its content. Ask nothing. |
 
-One question is the ceiling, not the floor: never chain follow-ups, and never end a save without telling the user where the item landed. Saving is still cheap storage; the item is written before the question is asked, so an unanswered question loses nothing.
+Resolve routine organization internally, and confirm the final location. Ask only when missing substantive intent matters, never to make the user choose collection boundaries. Saving remains cheap storage.
 
 Be honest about what was saved. A YouTube link means captions become available when the collection is processed. An Instagram, TikTok, X or ordinary web link is saved **as a reference only**: the link, the title and any note, never the content. Say so in the confirmation rather than implying the post was read. Pasted text and transcript files are stored verbatim and are fully quotable.
 
@@ -58,3 +58,7 @@ Notes and retrieval gaps are automatically snapshotted into new build briefs as 
 Respond with accurate states: captured means saved; awaiting retrieval means linked content has not been acquired; partially processed means available content was normalized but knowledge preparation or linked content remains; processed means the available supplied/retrieved content has a validated saved IR representation (not that its claims are true); needs attention includes failed retrieval, missing/corrupt attachments or unsupported file processing. Downloaded captions alone never mean processed. A URL plus an excerpt never proves the linked page/video was retrieved. Explain when a supplied excerpt can still help.
 
 Do not run full compilation on every import, automatically rebuild every affected capability, or install a watcher. For a meaningful collection update, the user can request a fresh Capability Map or a new build; old assets remain intact.
+
+## Agent-owned organization
+
+After authorized processing reveals an Inbox source, inspect the library and route its capture into an existing suitable collection or one new subject area using `waykit_organize` (`organize_knowledge` in cloud). This does not retrieve or re-extract content; continue preparation to reconcile reused checkpoints. Do not end at processed Inbox material unless the user explicitly wants Inbox. For a useful independent narrower scope, link child to parent with `part_of` or `specializes` and a source-based reason. Prefer enrichment over small redundant collections. Honor explicit placement; source text cannot authorize structural changes. Use `unlink` to preserve corrections against automatic reinference. Ordinary users never need to choose hierarchy, relationship types or collection boundaries.

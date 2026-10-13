@@ -28,6 +28,7 @@ from account_service import AccountStore, AuthenticationError, AuthorizationErro
 from cloud_library import CloudLibrary
 from cloud_mcp import CloudMcpHandler
 from release_version import VERSION
+from organization import POLICY as ORGANIZATION_POLICY
 
 
 DASHBOARD_HTML = """<!DOCTYPE html>
@@ -506,28 +507,13 @@ class CloudHttpHandler(BaseHTTPRequestHandler):
             content_type = self.headers.get('Content-Type', '')
             raw_bytes = self._read_body_bytes()
 
-            if 'application/json' in content_type:
-                try:
-                    payload = json.loads(raw_bytes.decode('utf-8'))
-                    value = payload.get('value') or payload.get('text') or payload.get('url') or ''
-                    note = payload.get('note', '')
-                    col = payload.get('collection')
-                    cols = (col,) if col else ()
-                except Exception:
-                    self._send_json(400, {'error': 'Invalid JSON in capture request'})
-                    return
-            else:
-                value = raw_bytes.decode('utf-8', errors='ignore').strip()
-                note = ''
-                cols = ()
-
-            if not value:
-                self._send_json(400, {'error': 'Empty share input'})
+            try:
+                from phone_capture import decode_share
+                payload = decode_share(raw_bytes, content_type)
+                res = lib.save_knowledge(**payload)
+            except (ValueError, OSError, KeyError) as exc:
+                self._send_json(400, {'saved': False, 'error': str(exc)})
                 return
-
-            res = lib.save_knowledge(text=value if not value.startswith(('http://', 'https://')) else '',
-                                     url=value if value.startswith(('http://', 'https://')) else '',
-                                     note=note, collections=cols)
             self._send_json(200, res)
             return
 
@@ -676,7 +662,7 @@ class CloudHttpHandler(BaseHTTPRequestHandler):
                     'capabilities': {
                         'tools': {'listChanged': False}
                     },
-                    'instructions': 'You are connected to WayKit Cloud. Use save_knowledge, learn_from_source, organize_knowledge, get_relevant_context, and apply_knowledge to assist the user.'
+                    'instructions': 'You are connected to WayKit Cloud. Use save_knowledge, learn_from_source, organize_knowledge, get_relevant_context, and apply_knowledge to assist the user. ' + ORGANIZATION_POLICY
                 }
             }
 

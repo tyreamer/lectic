@@ -1,0 +1,22 @@
+# Free Python compute. Durable knowledge and phone saves live in Cloudflare D1.
+# Secrets and the store address are supplied by the assistant during setup.
+services:
+  - type: web
+    name: waykit-free
+    runtime: docker
+    plan: free
+    region: virginia
+    numInstances: 1
+    autoDeployTrigger: "off"
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      - key: WAYKIT_HOME
+        value: /tmp/waykit-cache
+      - key: WAYKIT_TOKEN
+        sync: false
+      - key: WAYKIT_STORE_URL
+        sync: false
+      - key: WAYKIT_STORE_TOKEN
+        sync: false

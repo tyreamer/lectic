@@ -58,13 +58,13 @@ CLOUD_TOOLS = [
     },
     {
         'name': 'organize_knowledge',
-        'description': 'Organize collections and define or infer relationships between packs (such as specialization, domain hierarchy, or personal preferences).',
+        'description': 'Agent-managed organization. Reuse suitable collections; create a distinct area only when actual content warrants it. Route saved captures without retrieval, then link child to parent. Never require users to design the hierarchy.',
         'inputSchema': {
             'type': 'object',
             'properties': {
                 'action': {
                     'type': 'string',
-                    'enum': ['infer', 'link', 'unlink', 'explain'],
+                    'enum': ['infer', 'link', 'unlink', 'explain', 'route'],
                     'description': 'Action to perform: infer relationships, explicitly link, unlink, or explain a pack.'
                 },
                 'source_collection': {'type': 'string', 'description': 'Source collection name.'},
@@ -74,7 +74,8 @@ CLOUD_TOOLS = [
                     'enum': ['related_to', 'specializes', 'part_of', 'useful_with', 'derived_from', 'supersedes', 'contradicts', 'personal_preference_relevant_to', 'learned_from'],
                     'description': 'Relationship type.'
                 },
-                'reason': {'type': 'string', 'description': 'Plain-language rationale for the relationship.'}
+                'reason': {'type': 'string', 'description': 'Source-based rationale for organization.'},
+                'items': {'type': 'array', 'items': {'type': 'string'}, 'description': 'Saved capture IDs for route; no retrieval.'}
             },
             'additionalProperties': False
         }
@@ -178,7 +179,7 @@ class CloudMcpHandler:
                     source_collection=arguments.get('source_collection'),
                     target_collection=arguments.get('target_collection'),
                     relationship=arguments.get('relationship'),
-                    reason=arguments.get('reason')
+                    reason=arguments.get('reason'), items=arguments.get('items', ())
                 )
             elif name == 'get_relevant_context':
                 res = self.library.get_relevant_context(

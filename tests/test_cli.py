@@ -12,7 +12,7 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
-from support import isolate_home
+from support import isolate_home, at_home
 import cli
 
 
@@ -21,8 +21,10 @@ class SetupTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory(); self.addCleanup(self.temp.cleanup)
         self.base = Path(self.temp.name).resolve()
         self.user = self.base / 'user'; self.user.mkdir()
+        self.project = self.base / 'project'; self.project.mkdir()
         self.home = isolate_home(self, self.base)
         patch('cli.Path.home', return_value=self.user).start(); self.addCleanup(patch.stopall)
+        patch('cli.Path.cwd', return_value=self.project).start()
         patch('cli.shutil.which', side_effect=lambda name: None).start()
         patch('cli.sys.stdin', io.StringIO()).start()  # never interactive in tests
 
@@ -66,6 +68,19 @@ class SetupTests(unittest.TestCase):
             self.assertEqual(cli.connect_claude(), 'connected')
         self.assertEqual([c[1:3] for c in calls], [['mcp', 'add'], ['mcp', 'remove'], ['mcp', 'add']])
         self.assertEqual(calls[-1][calls[-1].index('--') + 1:], cli.server_command())
+
+    def test_setup_imports_legacy_knowledge_before_connecting(self):
+        from goal_workflow import work
+        import ec
+        legacy = self.project / '.expertise-compiler'
+        with at_home(legacy):
+            work(project=self.project, input=str(ec.ROOT / 'fixtures/debugging'), name='Old Knowledge', action='save')
+        (self.user / '.codex').mkdir()
+        code, out = self.run_cli('setup', '--yes')
+        self.assertEqual(code, 0, out)
+        self.assertIn('Knowledge centralized', out)
+        self.assertEqual([c['name'] for c in work(project=self.project, action='list')['collections']], ['Old Knowledge'])
+        self.assertTrue(legacy.is_dir())
 
     def test_setup_explains_when_no_assistant_is_present(self):
         code, out = self.run_cli('setup', '--yes')

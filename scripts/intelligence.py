@@ -81,6 +81,8 @@ def knowledge_graph(project='.'):
             elif left['collection_id'] < right['collection_id'] and (meaningful or len(shared) >= 2):
                 relationships.append(_relationship(left, right, 'related_to',
                     f"{left['name']} and {right['name']} cover some of the same subject.", shared, evidence))
+    from organization import merge_relationships
+    relationships = merge_relationships(project, relationships, {p['collection_id'] for p in active})
     public_profiles = [{k:v for k,v in p.items() if k not in {'units','sources','topics'}} |
                        {'topics': p['topics'][:24]} for p in profiles]
     graph = {'schema_version':'1.0', 'generated_at':datetime.now(timezone.utc).isoformat(),
@@ -108,9 +110,35 @@ def _unit_score(unit, query):
 def compose_context(project='.', intent='', task_context='', max_units=24):
     """Select useful units for an intent, following only helpful relationships."""
     if not str(intent).strip(): raise ValueError('Describe the task Lectic should prepare for')
+    if not 1 <= max_units <= 100: raise ValueError('max_units must be between 1 and 100')
     library = Library(project)
     profiles = [_profile(library, e) for e in library.index['collections']]
     raw, query = _query_features(intent + ' ' + (task_context or ''))
+    from organization import decisions, HIERARCHY
+    graph = knowledge_graph(project)
+    explicit = {(r['from'], r['to'], r['kind']) for r in decisions(project)['relationships']}
+    active = {p['collection_id']: p for p in profiles if not p['archived']}
+    # Names can seed empty parents; their children carry the useful evidence.
+    reached = {cid for cid, p in active.items() if tokens(p['name']) & raw}
+    via = {}
+    for depth in range(3):
+        added = {}
+        for r in graph['relationships']:
+            a, b, kind = r['from'], r['to'], r['kind']
+            if kind in HIERARCHY:
+                directions = [(a, b), (b, a)]
+            elif depth == 0 and (a, b, kind) in explicit and kind in {
+                    'related_to', 'useful_with', 'personal_preference_relevant_to', 'contradicts'}:
+                directions = [(a, b), (b, a)]
+            else:
+                continue
+            for origin, dest in directions:
+                if origin in reached and dest in active and dest not in reached:
+                    added[dest] = r['reason']
+        if not added:
+            break
+        reached.update(added)
+        via.update(added)
     ranked = []
     for p in profiles:
         if p['archived'] or not p['units']: continue
@@ -119,8 +147,10 @@ def compose_context(project='.', intent='', task_context='', max_units=24):
         if p['layer'] == 'personal':
             # Personal knowledge follows the user only when its domain is relevant.
             personal_domain = (pt & query) | ({'travel'} if 'travel' in pt & query else set()) | ({'coding'} if 'coding' in pt & query else set())
-            if not personal_domain: continue
+            if not personal_domain and p['collection_id'] not in via: continue
             score += 4
+        if p['collection_id'] in via:
+            score += 3
         if score <= 0: continue
         ranked.append((score, p))
     ranked.sort(key=lambda pair: (-pair[0], pair[1]['name'].casefold()))
@@ -150,7 +180,8 @@ def compose_context(project='.', intent='', task_context='', max_units=24):
         if count:
             activated.append({'name':p['name'], 'collection_id':p['collection_id'], 'layer':p['layer'],
                               'selected_units':count,
-                              'why':('Your preferences are relevant to this task.' if p['layer']=='personal' else
+                              'why':(via[p['collection_id']] if p['collection_id'] in via else
+                                     'Your preferences are relevant to this task.' if p['layer']=='personal' else
                                      f"It covers {', '.join(sorted(query & set(p['topics']))[:4]) or 'the task subject'}." )})
 
     gaps = []

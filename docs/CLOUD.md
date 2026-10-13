@@ -86,6 +86,8 @@ Menus move; the constant is a Streamable HTTP MCP server that needs no OAuth bec
 
 ## Your phone
 
+For iPhone saves while the computer is off, use the direct **Instagram → Share → Save to WayKit** recipe in [Phone setup](PHONE.md). The free deployment uses Cloudflare Workers/D1 for durable saves and [free Render compute](../render.yaml) for the Python service, with platform quotas and a possible one-minute wake-up for assistant tasks. No paid disk is used. An Instagram link is a saved reference, not retrieved video content. Current ChatGPT custom MCP apps are web-only, so the native iPhone save goes directly to WayKit.
+
 Captures no longer need a synced folder. In Shortcuts, make a Share Sheet shortcut with two actions:
 
 1. **Get Contents of URL** — URL `https://your-host/t/<secret>/capture`, Method POST, Request Body: File, with the Shortcut Input.

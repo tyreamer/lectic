@@ -1,4 +1,8 @@
-# iPhone capture: four actions
+# iPhone capture
+
+For **Instagram → Share → Save to WayKit** with the computer off, use the [direct phone setup](PHONE.md). It saves immediately to a hosted central library. The synced-folder recipe below is an optional offline capture fallback; desktop import is needed before those files appear in WayKit.
+
+## Synced-folder fallback: four actions
 
 Save a link or selected text to Inbox. The **desktop generates the metadata**; your phone only sends what you shared and when you saved it.
 

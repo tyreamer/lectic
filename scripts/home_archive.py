@@ -41,7 +41,7 @@ def portable(relative):
     parts = relative.split('/')
     if parts[0] in MACHINE_LOCAL or parts[0] in MACHINE_LOCAL_DIRS: return False
     if any(part.startswith('.') for part in parts): return False
-    return parts[0] == 'library.json' or parts[0] in AREAS
+    return parts[0] in {'library.json', 'custom_relationships.json'} or parts[0] in AREAS
 
 
 # ---------------------------------------------------------------- write
@@ -150,9 +150,38 @@ def merge_archive(project, raw, home=None):
         existing['active_collection'] = None
     write(home / 'library.json', existing)
 
+    # Organization is additive too: preserve local decisions on conflicting pairs.
+    if 'custom_relationships.json' in members:
+        from organization import KINDS, _acyclic
+        incoming = json.loads(members['custom_relationships.json'].decode('utf-8'))
+        path = home / 'custom_relationships.json'
+        current = read(path) if path.is_file() else {'relationships': [], 'suppressed': []}
+        current.setdefault('suppressed', [])
+        current.setdefault('relationships', [])
+        known = {c['collection_id'] for c in existing['collections']}
+        local_pairs = {frozenset((r['from'], r['to'])) for rows in current.values() if isinstance(rows, list)
+                       for r in rows if isinstance(r, dict) and 'from' in r and 'to' in r}
+        for area in ('relationships', 'suppressed'):
+            for rel in incoming.get(area, []):
+                try:
+                    require(rel['from'] in known and rel['to'] in known and rel['from'] != rel['to'],
+                            'Unknown or identical relationship endpoints')
+                    require(rel['kind'] in KINDS, 'Unknown relationship kind')
+                    if frozenset((rel['from'], rel['to'])) in local_pairs:
+                        continue
+                    if area == 'relationships':
+                        require(isinstance(rel.get('reason'), str) and rel['reason'].strip(), 'Missing relationship reason')
+                        require(isinstance(rel.get('shared_topics'), list) and isinstance(rel.get('evidence'), list),
+                                'Missing relationship evidence')
+                        _acyclic(current['relationships'] + [rel])
+                    if rel not in current[area]: current[area].append(rel)
+                except (ValueError, KeyError, TypeError) as exc:
+                    report['issues'].append('Relationship not merged: ' + str(exc))
+        write(path, current)
+
     # Everything else is immutable or content-addressed: add when absent, never replace.
     rest = {p: raw_bytes for p, raw_bytes in members.items()
-            if p != 'library.json' and not p.startswith('blobs/') and not p.startswith('collections/')}
+            if p not in {'library.json', 'custom_relationships.json'} and not p.startswith('blobs/') and not p.startswith('collections/')}
     added = write_files(home, rest, skip_existing=True)
     report['captures_added'] = sum(1 for p in added if p.startswith('capture/records/'))
     report['other_files_added'] = len(added) - report['captures_added']

@@ -35,13 +35,13 @@ PROTOCOL_VERSIONS = ['2025-06-18', '2025-03-26', '2024-11-05']
 INSTRUCTIONS = '''WayKit (formerly Lectic) stores the user's saved videos, notes, and transcripts in a folder on their computer so you can search them and quote them. You answer questions and review work; these tools handle saving, searching, and checking quotes.
 
 How to talk to the user:
-- When the user asks to save a link, text, or file, call waykit_capture_save (or lectic_capture_save) immediately. The response decides where it went; follow it instead of improvising. `decision` is one of: `explicit` (they named the collection), `auto_filed` (one collection clearly matched and the item is already in it), `needs_clarification` (several fit, so ask the one short `question` verbatim and nothing else), `inbox_fallback` (nothing fit, so it is in Inbox). Say the returned `confirmation` in your own words, always naming where the item went and what WayKit can actually read from it.
+- When the user shares material, save it immediately with waykit_capture_save. Follow its organization_task internally: inspect existing collections and use waykit_organize to file material based on known content. Reuse a suitable area, create one only for a distinct subject, and link meaningful subcollections to their parent. Never require the user to choose collection boundaries. Honor explicit placement and corrections. Unknown bare URLs may wait in Inbox until authorized processing; saving alone never authorizes retrieval. After processing, organize unassigned Inbox material before reporting completion. Confirm the final location briefly.
 - When the user asks to try WayKit, call waykit_starter (or lectic_starter). Show the sample review and checklist, explain that these are sample examples from a saved lesson, and give one question the user can ask next about their own work.
 - When the user asks "What do I have saved?", call waykit_library (or lectic_library). List their saved collections and tell them what questions they can ask about those files.
 - When the user asks for help using saved knowledge, call waykit_context (or lectic_context) with their task. Use its focused knowledge and show the short "Using for this task" list when that would build trust. Continue even when it reports a knowledge gap.
 - When the user asks you to review work or answer a question using their saved files, search their files, write an answer based on what you find, and quote the exact sentence and timestamp from the original source.
 - Speak in plain, normal sentences. Tell the user what the saved file says and quote the exact words. Never mention technical IDs, content hashes, file paths, or internal JSON, and never ask the user to run terminal commands.
-- When files are waiting in the drop folder (Documents/WayKit Inbox), tell the user what was dropped and ask where they want to file them. When confirmed, call waykit_inbox(action='route') or lectic_inbox(action='route').
+- When files are waiting in the drop folder (Documents/WayKit Inbox), inspect available titles and content to choose suitable destinations without asking the user to design collections, then call waykit_inbox(action='route') or lectic_inbox(action='route').
 - When the user asks to share a collection, call waykit_pack(collection=X) or lectic_pack(collection=X). Tell the user the file name that was created and explain that they can send it to another person.
 - When the user asks to install a pack or shares a .waykit (or .lectic) file, call waykit_install or lectic_install. Tell them what collection was added and give them one specific question they can ask right now to test it.
 - When the user asks to search for packs, call waykit_search or lectic_search. Describe the matching collections in plain words and ask if they want to inspect or install one.
@@ -82,6 +82,13 @@ TOOLS = [
           'title': S('Title if known.'), 'files': L('Filenames or file paths.'), 'note': S('User note if any.')}),
     tool('lectic_knowledge', 'Show the knowledge Lectic has inferred, including personal or reusable roles and plain-language relationships. Users never need to organize these manually.',
          {'project': PROJECT}),
+    tool('lectic_organize', 'Agent-managed organization: inspect relationships, route saved captures into a suitable existing or new collection without retrieval, and persist child-to-parent or related links. Choose organization from actual content; do not ask users to design collections.',
+         {'project': PROJECT, 'action': S('Organization action', enum=['infer','explain','link','unlink','route']),
+          'source_collection': S('Existing child/source collection.'),
+          'target_collection': S('Existing parent/target, or existing/new destination for route.'),
+          'relationship': S('Typed link', enum=['part_of','specializes','related_to','useful_with','derived_from','supersedes','contradicts','personal_preference_relevant_to','learned_from']),
+          'reason': S('Concrete rationale based on source content or user correction; required for link/route.'),
+          'items': L('Capture IDs to route; no retrieval or extraction is performed.')}),
     tool('lectic_explain', 'Explain what one saved knowledge area knows, what it relates to, and which sources support it.',
          {'project': PROJECT, 'collection': S('Saved knowledge area name or ID.')}, ['collection']),
     tool('lectic_context', 'Build a focused, evidence-preserving context for a task. Automatically combines relevant personal preferences and domain knowledge, excludes unrelated material, removes duplicates, and reports helpful gaps.',
@@ -122,7 +129,7 @@ TOOLS = [
           'items': L('Capture IDs, titles or original values to act on.'), 'to': L('Collection names for add/move/remove/note.'),
           'query': S('Lexical filter over shared text, titles and notes.'), 'since': S('ISO timestamp with timezone, inclusive.'),
           'until': S('ISO timestamp with timezone, exclusive.'), 'note': S('Personal note text (action=note).'), 'build': S('Saved build folder (action=trace).')}),
-    tool('lectic_capture_save', 'Save something the user shared right now (a URL, pasted text, or local files) as a capture record, then import it. Cheap storage only: no retrieval, extraction or map. The response carries a `decision` (explicit | auto_filed | needs_clarification | inbox_fallback), a `question` to ask only when clarification is needed, and a `source` describing what Lectic can actually read from the item.',
+    tool('lectic_capture_save', 'Save something the user shared right now (a URL, pasted text, or local files) as a capture record, then import it. Cheap storage only: no retrieval, extraction or map. The response carries a `decision` (explicit | auto_filed | agent_organization | inbox_fallback), an `organization_task` for agent-owned filing, and a `source` describing what Lectic can actually read from the item.',
          {'project': PROJECT, 'url': S('Shared link, exactly as given.'), 'text': S('Shared text, verbatim.'),
           'files': L('Local file paths to attach as originals.'), 'note': S('The user\'s reason for saving, verbatim.'),
           'collections': L('Requested collection names; omitted means Inbox.'), 'title': S('Title only if actually known.')}),
@@ -319,6 +326,10 @@ class Server:
         from intelligence import knowledge_graph
         return knowledge_graph(self.resolve_project(project))
 
+    def tool_organize(self, project=None, **kwargs):
+        from organization import organize
+        return organize(self.resolve_project(project), **kwargs)
+
     def tool_explain(self, project=None, collection=None):
         from intelligence import explain_collection
         return explain_collection(self.resolve_project(project), collection)
@@ -369,6 +380,8 @@ class Server:
         item = next((i for i in report['items'] if i['capture_id'] == record.stem), None)
         require(item is not None and item['saved'], 'The capture was written but its import reported a problem: ' + json.dumps(report['needs_attention']))
         return {'phase': 'captured', 'capture_id': item['capture_id'], 'new': item['new'], 'record': str(record),
+                'organization_task': None if placement['decision'] in {'explicit', 'auto_filed'} else {'tool': 'waykit_organize', 'action': 'route',
+                                      'items': [item['capture_id']], 'guidance': placement['guidance']},
                 'issues': item['issues'], 'collections': list(placement['collections']),
                 'decision': placement['decision'], 'question': placement['question'],
                 'candidate_collections': placement['candidates'], 'all_collections': placement['all_collections'],
@@ -617,6 +630,17 @@ class HttpHandler(BaseHTTPRequestHandler):
     server_version = f'waykit/{SERVER_VERSION} lectic/{SERVER_VERSION}'
     protocol_version = 'HTTP/1.1'
 
+    def home_operation(self):
+        from contextlib import contextmanager
+        @contextmanager
+        def operation():
+            with self.server.lock:
+                if self.server.remote_home:
+                    with self.server.remote_home.operation(self.server.mcp): yield
+                else:
+                    yield
+        return operation()
+
     def log_message(self, format, *args):  # keep stdout clean; stderr gets one line per request
         sys.stderr.write('%s %s\n' % (self.command, self.path.split('/t/')[0] + ('/t/...' if '/t/' in self.path else '')))
 
@@ -667,7 +691,7 @@ class HttpHandler(BaseHTTPRequestHandler):
             if not authorized: return self.send(401, {'error': 'unauthorized'})
             from home_archive import archive_home
             try:
-                with self.server.lock:
+                with self.home_operation():
                     raw = archive_home(self.server.home)
             except (Invalid, ValueError, OSError) as exc:
                 return self.send(409, {'error': str(exc)})
@@ -696,14 +720,17 @@ class HttpHandler(BaseHTTPRequestHandler):
             return self.send(400, Server.error(None, -32700, 'Parse error'))
         messages = message if isinstance(message, list) else [message]
         responses = []
-        with self.server.lock:
-            for item in messages:
-                try:
-                    response = self.server.mcp.handle(item)
-                except Exception as exc:
-                    traceback.print_exc(file=sys.stderr)
-                    response = Server.error(item.get('id') if isinstance(item, dict) else None, -32603, 'Internal error: ' + str(exc))
-                if response is not None: responses.append(response)
+        try:
+            with self.home_operation():
+                for item in messages:
+                    try:
+                        response = self.server.mcp.handle(item)
+                    except Exception as exc:
+                        traceback.print_exc(file=sys.stderr)
+                        response = Server.error(item.get('id') if isinstance(item, dict) else None, -32603, 'Internal error: ' + str(exc))
+                    if response is not None: responses.append(response)
+        except (Invalid, ValueError, OSError) as exc:
+            return self.send(503, Server.error(None, -32603, str(exc)))
         headers = [('Mcp-Session-Id', self.server.session_id)]
         if not responses: return self.send(202, headers=headers)
         return self.send(200, responses if isinstance(message, list) else responses[0], headers=headers)
@@ -712,7 +739,7 @@ class HttpHandler(BaseHTTPRequestHandler):
         """Someone is moving their knowledge onto this server. Merge it; never overwrite."""
         from home_archive import merge_archive
         try:
-            with self.server.lock:
+            with self.home_operation():
                 report = merge_archive(self.server.mcp.project, raw, home=self.server.home)
         except (Invalid, ValueError, OSError, KeyError) as exc:
             return self.send(400, {'error': str(exc)})
@@ -720,21 +747,11 @@ class HttpHandler(BaseHTTPRequestHandler):
 
     def capture(self, raw):
         """What a phone posts: the shared thing, an optional note, optional collections. Storage only."""
-        content_type = (self.headers.get('Content-Type') or '').split(';')[0].strip().lower()
         try:
-            if content_type == 'application/json':
-                payload = json.loads(raw.decode('utf-8'))
-                require(isinstance(payload, dict), 'Capture body must be a JSON object')
-            else:
-                payload = {'value': raw.decode('utf-8')}
-            value = str(payload.get('value') or payload.get('url') or payload.get('text') or '').strip()
-            require(value, 'Nothing to save: send value, url or text')
-            is_url = re.fullmatch(r'https?://\S+', value) is not None
-            collections = payload.get('collections') or ([payload['collection']] if payload.get('collection') else [])
-            with self.server.lock:
-                result = self.server.mcp.tool_capture_save(url=value if is_url else '', text='' if is_url else value,
-                                                           note=str(payload.get('note') or ''), collections=[str(c) for c in collections],
-                                                           title=str(payload.get('title') or ''))
+            from phone_capture import decode_share
+            payload = decode_share(raw, self.headers.get('Content-Type') or '')
+            with self.home_operation():
+                result = self.server.mcp.tool_capture_save(**payload)
         except (Invalid, ValueError, KeyError, OSError) as exc:
             return self.send(400, {'saved': False, 'error': str(exc)})
         return self.send(200, {'saved': True, 'new': result['new'], 'capture_id': result['capture_id'],
@@ -745,12 +762,17 @@ class HttpHandler(BaseHTTPRequestHandler):
 
 def serve_http(project='.', host='127.0.0.1', port=8787, token=None, allowed_origins=(), announce=print):
     project = Path(project).resolve()
+    remote = None
+    if os.environ.get('WAYKIT_STORE_URL'):
+        from remote_home import RemoteHome
+        remote = RemoteHome(storage_root(project), os.environ['WAYKIT_STORE_URL'], os.environ.get('WAYKIT_STORE_TOKEN', ''))
     token = token or ensure_token(storage_root(project))
     httpd = ThreadingHTTPServer((host, port), HttpHandler)
     httpd.daemon_threads = True
     httpd.mcp = Server(project, transport='http')
     # One server serves one home, fixed when it starts.
     httpd.home = storage_root(project)
+    httpd.remote_home = remote
     httpd.token = token
     httpd.lock = threading.Lock()
     httpd.session_id = secrets.token_hex(16)

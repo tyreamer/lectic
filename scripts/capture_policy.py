@@ -1,7 +1,7 @@
 """Two decisions a save must not leave to improvisation.
 
-Where the item goes (one strong match files itself, several plausible ones earn a
-single question, nothing plausible falls to Inbox), and what Lectic can honestly
+Where the item goes (one strong match files itself, several plausible ones earn an
+agent decision, nothing plausible falls to Inbox), and what Lectic can honestly
 read from it later (YouTube captions are retrievable; almost every other link is
 kept as a reference only).
 """
@@ -106,7 +106,7 @@ def _or_list(names):
 def decide_placement(project, *, url='', text='', title='', files=(), note='', collections=()):
     """Resolve the destination before anything is written.
 
-    decision is one of: explicit, auto_filed, needs_clarification, inbox_fallback.
+    decision is one of: explicit, auto_filed, agent_organization, inbox_fallback.
     """
     requested = [str(c).strip() for c in (collections or ()) if str(c).strip()]
     if requested:
@@ -128,18 +128,18 @@ def decide_placement(project, *, url='', text='', title='', files=(), note='', c
                             'your confirmation so the user can correct it, and ask nothing.'}
 
     if ranked:
-        question = f"Should this go in {_or_list(c['name'] for c in ranked)}, or somewhere new?"
-        return {'decision': 'needs_clarification', 'collections': ['Inbox'], 'candidates': ranked,
-                'all_collections': everything, 'question': question,
-                'guidance': 'Several collections fit, so the item is already safe in Inbox. Ask exactly this one '
-                            'short question and nothing more. When the user answers, move it with '
-                            "lectic_capture(action='move', items=[capture_id], to=[name]), or save a new "
-                            'collection by name if they want somewhere new.'}
+        return {'decision': 'agent_organization', 'collections': ['Inbox'], 'candidates': ranked,
+                'all_collections': everything, 'question': '',
+                'guidance': 'The item is safe in Inbox. Resolve placement internally from available content '
+                            'and collection scopes; reuse a suitable broad area or create a distinct subject '
+                            'with organize(action=route). Do not ask the user to choose a collection. '
+                            'If only an unknown URL is available, defer until authorized processing.'}
 
     return {'decision': 'inbox_fallback', 'collections': ['Inbox'], 'candidates': [], 'all_collections': everything,
             'question': '',
             'guidance': 'Nothing already saved was a plausible fit, so this went to Inbox. Say that plainly in the '
-                        'confirmation and ask no question.'}
+                        'confirmation and ask no question. If actual source text or a known title gives enough context, '
+                        'use organize(action=route) to create a suitable collection now; otherwise defer until processing.'}
 
 
 def confirmation_line(placement, source):
@@ -151,6 +151,6 @@ def confirmation_line(placement, source):
     if decision == 'auto_filed':
         return (f"Saved to {placement['collections'][0]}, which was the closest fit. {honesty} "
                 'Tell me if it belongs somewhere else.')
-    if decision == 'needs_clarification':
-        return f"Saved. {honesty} {placement['question']}"
+    if decision == 'agent_organization':
+        return f'Saved to your Inbox pending organization. {honesty}'
     return f'Saved to your Inbox: nothing already in your library was a close fit. {honesty}'

@@ -159,6 +159,8 @@ def work(*, project='.', input=None, metadata=None, collection=None, name=None, 
             from capture_store import CaptureStore
             CaptureStore(project).refresh_status()
         return respond('knowledge_saved',summary=library.inspect(data['collection_id']),ir_hash=fingerprint(ir),
+                       organization_task={'tool': 'waykit_organize', 'action': 'infer',
+                                          'instruction': 'Before final confirmation, inspect organization. If this is unassigned Inbox material, route its captures to a suitable existing or new subject collection. Reuse reviewed extraction and finish prepare there. Link a child to an existing parent only when a useful narrower scope warrants it. Honor explicit user placement; never ask the user to design collections.'},
                        message='Sources and reviewed knowledge saved; no user goal, result or skill was invented.',
                        guidance=str(ROOT/'prompts/guide-use.md'))
     if action in {'save','add','remove','replace'} and brief is None:

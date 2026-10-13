@@ -344,6 +344,23 @@ class CloudServerIntegrationTests(unittest.TestCase):
         self.assertTrue(res['saved'])
         self.assertIn('capture_id', res)
 
+    def test_instagram_phone_share_and_mixed_text_stay_in_the_users_library(self):
+        from capture_store import CaptureStore
+        path = f'/t/{self.tok_alice}/capture'
+        url = 'https://www.instagram.com/reel/WayKitPhoneFixture/'
+        status, saved, _ = self.request(path, {'value': url, 'collections': ['Phone Saves']})
+        self.assertEqual(status, 200)
+        self.assertEqual(saved['collections'], ['Phone Saves'])
+        self.assertEqual(saved['source']['platform'], 'Instagram')
+        self.assertFalse(saved['source']['content_available'])
+        mixed = url + '\nUseful phrasing to revisit 📌'
+        status, saved, _ = self.request(path, {'value': mixed})
+        self.assertEqual(status, 200)
+        home = self.accounts.get_account_home(self.alice['account_id'])
+        self.assertEqual(CaptureStore(home, home=home).find(saved['capture_id'])[0]['original_value'], mixed)
+        for invalid in ([url], {'value': url, 'collections': 'Phone Saves'}, {'value': 42}):
+            self.assertEqual(self.request(path, invalid)[0], 400)
+
 
 if __name__ == '__main__':
     unittest.main()
