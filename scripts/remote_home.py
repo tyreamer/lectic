@@ -12,7 +12,9 @@ import json
 from pathlib import Path
 import secrets
 import sys
+import threading
 import time
+import traceback
 import urllib.error
 import urllib.request
 import zlib
@@ -175,6 +177,14 @@ class RemoteHome:
         started = time.monotonic()
         def progress(stage):
             print(f'WayKit central storage: {stage} ({time.monotonic() - started:.1f}s)', file=sys.stderr, flush=True)
+        def stalled():
+            progress('operation is taking over 30 seconds; stack diagnostics follow')
+            for stack in sys._current_frames().values():
+                traceback.print_stack(stack, file=sys.stderr)
+        diagnostic = threading.Timer(30, stalled)
+        diagnostic.daemon = True
+        diagnostic.start()
+        progress('acquiring central lease')
         state = self.request('lease', {'owner': owner})
         try:
             with home_scope(self.root), LocalStore(self.root).transaction('knowledge', reentrant=True):
@@ -194,5 +204,6 @@ class RemoteHome:
                     self.revision = committed['revision']
                 progress('complete')
         finally:
+            diagnostic.cancel()
             try: self.request('release', {'owner': owner})
             except Invalid: pass  # Expiry recovers a dead server; never hide a failed commit.
