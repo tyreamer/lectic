@@ -76,7 +76,7 @@ class LibraryGuideTests(unittest.TestCase):
         before = self.hashes()
         view = library_view(self.project)
         self.assertEqual(view['collections'], [])
-        self.assertIn('Other projects', view['markdown'])
+        self.assertIn('across projects', view['markdown'])
         self.assertEqual(before, self.hashes())
         saved = self.save(self.draft(view))
         self.assertEqual(saved['guide']['cards'], [])

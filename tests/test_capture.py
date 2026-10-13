@@ -92,6 +92,22 @@ class CaptureTests(unittest.TestCase):
         self.assertEqual(row['source_ids'],[])
         self.assertFalse(list(self.home.rglob('ir.json')))
 
+    def test_reference_status_does_not_validate_unrelated_transcripts(self):
+        from unittest.mock import patch
+        self.prepare_case(self.cases[0])
+        cid=self.capture(url='https://www.instagram.com/reel/reference/',collections=['New Links'])
+        self.imported()
+        with patch('capture_store.validate_ir',side_effect=AssertionError('Unrelated source validation')):
+            rows=self.rows('New Links')
+        self.assertEqual(rows[0]['capture_id'],cid)
+        self.assertEqual(rows[0]['processing_status'],'awaiting_retrieval')
+
+    def test_processed_capture_status_still_detects_changed_source_bytes(self):
+        run=self.prepare_case(self.cases[0])
+        doc=next(iter(ec.validate_sources(run)[1].values()))
+        (run/doc['raw_path']).write_text('Changed source text',encoding='utf-8')
+        with self.assertRaises(ec.Invalid): self.rows(self.cases[0]['collection'])
+
     def test_reimport_is_idempotent_before_and_after_processing(self):
         self.capture(text='First inspect the input before changing the configuration.')
         self.imported();self.assertFalse(self.imported()['items'][0]['new'])

@@ -16,6 +16,13 @@ def library_view(project='.', collection=None):
     library = Library(project)
     rows, references, issues = [], {}, []
     entries = library.index['collections']
+    captures, capture_issue = [], None
+    if (library.root / 'capture/state').exists():
+        try:
+            from capture_store import CaptureStore
+            captures = CaptureStore(project).listing()['items']
+        except (OSError, ValueError, KeyError) as exc:
+            capture_issue = str(exc)
     if collection:
         resolved = library.resolve(collection)
         require(resolved is not None, 'Collection is not saved in this project')
@@ -99,12 +106,8 @@ def library_view(project='.', collection=None):
                     row['map_reason'] = record['draft']['no_opportunities_reason']
             except (OSError, ValueError, KeyError) as exc:
                 row['issues'].append('Capability Map: ' + str(exc))
-        if (library.root / 'capture/state').exists():
-            try:
-                from capture_store import CaptureStore
-                row['captures'] = CaptureStore(project).listing(data['collection_id'])['items']
-            except (OSError, ValueError, KeyError) as exc:
-                row['issues'].append('Capture availability: ' + str(exc))
+        row['captures'] = [c for c in captures if data['name'] in c['collections']]
+        if capture_issue: row['issues'].append('Capture availability: ' + capture_issue)
     # Older runs predate named collections. Surface actual packages without
     # adopting or rewriting them, so returning users don't get an empty library.
     legacy, legacy_runs = [], []
@@ -156,9 +159,9 @@ def library_view(project='.', collection=None):
 
 
 def render_library(view):
-    lines = ['# Your Lectic library', '', 'Saved in this project. Other projects and platform memories are not searched.', '']
+    lines = ['# Your Lectic library', '', 'Saved in your shared knowledge home and available across projects. Platform memories are not searched.', '']
     if not view['collections'] and not view['legacy_methods'] and not view['legacy_runs']:
-        lines += ['No saved collections or methods found here. If you used another project, open that project; no re-upload is needed when the originals are still saved there.', '']
+        lines += ['No saved collections or methods found in your shared knowledge home.', '']
     for row in view['collections']:
         lines += ['## ' + row['name'] + (' (archived)' if row.get('archived') else ''),
                   f"Saved: {len(row['sources'])} source document(s); {len(row['captures'])} capture(s).", '']

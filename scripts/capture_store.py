@@ -213,13 +213,17 @@ class CaptureStore:
             return 'partially_processed'
         return 'processed' if set(state['source_ids'])<=processed_ids else 'partially_processed'
 
-    def processed_sources(self):
+    def processed_sources(self,source_ids=None):
+        requested=None if source_ids is None else set(source_ids)
+        if requested==set(): return set()
         result=set();library=Library(self.project)
         for entry in library.index['collections']:
             folder,data=library.resolve(entry['collection_id'])
             for revision in data['revisions']:
                 run=safe_child(folder,revision['run'])
                 if (run/'ir.json').exists():
+                    if requested is not None and not requested.intersection(
+                            row['source_id'] for row in read(run/'corpus.json')['sources']): continue
                     ir=validate_ir(run)
                     result.update(row['source_id'] for row in ir['coverage'])
         return result
@@ -239,7 +243,7 @@ class CaptureStore:
             chosen=hits[0]
         start=instant(since) if since else None;end=instant(until) if until else None
         require(not (start and end) or start<end,'Date interval must have since before until')
-        processed=self.processed_sources();result=[]
+        selected=[]
         for event,state in self.all():
             if chosen and chosen not in state['collection_ids']: continue
             captured=instant(event['captured_at'])
@@ -247,6 +251,9 @@ class CaptureStore:
             notes=self.notes(event,state)
             haystack=' '.join([event['original_value'],event.get('shared_text',''),event.get('title','')]+[n['note'] for n in notes]).casefold()
             if query and not all(word in haystack for word in query.casefold().split()): continue
+            selected.append((event,state,notes))
+        processed=self.processed_sources({sid for _,state,_ in selected for sid in state['source_ids']});result=[]
+        for event,state,notes in selected:
             result.append({'capture_id':event['capture_id'],'title':event.get('title') or event['original_value'][:100],
                 'captured_at':event['captured_at'],'source_type':event['source_type'],'url':self.url(event),
                 'collections':[names.get(cid,cid) for cid in state['collection_ids']],

@@ -83,6 +83,18 @@ class FreeHostingTests(unittest.TestCase):
         home = self.base / 'user-home'; home.mkdir(); (home / 'library.json').write_text('{}')
         with self.assertRaises(Invalid): RemoteHome(home, self.origin + '/store', 'test-store-token')
 
+    def test_phone_save_refreshes_capture_inventory_without_rechecking_all_methods(self):
+        cache=self.cache('cache'); server=Server(self.project)
+        first=self.request('/capture', {'value':'First saved note'})
+        with cache.operation(server): pass
+        second=self.request('/capture', {'value':'Second saved note'})
+        with patch.object(server,'tool_library',side_effect=AssertionError('Unchanged methods were rechecked')):
+            with cache.operation(server): pass
+        state=cache.request('manifest')
+        captures=state['library']['collections'][0]['captures']
+        self.assertEqual({row['capture_id'] for row in captures}, {first['capture_id'],second['capture_id']})
+        self.assertEqual(cache.request('queue')['items'],[])
+
     def test_server_identity_survives_restart_but_is_excluded_from_backup(self):
         from home_archive import archive_home, open_archive
         from identity import save_identity, load_identity

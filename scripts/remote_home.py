@@ -12,14 +12,12 @@ import json
 from pathlib import Path
 import secrets
 import sys
-import threading
 import time
-import traceback
 import urllib.error
 import urllib.request
 import zlib
 
-from ec import Invalid, digest, read, require, safe_child, write
+from ec import Invalid, digest, fingerprint, read, require, safe_child, write
 from home import home_scope
 from home_archive import portable
 from privacy import require_shareable
@@ -162,8 +160,28 @@ class RemoteHome:
             CaptureStore(project).import_record(record)
         return [item['id'] for item in pending]
 
-    def summary(self, server):
-        result = server.tool_library()
+    def summary(self, server, state=None, files=None):
+        previous = (state or {}).get('library', {})
+        changed = {path for path in set((state or {}).get('files', {})) | set(files or {})
+                   if (state or {}).get('files', {}).get(path) != (files or {}).get(path)}
+        capture_only = state is not None and 'references' in previous and all(
+            path == 'identity.json' or path.startswith(('capture/', 'blobs/', 'sessions/')) for path in changed)
+        if capture_only:
+            # Source runs and methods are byte-identical to the last checked
+            # snapshot. Refresh capture availability without revalidating every
+            # transcript and build just to acknowledge a cheap phone save.
+            from capture_store import CaptureStore
+            from library_guide import render_library
+            result = json.loads(json.dumps(previous))
+            captures = CaptureStore(server.project).listing()['items']
+            for row in result['collections']:
+                row['captures'] = [c for c in captures if row['name'] in c['collections']]
+            result['scope'] = str(server.project)
+            base = {k: v for k, v in result.items() if k not in {'binding_hash', 'markdown'} and not k.startswith('inbox_')}
+            result['binding_hash'] = fingerprint(base)
+            result['markdown'] = render_library(result)
+        else:
+            result = server.tool_library()
         # A setup cache can live on another OS. Tool paths must name the stable
         # cache directory used by the hosted service, not the setup machine.
         serialized = json.dumps(result, ensure_ascii=False)
@@ -177,13 +195,6 @@ class RemoteHome:
         started = time.monotonic()
         def progress(stage):
             print(f'WayKit central storage: {stage} ({time.monotonic() - started:.1f}s)', file=sys.stderr, flush=True)
-        def stalled():
-            progress('operation is taking over 30 seconds; stack diagnostics follow')
-            for stack in sys._current_frames().values():
-                traceback.print_stack(stack, file=sys.stderr)
-        diagnostic = threading.Timer(30, stalled)
-        diagnostic.daemon = True
-        diagnostic.start()
         progress('acquiring central lease')
         state = self.request('lease', {'owner': owner})
         try:
@@ -200,10 +211,9 @@ class RemoteHome:
                     progress('committing changes')
                     self.upload(objects)
                     committed = self.request('commit', {'owner': owner, 'revision': state['revision'],
-                                'files': files, 'ack': ack, 'library': self.summary(server)})
+                                'files': files, 'ack': ack, 'library': self.summary(server, state, files)})
                     self.revision = committed['revision']
                 progress('complete')
         finally:
-            diagnostic.cancel()
             try: self.request('release', {'owner': owner})
             except Invalid: pass  # Expiry recovers a dead server; never hide a failed commit.
