@@ -152,6 +152,11 @@ class SetupTests(unittest.TestCase):
             json.dumps({'link': local + '/t/secret/mcp', 'local': local, 'started_at': 'now'}), encoding='utf-8')
         self.assertIn('Hosted chat reachable', self.run_cli('status')[1])
 
+    def test_hosted_reach_checks_configured_remote_without_a_local_tunnel(self):
+        with patch('cli.live_link',return_value=None), patch('cli.configured_spec',return_value={'url':'https://example.test/mcp'}), \
+                patch('client_check.check_connection',return_value=(True,{'home':'/remote'})):
+            self.assertIn('hosted central library',cli.hosted_reach(self.home))
+
     def test_share_explains_the_missing_tunnel_and_accepts_a_public_address(self):
         code, out = self.run_cli('share', '--port', '0')
         self.assertEqual(code, 1); self.assertIn('winget install Cloudflare.cloudflared', out); self.assertIn('brew install cloudflared', out)

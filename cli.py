@@ -549,6 +549,11 @@ def hosted_reach(home):
     """
     if live_link(home):
         return 'reachable: paste the share link above into ChatGPT, Claude on the web or Gemini'
+    from client_check import check_connection
+    for client in ('Codex', 'Claude Code'):
+        spec = configured_spec(client)
+        if spec and spec.get('url') and check_connection(spec)[0]:
+            return 'reachable: your assistants use the hosted central library; connect hosted chat to that same private address'
     return 'NOT reachable: ChatGPT, Gemini and other hosted chats cannot see a local server (run: waykit share)'
 
 

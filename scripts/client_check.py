@@ -17,7 +17,8 @@ def check_connection(spec, cwd=None):
     try:
         if spec.get('url'):
             responses = []
-            headers = {'Content-Type': 'application/json', 'Accept': 'application/json, text/event-stream'}
+            headers = {'Content-Type': 'application/json', 'Accept': 'application/json, text/event-stream',
+                       'User-Agent': 'WayKit/0.3.2'}
             headers.update(spec.get('http_headers', {}))
             if spec.get('bearer_token_env_var'):
                 headers['Authorization'] = 'Bearer ' + os.environ[spec['bearer_token_env_var']]
