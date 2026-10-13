@@ -11,6 +11,8 @@ from contextlib import contextmanager
 import json
 from pathlib import Path
 import secrets
+import sys
+import time
 import urllib.error
 import urllib.request
 import zlib
@@ -170,18 +172,27 @@ class RemoteHome:
     @contextmanager
     def operation(self, server):
         owner = secrets.token_hex(16)
+        started = time.monotonic()
+        def progress(stage):
+            print(f'WayKit central storage: {stage} ({time.monotonic() - started:.1f}s)', file=sys.stderr, flush=True)
         state = self.request('lease', {'owner': owner})
         try:
             with home_scope(self.root), LocalStore(self.root).transaction('knowledge', reentrant=True):
+                progress('restoring cache')
                 self.hydrate(state)
+                progress('importing phone shares')
                 ack = self.import_phone(server.project)
+                progress('running assistant task')
                 yield
+                progress('checking changes')
                 files, objects = self.inventory(state)
                 if files != state['files'] or ack:
+                    progress('committing changes')
                     self.upload(objects)
                     committed = self.request('commit', {'owner': owner, 'revision': state['revision'],
                                 'files': files, 'ack': ack, 'library': self.summary(server)})
                     self.revision = committed['revision']
+                progress('complete')
         finally:
             try: self.request('release', {'owner': owner})
             except Invalid: pass  # Expiry recovers a dead server; never hide a failed commit.

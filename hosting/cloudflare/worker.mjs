@@ -144,8 +144,8 @@ async function capture(request, env, ctx) {
 }
 function wire(id, result) { return { jsonrpc: '2.0', id, result }; }
 function tool(value) { return { content: [{ type: 'text', text: JSON.stringify(value) }], isError: false }; }
-function phonePage(url) {
-  const base = url.origin + url.pathname.replace(/\/phone$/, '');
+function phonePage(url, env) {
+  const base = url.origin + '/t/' + env.USER_TOKEN;
   const capture = base + '/capture', connection = base + '/mcp';
   const nonce = crypto.randomUUID();
   const html = `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Save to WayKit</title>
@@ -209,7 +209,7 @@ export default {
       const match = /^\/t\/([A-Za-z0-9_-]+)(\/.*)$/.exec(path);
       if (match) path = match[2];
       check(await matches(supplied || match?.[1], env.USER_TOKEN), 'Unauthorized', 401);
-      if (path === '/phone' && request.method === 'GET') return phonePage(url);
+      if (path === '/phone' && request.method === 'GET') return phonePage(url, env);
       if (path === '/capture' && request.method === 'POST') return await capture(request, env, ctx);
       if (path === '/mcp' && request.method === 'GET') return reply({ error: 'POST MCP requests here' }, 405);
       if (path === '/mcp' && request.method === 'DELETE') return new Response(null, { status: 204 });
