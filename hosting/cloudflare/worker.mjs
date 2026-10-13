@@ -144,6 +144,27 @@ async function capture(request, env, ctx) {
 }
 function wire(id, result) { return { jsonrpc: '2.0', id, result }; }
 function tool(value) { return { content: [{ type: 'text', text: JSON.stringify(value) }], isError: false }; }
+function phonePage(url) {
+  const base = url.origin + url.pathname.replace(/\/phone$/, '');
+  const capture = base + '/capture', connection = base + '/mcp';
+  const nonce = crypto.randomUUID();
+  const html = `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Save to WayKit</title>
+  <style>body{margin:0;background:#f7f4eb;color:#243629;font:17px/1.55 system-ui,sans-serif}main{max-width:600px;margin:auto;padding:36px 24px}h1{font-size:38px;line-height:1.15;letter-spacing:-1px}h2{font-size:22px;margin-top:36px}strong{color:#244e35}label{display:block;font-weight:600}input{box-sizing:border-box;width:100%;padding:14px;border:1px solid #c6cdbf;border-radius:8px;background:white;font-size:14px;margin:10px 0}button{padding:13px 18px;background:#244e35;color:white;border:0;border-radius:8px;font:600 16px system-ui}li{margin:14px 0}.small{font-size:14px;color:#586252}.brand{letter-spacing:2px;font-size:13px;font-weight:700}.card{background:#fff;padding:20px;border-radius:14px;margin:24px 0}</style>
+  <main><div class="brand">WAYKIT</div><h1>Save from Instagram.<br>Keep it in WayKit.</h1><p>Share a link on your iPhone and it is saved immediately. Your computer can be off.</p>
+  <div class="card"><label for="capture">Your private save address</label><input id="capture" readonly><button id="copy-capture">Copy save address</button><p id="feedback" role="status" class="small"></p></div>
+  <h2>Set it up once on your iPhone</h2><ol><li>Open <strong>Shortcuts</strong> and create <strong>Save to WayKit</strong>. In its details, enable <strong>Show in Share Sheet</strong> and receive <strong>URLs and Text</strong>.</li>
+  <li>Add <strong>Get Text from Input</strong>, with <strong>Shortcut Input</strong>.</li><li>Add <strong>Get Contents of URL</strong> and paste your save address. Choose <strong>POST</strong>, set the request body to <strong>JSON</strong>, and add a Text field named <strong>value</strong>. Select the previous action's Text variable for its value.</li>
+  <li>Add <strong>Get Dictionary Value</strong> for <strong>confirmation</strong>, then <strong>Show Notification</strong> with that result.</li></ol>
+  <h2>Then just share</h2><p><strong>Instagram → Share → Save to WayKit.</strong> The notification confirms the save. Check your first share in a connected assistant.</p><p class="small">An Instagram save keeps the link and any supplied text. Reading the reel's video or audio is currently unavailable.</p>
+  <h2>Connect an assistant</h2><p>Add WayKit to ChatGPT on the web using this private connection address. Current custom MCP apps are web-only; your iPhone Shortcut saves directly to WayKit.</p><input id="connection" readonly><button id="copy-connection">Copy connection address</button>
+  <p class="small">A first assistant task after inactivity can take about a minute while the free Python service wakes. Phone saves remain safely stored.</p>
+  <p class="small"><strong>Keep these addresses private.</strong> Anyone with them can read or change your library. This page is a setup recipe, not an automatically installed Shortcut.</p></main>
+  <script nonce="${nonce}">const capture=${JSON.stringify(capture)},connection=${JSON.stringify(connection)};document.querySelector('#capture').value=capture;document.querySelector('#connection').value=connection;
+  for(const name of ['capture','connection'])document.querySelector('#copy-'+name).onclick=async()=>{try{await navigator.clipboard.writeText(document.querySelector('#'+name).value);document.querySelector('#feedback').textContent='Copied. Paste it into your setup.';}catch{document.querySelector('#'+name).select();document.querySelector('#feedback').textContent='Select the address and use Copy.';}};</script></html>`;
+  return new Response(html, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store',
+    'Referrer-Policy': 'no-referrer', 'X-Content-Type-Options': 'nosniff',
+    'Content-Security-Policy': `default-src 'none'; style-src 'unsafe-inline'; script-src 'nonce-${nonce}'; base-uri 'none'; frame-ancestors 'none'` } });
+}
 async function mcp(message, env) {
   check(message && message.jsonrpc === '2.0', 'Invalid MCP request');
   const { method, id, params = {} } = message;
@@ -154,10 +175,10 @@ async function mcp(message, env) {
   if (method === 'tools/list') return wire(id, { tools: TOOLS });
   if (method === 'tools/call' && /^(waykit|lectic)_home$/.test(params.name)) return wire(id, tool({
     home: '/tmp/waykit-cache', mode: 'remote', transport: 'http', reach: 'Your central knowledge is persisted in Cloudflare D1. Phone saves work while the computer is off.' }));
-  if (method === 'tools/call' && /^(waykit|lectic)_library$/.test(params.name)) {
+  if (method === 'tools/call' && /^(waykit|lectic)_library$/.test(params.name) &&
+      !Object.entries(params.arguments || {}).some(([key, value]) => key !== 'project' && value)) {
     const row = await stmt(env, 'SELECT revision,library FROM home WHERE id=1').first();
     const library = JSON.parse(row.library);
-    if (params.arguments?.collection) library.collections = (library.collections || []).filter(c => c.name === params.arguments.collection || c.collection_id === params.arguments.collection);
     const pending = await stmt(env, 'SELECT COUNT(*) AS n FROM phone_captures WHERE processed=0').first();
     return wire(id, tool({ ...library, home: '/tmp/waykit-cache', storage_mode: 'remote', snapshot_revision: row.revision,
       pending_phone_saves: pending.n, pending_note: pending.n ? 'Phone shares are durably saved and will be imported when the free Python service next handles a task.' : '' }));
@@ -188,6 +209,7 @@ export default {
       const match = /^\/t\/([A-Za-z0-9_-]+)(\/.*)$/.exec(path);
       if (match) path = match[2];
       check(await matches(supplied || match?.[1], env.USER_TOKEN), 'Unauthorized', 401);
+      if (path === '/phone' && request.method === 'GET') return phonePage(url);
       if (path === '/capture' && request.method === 'POST') return await capture(request, env, ctx);
       if (path === '/mcp' && request.method === 'GET') return reply({ error: 'POST MCP requests here' }, 405);
       if (path === '/mcp' && request.method === 'DELETE') return new Response(null, { status: 204 });

@@ -70,7 +70,7 @@ PROJECT = S('Working folder the user is in; defaults to the server\'s configured
 
 TOOLS = [
     tool('lectic_starter', 'Try Lectic offline: install its authored debugging starter, save a sample review and a second result reusing the same knowledge. Prewritten teaching examples, not live AI output. Use for an explicit request to try Lectic.', {'project': PROJECT}),
-    tool('lectic_home', 'Where this project\'s Lectic knowledge lives (user home, LECTIC_HOME or a legacy project folder) and why.',
+    tool('lectic_home', 'Where the user\'s shared Lectic knowledge lives (user home or an explicit WAYKIT_HOME/LECTIC_HOME override) and why. Every project uses the same home.',
          {'project': PROJECT}),
     tool('lectic_library', 'Read-only inventory of saved collections, ready methods, earlier results and possible next builds. When url, text or title are provided, it also scores candidate collections for the incoming material.',
          {'project': PROJECT, 'collection': S('Limit to one collection by name.'),

@@ -21,6 +21,8 @@ and [Render free hosting](https://render.com/docs/free).
 
 ## One-time iPhone setup
 
+The assistant supplies a private phone setup page ending in `/phone`, with copy
+buttons for your capture and connector addresses and the Shortcut recipe below.
 The assistant supplies your private capture address after deployment. A connector
 address ending in `/mcp` has a capture address at the same location ending in
 `/capture`. Treat this address like a password: anyone holding it can access your
